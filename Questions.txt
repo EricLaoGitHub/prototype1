@@ -1,0 +1,4 @@
+1) 
+DSlicingNode::place(float x, float y, CenteringType hc, CenteringType vc)
+HVSlicingNode::place(float x, float y, CenteringType hc, CenteringType vc)
+Comment ne pas avoir CenteringType hc, CenteringType vc dans DSlicingNode?
