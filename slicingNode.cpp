@@ -3,31 +3,63 @@
 using namespace std;
 
 // class Node
-SlicingNode::SlicingNode(SlicingType type, float x, float y, float w, float h):_type(type),
-                                                                               _x(x),
-                                                                               _y(y),
-                                                                               _w(w),
-                                                                               _h(h){} 
+SlicingNode::SlicingNode(
+                         SlicingType type, 
+                         CenteringType c, 
+                         float x, 
+                         float y, 
+                         float w, 
+                         float h
+                        ):_type(type),
+                          _c(c),
+                          _x(x),
+                          _y(y),
+                          _w(w),
+                          _h(h){} 
 SlicingNode::~SlicingNode(){}
 
-SlicingType SlicingNode::getType  () const { return _type; }
-float       SlicingNode::getWidth () const { return _w; }
-float       SlicingNode::getHeight() const { return _h; }
-float       SlicingNode::getX     () const { return _x; }
-float       SlicingNode::getY     () const { return _y; }
+SlicingType   SlicingNode::getType         () const { return _type; }
+float         SlicingNode::getWidth        () const { return _w; }
+float         SlicingNode::getHeight       () const { return _h; }
+float         SlicingNode::getX            () const { return _x; }
+float         SlicingNode::getY            () const { return _y; }
+CenteringType SlicingNode::getCenteringType() const { return _c; }
 
-void SlicingNode::setWidth (float w){ _w = w; }
-void SlicingNode::setHeight(float h){ _h = h; }
-void SlicingNode::setX     (float x){ _x = x; }
-void SlicingNode::setY     (float y){ _y = y; }
+void SlicingNode::setWidth        (float w)        { _w = w; }
+void SlicingNode::setHeight       (float h)        { _h = h; }
+void SlicingNode::setX            (float x)        { _x = x; }
+void SlicingNode::setY            (float y)        { _y = y; }
+void SlicingNode::setCenteringType(CenteringType c){ _c = c; }
 
 void SlicingNode::print() const
 {
   cout << "- Print from Slicing Node- " << endl;
-  if      (_type == Horizontal ){ cout << "SlicingType: Horizontal" << endl; }
-  else if (_type == Vertical   ){ cout << "SlicingType: Vertical"   << endl; }
-  else if (_type == DeviceNode ){ cout << "SlicingType: Device"     << endl; }
-  else                          { cout << "SlicingType: Unknown"    << endl; }
+  if      (_type == Horizontal )
+    { 
+      cout << "SlicingType: Horizontal" << endl; 
+      if      (_c == LB    ){ cout << "CenteringType: Left"    << endl; }
+      else if (_c == Middle){ cout << "CenteringType: Middle"  << endl; }
+      else if (_c == RT    ){ cout << "CenteringType: Right"   << endl; }
+      else                  { cout << "CenteringType: Unknown" << endl; }
+    }
+  else if (_type == Vertical   )
+    { 
+      cout << "SlicingType: Vertical"   << endl; 
+      if      (_c == LB    ){ cout << "CenteringType: Bot"     << endl; }
+      else if (_c == Middle){ cout << "CenteringType: Middle"  << endl; }
+      else if (_c == RT    ){ cout << "CenteringType: Top"     << endl; }
+      else                  { cout << "CenteringType: Unknown" << endl; }
+  }
+  else if (_type == DeviceNode )
+    { 
+      cout << "SlicingType: Device"     << endl; 
+      if      (_c == LB    ){ cout << "CenteringType: Left/Bot"  << endl; }
+      else if (_c == Middle){ cout << "CenteringType: Middle"    << endl; }
+      else if (_c == RT    ){ cout << "CenteringType: Right/Top" << endl; }
+      else                  { cout << "CenteringType: Unknown"   << endl; }
+    }
+  else { cout << "SlicingType: Unknown"    << endl; }
+
   cout << "Height = "  << _h << endl;
   cout << "Width  = "  << _w << endl;
   cout << "X      = "  << _x << endl;
@@ -38,23 +70,22 @@ void SlicingNode::print() const
 
 // class HVSlicingNode
 HVSlicingNode::HVSlicingNode(
-                             SlicingType type,
+                             SlicingType   type,
                              CenteringType c, 
-                             float x, 
-                             float y, 
-                             float w, 
-                             float h
-                            ):SlicingNode(type,x,y,w,h),
-                              _c(c){}
+                             float         x, 
+                             float         y, 
+                             float         w, 
+                             float         h
+                            ):SlicingNode(type,c,x,y,w,h){}
 HVSlicingNode::~HVSlicingNode(){}
 
 void HVSlicingNode::createPushBackNode(
-                                       SlicingType type, 
+                                       SlicingType   type, 
                                        CenteringType c,
-                                       float x, 
-                                       float y, 
-                                       float w, 
-                                       float h
+                                       float         x, 
+                                       float         y, 
+                                       float         w, 
+                                       float         h
                                       ) 
 { 
   if (type == Horizontal)
@@ -73,13 +104,14 @@ void HVSlicingNode::createPushBackNode(
 }
 void HVSlicingNode::createPushBackDevice(
                                          map<float,float>* mapH, 
-                                         map<float,float>* mapW, 
-                                         float x, 
-                                         float y, 
-                                         float w, 
-                                         float h
+                                         map<float,float>* mapW,  
+                                         CenteringType     c,
+                                         float             x, 
+                                         float             y, 
+                                         float             w, 
+                                         float             h
                                         )
-{ this->pushBackNode(DSlicingNode::create(mapH,mapW,x,y,w,h)); }
+{ this->pushBackNode(DSlicingNode::create(mapH,mapW,c,x,y,w,h)); }
 
 
 int                         HVSlicingNode::getNbChild()        const { return _children.size(); }
@@ -171,26 +203,26 @@ void HVSlicingNode::place(float x, float y)
       for (vector<SlicingNode*>::iterator it = _children.begin(); it != _children.end(); it++)
         { 
           if (((*it)->getType() == Horizontal)||((*it)->getType() == Vertical)){ 
-            if (_c == LB)
+            if ((*it)->getCenteringType() == LB)
               {
                 (*it)->setX(xref);
                 (*it)->setY(yref);
               }
-            else if (_c == Middle)
+            else if ((*it)->getCenteringType() == Middle)
               {
                 (*it)->setX(xref + (_w/2) - ((*it)->getWidth()/2));
                 (*it)->setY(yref);
               }
-            else if (_c == RT)
+            else if ((*it)->getCenteringType() == RT)
               {
                 (*it)->setX(xref + _w - (*it)->getWidth());
                 (*it)->setY(yref);
               }
           }
 
-          if      (_c == LB)     { (*it)->place(xref                                 , yref); }
-          else if (_c == Middle) { (*it)->place(xref + (_w/2) - ((*it)->getWidth()/2), yref); }
-          else if (_c == RT)     { (*it)->place(xref + _w     - (*it)->getWidth()    , yref); }
+          if      ((*it)->getCenteringType() == LB)     { (*it)->place(xref                                 , yref); }
+          else if ((*it)->getCenteringType() == Middle) { (*it)->place(xref + (_w/2) - ((*it)->getWidth()/2), yref); }
+          else if ((*it)->getCenteringType() == RT)     { (*it)->place(xref + _w     - (*it)->getWidth()    , yref); }
           else { cerr << " Error(place(float x, float y)): Unknown CenteringType in SlicingTree." << endl; }
 
           xref =  x;
@@ -203,26 +235,26 @@ void HVSlicingNode::place(float x, float y)
         {
           if (((*it)->getType() == Horizontal)||((*it)->getType() == Vertical))
             { 
-              if (_c == LB)
+              if ((*it)->getCenteringType() == LB)
               {
                 (*it)->setX(xref);
                 (*it)->setY(yref);
               }
-            else if (_c == Middle)
+            else if ((*it)->getCenteringType() == Middle)
               {
                 (*it)->setX(xref);
                 (*it)->setY(yref + (_h/2) - ((*it)->getHeight()/2));
               }
-            else if (_c == RT)
+            else if ((*it)->getCenteringType() == RT)
               {
                 (*it)->setX(xref);
                 (*it)->setY(yref + _h - (*it)->getHeight());
               }
             }
 
-          if      (_c == LB)     { (*it)->place(xref, yref); }
-          else if (_c == Middle) { (*it)->place(xref, yref + (_h/2) - ((*it)->getHeight()/2)); }
-          else if (_c == RT)     { (*it)->place(xref, yref + _h     - (*it)->getHeight()); }
+          if      ((*it)->getCenteringType() == LB)     { (*it)->place(xref, yref); }
+          else if ((*it)->getCenteringType() == Middle) { (*it)->place(xref, yref + (_h/2) - ((*it)->getHeight()/2)); }
+          else if ((*it)->getCenteringType() == RT)     { (*it)->place(xref, yref + _h     - (*it)->getHeight()); }
           else { cerr << " Error(place(float x, float y)): Unknown CenteringType in SlicingTree." << endl; }
 
           xref += (*it)->getWidth();
@@ -237,60 +269,62 @@ void HVSlicingNode::place(float x, float y)
 // class HSlicingNode
 HSlicingNode* HSlicingNode::create(
                                    CenteringType c,
-                                   float x, 
-                                   float y, 
-                                   float w, 
-                                   float h
+                                   float         x, 
+                                   float         y, 
+                                   float         w, 
+                                   float         h
                                   ){ return new HSlicingNode(Horizontal,c,x,y,w,h); }
 
 HSlicingNode::HSlicingNode(
-                           SlicingType type, 
+                           SlicingType   type, 
                            CenteringType c,
-                           float x, 
-                           float y, 
-                           float w, 
-                           float h
+                           float         x, 
+                           float         y, 
+                           float         w, 
+                           float         h
                           ):HVSlicingNode(type,c,x,y,w,h){}
 HSlicingNode::~HSlicingNode(){}
 
 // class VSlicingNode
 VSlicingNode* VSlicingNode::create(
                                    CenteringType c,
-                                   float x, 
-                                   float y, 
-                                   float w, 
-                                   float h
+                                   float         x, 
+                                   float         y, 
+                                   float         w, 
+                                   float         h
                                   ){ return new VSlicingNode(Vertical,c,x,y,w,h); }
 
 VSlicingNode::VSlicingNode(
-                           SlicingType type, 
+                           SlicingType   type, 
                            CenteringType c,
-                           float x, 
-                           float y, 
-                           float w, 
-                           float h
+                           float         x, 
+                           float         y, 
+                           float         w, 
+                           float         h
                           ):HVSlicingNode(type,c,x,y,w,h){}
 VSlicingNode::~VSlicingNode(){}
 
 // class DSlicingNode
 DSlicingNode* DSlicingNode::create(
                                    map<float,float>* mapH, 
-                                   map<float,float>* mapW,  
-                                   float x, 
-                                   float y, 
-                                   float w, 
-                                   float h
-                                  ){ return new DSlicingNode(DeviceNode,mapH,mapW,x,y,w,h); }
+                                   map<float,float>* mapW, 
+                                   CenteringType     c, 
+                                   float             x, 
+                                   float             y, 
+                                   float             w, 
+                                   float             h
+                                  ){ return new DSlicingNode(DeviceNode,mapH,mapW,c,x,y,w,h); }
 
 DSlicingNode::DSlicingNode(
-                           SlicingType type, 
+                           SlicingType       type, 
                            map<float,float>* mapH, 
                            map<float,float>* mapW, 
-                           float x, 
-                           float y, 
-                           float w, 
-                           float h
-                          ):SlicingNode(type,x,y,w,h),
+                           CenteringType     c,
+                           float             x, 
+                           float             y, 
+                           float             w, 
+                           float             h
+                          ):SlicingNode(type,c,x,y,w,h),
                             _mapH(mapH),
                             _mapW(mapW)
 {
@@ -321,12 +355,12 @@ void DSlicingNode::place(float x, float y)
 
 // Error Message Methods
 void DSlicingNode::createPushBackNode(
-                                      SlicingType type, 
+                                      SlicingType   type, 
                                       CenteringType c, 
-                                      float x, 
-                                      float y, 
-                                      float w, 
-                                      float h
+                                      float         x, 
+                                      float         y, 
+                                      float         w, 
+                                      float         h
                                      )
 {
   cerr << " Error(createPushBackNode(SlicingType type, CenteringType c, float x, float y, float w, float h)): Device do not have child." << endl;
@@ -335,13 +369,14 @@ void DSlicingNode::createPushBackNode(
 void DSlicingNode::createPushBackDevice(
                                         map<float,float>* mapH, 
                                         map<float,float>* mapW,
-                                        float x, 
-                                        float y, 
-                                        float w, 
-                                        float h
+                                        CenteringType     c, 
+                                        float             x, 
+                                        float             y, 
+                                        float             w, 
+                                        float             h
                                        )
 {
-  cerr << " Error(createPushBackNode(map<float,float>* mapH, map<float,float>* mapW, float x, float y, float w, float h)): Device do not have child." << endl;
+  cerr << " Error(createPushBackNode(map<float,float>* mapH, map<float,float>* mapW, CenteringType c, float x, float y, float w, float h)): Device do not have child." << endl;
 }
 
 int DSlicingNode::getNbChild() const
@@ -385,8 +420,4 @@ float DSlicingNode::updateHeight(){ return _h; }
 
 float DSlicingNode::updateWidth(){ return _w; }
 
-CenteringType DSlicingNode::getCenteringType() const
-{
- cerr << " Error(void DSlicingNode::getCenteringType()): Device do not have CenteringType." << endl;
- return UnknownCentering;
-}
+

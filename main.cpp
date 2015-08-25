@@ -82,7 +82,7 @@ int main(int argc, char* argv[])
   cout << " -------------- Build Slicing Tree -------------- " << endl;
   HSlicingNode* slicingTree = HSlicingNode::create(Middle);
   slicingTree->createPushBackNode(Vertical,Middle);
-  slicingTree->createPushBackDevice(mapHDP12, mapWDP12);
+  slicingTree->createPushBackDevice(mapHDP12, mapWDP12,Middle);
   slicingTree->createPushBackNode(Vertical,Middle);
    
   cout << " -------------- Print Root -------------- " << endl;
@@ -91,15 +91,15 @@ int main(int argc, char* argv[])
   slicingTree->printChildren();
 
   cout << "-------------- 1st Hierarchy -------------- " << endl;
-  slicingTree->getChild(0)->createPushBackDevice(mapHM8, mapWM8);
-  slicingTree->getChild(0)->createPushBackDevice(mapHM5, mapWM5);
-  slicingTree->getChild(0)->createPushBackDevice(mapHM7, mapWM7);
+  slicingTree->getChild(0)->createPushBackDevice(mapHM8, mapWM8, Middle);
+  slicingTree->getChild(0)->createPushBackDevice(mapHM5, mapWM5, Middle);
+  slicingTree->getChild(0)->createPushBackDevice(mapHM7, mapWM7, Middle);
   slicingTree->getChild(0)->printChildren();
 
   cout << "-------------- 2nd Hierarchy -------------- " << endl;
-  slicingTree->getChild(2)->createPushBackDevice(mapHM9  , mapWM9);
-  slicingTree->getChild(2)->createPushBackDevice(mapHCM34, mapWCM34);
-  slicingTree->getChild(2)->createPushBackDevice(mapHM6  , mapWM6);
+  slicingTree->getChild(2)->createPushBackDevice(mapHM9  , mapWM9, Middle);
+  slicingTree->getChild(2)->createPushBackDevice(mapHCM34, mapWCM34, Middle);
+  slicingTree->getChild(2)->createPushBackDevice(mapHM6  , mapWM6, Middle);
   slicingTree->getChild(2)->printChildren();
 
   cout << " -------------- Print Global H/W -------------- " << endl;
