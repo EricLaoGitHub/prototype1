@@ -7,9 +7,8 @@
 
 using namespace std;
 
-enum HCenteringType { Left = 1, HMiddle = 2, Right = 3 };
-enum VCenteringType { Bot  = 1, VMiddle = 2, Top   = 3 };
-enum SlicingType    { Unknown = 0, Horizontal = 1, Vertical = 2, DeviceNode = 3 };
+enum CenteringType { LB = 1, Middle = 2, RT = 3, UnknownCentering = 4 }; // Left or Bot, Middle, Right or Top
+enum SlicingType   { Unknown = 0, Horizontal = 1, Vertical = 2, DeviceNode = 3 };
 
 class SlicingNode
 {
@@ -39,8 +38,7 @@ class SlicingNode
                                                            float y = 0, 
                                                            float w = 0, 
                                                            float h = 0,
-                                                           HCenteringType hc = Left,
-                                                           VCenteringType vc = Bot
+                                                           CenteringType c = LB
                                                            ) = 0;
     virtual int                         getNbChild        ()          const              = 0;
     virtual SlicingNode*                getChild          (int index) const              = 0;
@@ -53,6 +51,8 @@ class SlicingNode
     virtual void                        removeNode        (SlicingNode* node)            = 0;
     virtual float                       updateHeight      ()                             = 0; 
     virtual float                       updateWidth       ()                             = 0;
+
+    virtual CenteringType               getCenteringType  () const                       = 0;
     // DSlicingNode Virtual
 
   protected:
@@ -84,8 +84,7 @@ class HVSlicingNode: public SlicingNode
                                                    float y = 0, 
                                                    float w = 0, 
                                                    float h = 0,
-                                                   HCenteringType hc = Left,
-                                                   VCenteringType vc = Bot
+                                                   CenteringType c = LB
                                                   );
     int                         getNbChild        ()          const;
     SlicingNode*                getChild          (int index) const;
@@ -100,8 +99,9 @@ class HVSlicingNode: public SlicingNode
 
     float                       updateHeight      (); 
     float                       updateWidth       ();
-    void                        place             (float x, float y);
 
+    CenteringType               getCenteringType  () const;
+    void                        place             (float x, float y);
     // Error Message Methods
 
   protected:
@@ -110,38 +110,34 @@ class HVSlicingNode: public SlicingNode
                   float x = 0, 
                   float y = 0, 
                   float w = 0, 
-                  float h = 0
+                  float h = 0,
+                  CenteringType c = LB
                  );
     virtual ~HVSlicingNode();
 
   protected:
     vector<SlicingNode*> _children;
+    CenteringType        _c;
 };
 
 class VSlicingNode: public HVSlicingNode
 {
   public:
-    static VSlicingNode* create(float x = 0, float y = 0, float w = 0, float h = 0, VCenteringType c = Bot);
+    static VSlicingNode* create(float x = 0, float y = 0, float w = 0, float h = 0, CenteringType c = LB);
 
   private:
-    VSlicingNode(SlicingType type, float x = 0, float y = 0, float w = 0, float h = 0, VCenteringType c = Bot);
+    VSlicingNode(SlicingType type, float x = 0, float y = 0, float w = 0, float h = 0, CenteringType c = LB);
     ~VSlicingNode();
-
-  private:
-    VCenteringType _c;
 };
 
 class HSlicingNode: public HVSlicingNode
 {
   public:
-    static HSlicingNode* create(float x = 0, float y = 0, float w = 0, float h = 0, HCenteringType c = Left);
+    static HSlicingNode* create(float x = 0, float y = 0, float w = 0, float h = 0, CenteringType c = LB);
 
   private:
-    HSlicingNode(SlicingType type, float x = 0, float y = 0, float w = 0, float h = 0, HCenteringType c = Left);
+    HSlicingNode(SlicingType type, float x = 0, float y = 0, float w = 0, float h = 0, CenteringType c = LB);
     ~HSlicingNode();
-
-  private:
-    HCenteringType _c;
 };
 
 class DSlicingNode: public SlicingNode
@@ -167,8 +163,7 @@ class DSlicingNode: public SlicingNode
                                                    float y = 0, 
                                                    float w = 0, 
                                                    float h = 0,
-                                                   HCenteringType hc = Left,
-                                                   VCenteringType vc = Bot
+                                                   CenteringType c = LB
                                                   );
     int                         getNbChild        ()          const;
     SlicingNode*                getChild          (int index) const;
@@ -182,6 +177,8 @@ class DSlicingNode: public SlicingNode
 
     float                       updateHeight      (); 
     float                       updateWidth       ();
+
+    CenteringType               getCenteringType  () const;
 
   private:
     DSlicingNode(

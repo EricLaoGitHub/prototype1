@@ -1,7 +1,9 @@
 #include <iostream>
-#include "slicingNode.h"
-#include "parameters.h"
+#include <fstream>
+
 #include <typeinfo>
+#include "parameters.h"
+#include "slicingNode.h"
 
 using namespace std;
 
@@ -23,6 +25,24 @@ map <float,float>* createMapH(float widthmin, float widthmax, float heightmin, f
   map <float,float>* mapL = new map <float,float>();
   for (int i = 0; i <= nmax; i++){ mapL->insert(pair<float,float>(heightmax-hdelta*i, widthmin+ldelta*i)); }
   return mapL;
+}
+void createSlicingTreeData(SlicingNode* data, float tab[][4], int& i)
+{
+  for (vector<SlicingNode*>::const_iterator it = data->getChildren().begin(); it != data->getChildren().end(); it++)
+    {
+      if ((*it)->getType() == DeviceNode)
+        {  
+          tab[i][0]=(*it)->getX();
+          tab[i][1]=(*it)->getY();
+          tab[i][2]=(*it)->getWidth();
+          tab[i][3]=(*it)->getHeight();
+          i++;
+        }
+      else if (((*it)->getType() == Horizontal)||((*it)->getType() == Vertical))
+        {
+          createSlicingTreeData((*it), tab, i);
+        }
+    }
 }
 
 int main(int argc, char* argv[])
@@ -95,6 +115,33 @@ int main(int argc, char* argv[])
   cout << "2nd Hierarchy Height = " << slicingTree->getChild(2)->updateHeight() << endl;
   cout << "2nd Hierarchy Width  = " << slicingTree->getChild(2)->updateWidth() << endl;
 
+  cout << " -------------- Print SlicingTree Placement -------------- " << endl;
+  slicingTree->place(0,0);
+
+  cout << " -------------- Print Root -------------- " << endl;
+  slicingTree->print();
+  cout << " -------------- Print Children -------------- " << endl;
+  slicingTree->printChildren();
+
+  cout << "-------------- 1st Hierarchy -------------- " << endl;
+  slicingTree->getChild(0)->printChildren();
+  cout << "-------------- 2nd Hierarchy -------------- " << endl;
+  slicingTree->getChild(2)->printChildren();
+
   cout << " -------------- End -------------- " << endl;
+
+
+  ofstream myfile;
+  myfile.open (SlicingTreeData);
+
+  float tab[7][4]; 
+  int i = 0;
+  createSlicingTreeData(slicingTree, tab, i);
+  for (int j = 0; j < 7; j++)
+    {
+      myfile << tab[j][0] << " " << tab[j][1] << " " << tab[j][2] << " " << tab[j][3] << endl;
+    }
+  myfile.close();
+  
   return 0;
 }

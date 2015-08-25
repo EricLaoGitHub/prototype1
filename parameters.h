@@ -39,3 +39,5 @@
 #define hMinM9 1.6
 #define hMaxM9 8
 #define NM9   10
+
+#define SlicingTreeData "SlicingTreeData.txt"
