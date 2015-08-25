@@ -34,11 +34,11 @@ class SlicingNode
                                                            SlicingType type, 
                                                            map<float,float>* mapH = NULL, 
                                                            map<float,float>* mapW = NULL,
+                                                           CenteringType c = LB,
                                                            float x = 0, 
                                                            float y = 0, 
                                                            float w = 0, 
-                                                           float h = 0,
-                                                           CenteringType c = LB
+                                                           float h = 0
                                                            ) = 0;
     virtual int                         getNbChild        ()          const              = 0;
     virtual SlicingNode*                getChild          (int index) const              = 0;
@@ -80,11 +80,11 @@ class HVSlicingNode: public SlicingNode
                                                    SlicingType type, 
                                                    map<float,float>* mapH = NULL,
                                                    map<float,float>* mapW = NULL,
+                                                   CenteringType c = LB,
                                                    float x = 0, 
                                                    float y = 0, 
                                                    float w = 0, 
-                                                   float h = 0,
-                                                   CenteringType c = LB
+                                                   float h = 0
                                                   );
     int                         getNbChild        ()          const;
     SlicingNode*                getChild          (int index) const;
@@ -106,12 +106,12 @@ class HVSlicingNode: public SlicingNode
 
   protected:
     HVSlicingNode(
-                  SlicingType type, 
+                  SlicingType type,
+                  CenteringType c = LB, 
                   float x = 0, 
                   float y = 0, 
                   float w = 0, 
-                  float h = 0,
-                  CenteringType c = LB
+                  float h = 0
                  );
     virtual ~HVSlicingNode();
 
@@ -123,20 +123,20 @@ class HVSlicingNode: public SlicingNode
 class VSlicingNode: public HVSlicingNode
 {
   public:
-    static VSlicingNode* create(float x = 0, float y = 0, float w = 0, float h = 0, CenteringType c = LB);
+    static VSlicingNode* create(CenteringType c = LB, float x = 0, float y = 0, float w = 0, float h = 0);
 
   private:
-    VSlicingNode(SlicingType type, float x = 0, float y = 0, float w = 0, float h = 0, CenteringType c = LB);
+    VSlicingNode(SlicingType type, CenteringType c = LB, float x = 0, float y = 0, float w = 0, float h = 0);
     ~VSlicingNode();
 };
 
 class HSlicingNode: public HVSlicingNode
 {
   public:
-    static HSlicingNode* create(float x = 0, float y = 0, float w = 0, float h = 0, CenteringType c = LB);
+    static HSlicingNode* create(CenteringType c = LB, float x = 0, float y = 0, float w = 0, float h = 0);
 
   private:
-    HSlicingNode(SlicingType type, float x = 0, float y = 0, float w = 0, float h = 0, CenteringType c = LB);
+    HSlicingNode(SlicingType type, CenteringType c = LB, float x = 0, float y = 0, float w = 0, float h = 0);
     ~HSlicingNode();
 };
 
@@ -159,11 +159,11 @@ class DSlicingNode: public SlicingNode
                                                    SlicingType type, 
                                                    map<float,float>* mapH = NULL,
                                                    map<float,float>* mapW = NULL,
+                                                   CenteringType c = LB,
                                                    float x = 0, 
                                                    float y = 0, 
                                                    float w = 0, 
-                                                   float h = 0,
-                                                   CenteringType c = LB
+                                                   float h = 0
                                                   );
     int                         getNbChild        ()          const;
     SlicingNode*                getChild          (int index) const;

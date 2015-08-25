@@ -38,12 +38,12 @@ void SlicingNode::print() const
 
 // class HVSlicingNode
 HVSlicingNode::HVSlicingNode(
-                             SlicingType type, 
+                             SlicingType type,
+                             CenteringType c, 
                              float x, 
                              float y, 
                              float w, 
-                             float h, 
-                             CenteringType c
+                             float h
                             ):SlicingNode(type,x,y,w,h),
                               _c(c){}
 HVSlicingNode::~HVSlicingNode(){}
@@ -52,21 +52,21 @@ void HVSlicingNode::createPushBackNode(
                                        SlicingType type, 
                                        map<float,float>* mapH, 
                                        map<float,float>* mapW, 
+                                       CenteringType c,
                                        float x, 
                                        float y, 
                                        float w, 
-                                       float h,
-                                       CenteringType c
+                                       float h
                                       ) 
 { 
   if (type == Horizontal)
     {
-      this->pushBackNode(HSlicingNode::create(x,y,w,h,c));
+      this->pushBackNode(HSlicingNode::create(c,x,y,w,h));
       
     }
   else if (type == Vertical)
     {
-      this->pushBackNode(VSlicingNode::create(x,y,w,h,c));
+      this->pushBackNode(VSlicingNode::create(c,x,y,w,h));
     }
   else if (type == DeviceNode)
     {
@@ -208,40 +208,40 @@ void HVSlicingNode::place(float x, float y)
 
 // class HSlicingNode
 HSlicingNode* HSlicingNode::create(
+                                   CenteringType c,
                                    float x, 
                                    float y, 
                                    float w, 
-                                   float h, 
-                                   CenteringType c
-                                  ){ return new HSlicingNode(Horizontal,x,y,w,h,c); }
+                                   float h
+                                  ){ return new HSlicingNode(Horizontal,c,x,y,w,h); }
 
 HSlicingNode::HSlicingNode(
                            SlicingType type, 
+                           CenteringType c,
                            float x, 
                            float y, 
                            float w, 
-                           float h, 
-                           CenteringType c
-                          ):HVSlicingNode(type,x,y,w,h,c){}
+                           float h
+                          ):HVSlicingNode(type,c,x,y,w,h){}
 HSlicingNode::~HSlicingNode(){}
 
 // class VSlicingNode
 VSlicingNode* VSlicingNode::create(
+                                   CenteringType c,
                                    float x, 
                                    float y, 
                                    float w, 
-                                   float h, 
-                                   CenteringType c
-                                  ){ return new VSlicingNode(Vertical,x,y,w,h,c); }
+                                   float h
+                                  ){ return new VSlicingNode(Vertical,c,x,y,w,h); }
 
 VSlicingNode::VSlicingNode(
                            SlicingType type, 
+                           CenteringType c,
                            float x, 
                            float y, 
                            float w, 
-                           float h, 
-                           CenteringType c
-                          ):HVSlicingNode(type,x,y,w,h,c){}
+                           float h
+                          ):HVSlicingNode(type,c,x,y,w,h){}
 VSlicingNode::~VSlicingNode(){}
 
 // class DSlicingNode
@@ -295,12 +295,12 @@ void DSlicingNode::place(float x, float y)
 void DSlicingNode::createPushBackNode(
                                       SlicingType type, 
                                       map<float,float>* mapH, 
-                                      map<float,float>* mapW, 
+                                      map<float,float>* mapW,
+                                      CenteringType c, 
                                       float x, 
                                       float y, 
                                       float w, 
-                                      float h,
-                                      CenteringType c
+                                      float h
                                      )
 {
   cerr << " Error(createPushBackNode(SlicingType type, map<float,float>* mapH, map<float,float>* mapW, float x, float y, float w, float h)): Device do not have child." << endl;
