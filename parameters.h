@@ -12,27 +12,27 @@
 
 #define wMinM5 1.5
 #define wMaxM5 14.7
-#define hMinM5 2.1
+#define hMinM5 3.1
 #define hMaxM5 6
 #define NM5   16
 
 #define wMinM6 1.5
 #define wMaxM6 44
-#define hMinM6 2.1
+#define hMinM6 2.5
 #define hMaxM6 12
 #define NM6   20
 
 #define wMinM7 1.5
-#define wMaxM7 47
+#define wMaxM7 15.7
 #define hMinM7 2.1
-#define hMaxM7 15
-#define NM7   30
+#define hMaxM7 6.5
+#define NM7   16
 
 #define wMinM8 1.5
-#define wMaxM8 15.7
-#define hMinM8 2.1
-#define hMaxM8 6.5
-#define NM8   16
+#define wMaxM8 47
+#define hMinM8 4.1
+#define hMaxM8 15
+#define NM8   30
 
 #define wMinM9 1.5
 #define wMaxM9 13.3

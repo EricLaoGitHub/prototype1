@@ -50,8 +50,6 @@ HVSlicingNode::~HVSlicingNode(){}
 
 void HVSlicingNode::createPushBackNode(
                                        SlicingType type, 
-                                       map<float,float>* mapH, 
-                                       map<float,float>* mapW, 
                                        CenteringType c,
                                        float x, 
                                        float y, 
@@ -68,15 +66,22 @@ void HVSlicingNode::createPushBackNode(
     {
       this->pushBackNode(VSlicingNode::create(c,x,y,w,h));
     }
-  else if (type == DeviceNode)
-    {
-      this->pushBackNode(DSlicingNode::create(mapH,mapW,x,y,w,h));
-    }
   else
     {
-      cerr << " Error(void HSlicingNode::createPushBack(SlicingType type, map<float,float>* mapH, map<float,float>* mapW, float x, float y, float w, float h)): Unknown type." << endl;
+      cerr << " Error(void HSlicingNode::createPushBack(SlicingType type, CenteringType c, float x, float y, float w, float h)): Unknown or Device type." << endl;
     }
 }
+void HVSlicingNode::createPushBackDevice(
+                                         map<float,float>* mapH, 
+                                         map<float,float>* mapW, 
+                                         float x, 
+                                         float y, 
+                                         float w, 
+                                         float h
+                                        )
+{ this->pushBackNode(DSlicingNode::create(mapH,mapW,x,y,w,h)); }
+
+
 int                         HVSlicingNode::getNbChild()        const { return _children.size(); }
 SlicingNode*                HVSlicingNode::getChild(int index) const { return _children[index]; }
 const vector<SlicingNode*>& HVSlicingNode::getChildren()       const { return _children; }
@@ -164,20 +169,29 @@ void HVSlicingNode::place(float x, float y)
   if (this->getType() == Horizontal)
     {
       for (vector<SlicingNode*>::iterator it = _children.begin(); it != _children.end(); it++)
-        {
-          if ((*it)->getType() == DeviceNode)
-            {
-              if (_c == LB){ (*it)->place(xref, yref); }
-              else if (_c == Middle) { (*it)->place(xref + (_w/2) - ((*it)->getWidth()/2), yref); }
-              else if (_c == RT) { (*it)->place(xref + _w - (*it)->getWidth(), yref);}
-              else { cerr << " Error(place(float x, float y)): Unknown CenteringType in SlicingTree." << endl; }
-            }  
-          else if (((*it)->getType() == Horizontal)||((*it)->getType() == Vertical)){ 
-            (*it)->setX(xref);
-            (*it)->setY(yref);
-            (*it)->place(xref,yref); 
+        { 
+          if (((*it)->getType() == Horizontal)||((*it)->getType() == Vertical)){ 
+            if (_c == LB)
+              {
+                (*it)->setX(xref);
+                (*it)->setY(yref);
+              }
+            else if (_c == Middle)
+              {
+                (*it)->setX(xref + (_w/2) - ((*it)->getWidth()/2));
+                (*it)->setY(yref);
+              }
+            else if (_c == RT)
+              {
+                (*it)->setX(xref + _w - (*it)->getWidth());
+                (*it)->setY(yref);
+              }
           }
-          else { cerr << " Error(place(float x, float y)): Unknown Slicingtype in SlicingTree." << endl; }
+
+          if      (_c == LB)     { (*it)->place(xref                                 , yref); }
+          else if (_c == Middle) { (*it)->place(xref + (_w/2) - ((*it)->getWidth()/2), yref); }
+          else if (_c == RT)     { (*it)->place(xref + _w     - (*it)->getWidth()    , yref); }
+          else { cerr << " Error(place(float x, float y)): Unknown CenteringType in SlicingTree." << endl; }
 
           xref =  x;
           yref += (*it)->getHeight();
@@ -187,15 +201,29 @@ void HVSlicingNode::place(float x, float y)
     {
       for (vector<SlicingNode*>::iterator it = _children.begin(); it != _children.end(); it++)
         {
-          if ((*it)->getType() == DeviceNode)
-            {
-              if (_c == LB){ (*it)->place(xref, yref); }
-              else if (_c == Middle) { (*it)->place(xref, yref + (_h/2) - ((*it)->getHeight()/2)); }
-              else if (_c == RT) { (*it)->place(xref, yref + _h - (*it)->getHeight());}
-              else { cerr << " Error(place(float x, float y)): Unknown CenteringType in SlicingTree." << endl; }
-            }  
-          else if (((*it)->getType() == Horizontal)||((*it)->getType() == Vertical)){ (*it)->place(xref,yref); }
-          else { cerr << " Error(place(float x, float y)): Unknown Slicingtype in SlicingTree." << endl; }
+          if (((*it)->getType() == Horizontal)||((*it)->getType() == Vertical))
+            { 
+              if (_c == LB)
+              {
+                (*it)->setX(xref);
+                (*it)->setY(yref);
+              }
+            else if (_c == Middle)
+              {
+                (*it)->setX(xref);
+                (*it)->setY(yref + (_h/2) - ((*it)->getHeight()/2));
+              }
+            else if (_c == RT)
+              {
+                (*it)->setX(xref);
+                (*it)->setY(yref + _h - (*it)->getHeight());
+              }
+            }
+
+          if      (_c == LB)     { (*it)->place(xref, yref); }
+          else if (_c == Middle) { (*it)->place(xref, yref + (_h/2) - ((*it)->getHeight()/2)); }
+          else if (_c == RT)     { (*it)->place(xref, yref + _h     - (*it)->getHeight()); }
+          else { cerr << " Error(place(float x, float y)): Unknown CenteringType in SlicingTree." << endl; }
 
           xref += (*it)->getWidth();
           yref = y;
@@ -294,8 +322,6 @@ void DSlicingNode::place(float x, float y)
 // Error Message Methods
 void DSlicingNode::createPushBackNode(
                                       SlicingType type, 
-                                      map<float,float>* mapH, 
-                                      map<float,float>* mapW,
                                       CenteringType c, 
                                       float x, 
                                       float y, 
@@ -303,8 +329,21 @@ void DSlicingNode::createPushBackNode(
                                       float h
                                      )
 {
-  cerr << " Error(createPushBackNode(SlicingType type, map<float,float>* mapH, map<float,float>* mapW, float x, float y, float w, float h)): Device do not have child." << endl;
+  cerr << " Error(createPushBackNode(SlicingType type, CenteringType c, float x, float y, float w, float h)): Device do not have child." << endl;
 }
+
+void DSlicingNode::createPushBackDevice(
+                                        map<float,float>* mapH, 
+                                        map<float,float>* mapW,
+                                        float x, 
+                                        float y, 
+                                        float w, 
+                                        float h
+                                       )
+{
+  cerr << " Error(createPushBackNode(map<float,float>* mapH, map<float,float>* mapW, float x, float y, float w, float h)): Device do not have child." << endl;
+}
+
 int DSlicingNode::getNbChild() const
 {
   cerr << " Error(int DSlicingNode::getNbChild()): Device do not have child." << endl;

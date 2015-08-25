@@ -32,14 +32,20 @@ class SlicingNode
     // HVSlicingNode Virtual
     virtual void                        createPushBackNode(
                                                            SlicingType type, 
-                                                           map<float,float>* mapH = NULL, 
-                                                           map<float,float>* mapW = NULL,
                                                            CenteringType c = LB,
                                                            float x = 0, 
                                                            float y = 0, 
                                                            float w = 0, 
                                                            float h = 0
                                                            ) = 0;
+    virtual void                        createPushBackDevice(
+                                                             map<float,float>* mapH = NULL, 
+                                                             map<float,float>* mapW = NULL,
+                                                             float x = 0, 
+                                                             float y = 0, 
+                                                             float w = 0, 
+                                                             float h = 0
+                                                            ) = 0;
     virtual int                         getNbChild        ()          const              = 0;
     virtual SlicingNode*                getChild          (int index) const              = 0;
     virtual const vector<SlicingNode*>& getChildren       ()          const              = 0;
@@ -77,15 +83,21 @@ class HVSlicingNode: public SlicingNode
 {
   public:
     void                        createPushBackNode(
-                                                   SlicingType type, 
-                                                   map<float,float>* mapH = NULL,
-                                                   map<float,float>* mapW = NULL,
+                                                   SlicingType type,      
                                                    CenteringType c = LB,
                                                    float x = 0, 
                                                    float y = 0, 
                                                    float w = 0, 
                                                    float h = 0
                                                   );
+    void                        createPushBackDevice(
+                                                     map<float,float>* mapH = NULL, 
+                                                     map<float,float>* mapW = NULL,
+                                                     float x = 0, 
+                                                     float y = 0, 
+                                                     float w = 0, 
+                                                     float h = 0
+                                                    );
     int                         getNbChild        ()          const;
     SlicingNode*                getChild          (int index) const;
     const vector<SlicingNode*>& getChildren       ()          const;
@@ -157,14 +169,20 @@ class DSlicingNode: public SlicingNode
     // Error Message Methods
     void                        createPushBackNode(
                                                    SlicingType type, 
-                                                   map<float,float>* mapH = NULL,
-                                                   map<float,float>* mapW = NULL,
                                                    CenteringType c = LB,
                                                    float x = 0, 
                                                    float y = 0, 
                                                    float w = 0, 
                                                    float h = 0
                                                   );
+    void                        createPushBackDevice(
+                                                     map<float,float>* mapH = NULL, 
+                                                     map<float,float>* mapW = NULL,
+                                                     float x = 0, 
+                                                     float y = 0, 
+                                                     float w = 0, 
+                                                     float h = 0
+                                                    );
     int                         getNbChild        ()          const;
     SlicingNode*                getChild          (int index) const;
     const vector<SlicingNode*>& getChildren       ()          const;
