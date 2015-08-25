@@ -16,4 +16,4 @@ main.o: main.cpp parameters.h
 slicingNode.o: slicingNode.cpp slicingNode.h
 	$(CC) $(CFLAGS) slicingNode.cpp 
 clean:
-	rm -rf *.o $(EXEC)
+	rm -rf *.o $(EXEC) *.txt
