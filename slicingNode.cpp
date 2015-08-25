@@ -196,6 +196,12 @@ CenteringType HVSlicingNode::getCenteringType() const{ return _c; }
 
 void HVSlicingNode::place(float x, float y)
 {
+  updateHeight();
+  updateWidth();
+  this->_place(x,y);
+}
+void HVSlicingNode::_place(float x, float y)
+{
   float xref = x;
   float yref = y;
   if (this->getType() == Horizontal)
@@ -220,9 +226,9 @@ void HVSlicingNode::place(float x, float y)
               }
           }
 
-          if      ((*it)->getCenteringType() == LB)     { (*it)->place(xref                                 , yref); }
-          else if ((*it)->getCenteringType() == Middle) { (*it)->place(xref + (_w/2) - ((*it)->getWidth()/2), yref); }
-          else if ((*it)->getCenteringType() == RT)     { (*it)->place(xref + _w     - (*it)->getWidth()    , yref); }
+          if      ((*it)->getCenteringType() == LB)     { (*it)->_place(xref                                 , yref); }
+          else if ((*it)->getCenteringType() == Middle) { (*it)->_place(xref + (_w/2) - ((*it)->getWidth()/2), yref); }
+          else if ((*it)->getCenteringType() == RT)     { (*it)->_place(xref + _w     - (*it)->getWidth()    , yref); }
           else { cerr << " Error(place(float x, float y)): Unknown CenteringType in SlicingTree." << endl; }
 
           xref =  x;
@@ -252,9 +258,9 @@ void HVSlicingNode::place(float x, float y)
               }
             }
 
-          if      ((*it)->getCenteringType() == LB)     { (*it)->place(xref, yref); }
-          else if ((*it)->getCenteringType() == Middle) { (*it)->place(xref, yref + (_h/2) - ((*it)->getHeight()/2)); }
-          else if ((*it)->getCenteringType() == RT)     { (*it)->place(xref, yref + _h     - (*it)->getHeight()); }
+          if      ((*it)->getCenteringType() == LB)     { (*it)->_place(xref, yref); }
+          else if ((*it)->getCenteringType() == Middle) { (*it)->_place(xref, yref + (_h/2) - ((*it)->getHeight()/2)); }
+          else if ((*it)->getCenteringType() == RT)     { (*it)->_place(xref, yref + _h     - (*it)->getHeight()); }
           else { cerr << " Error(place(float x, float y)): Unknown CenteringType in SlicingTree." << endl; }
 
           xref += (*it)->getWidth();
@@ -348,6 +354,12 @@ void DSlicingNode::print() const
 }
 
 void DSlicingNode::place(float x, float y)
+{
+  _x = x;
+  _y = y;
+}
+
+void DSlicingNode::_place(float x, float y)
 {
   _x = x;
   _y = y;

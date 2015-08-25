@@ -82,7 +82,7 @@ int main(int argc, char* argv[])
   cout << " -------------- Build Slicing Tree -------------- " << endl;
   HSlicingNode* slicingTree = HSlicingNode::create(Middle);
   slicingTree->createPushBackNode(Vertical,Middle);
-  slicingTree->createPushBackDevice(mapHDP12, mapWDP12,Middle);
+  slicingTree->createPushBackDevice(mapHDP12, mapWDP12);
   slicingTree->createPushBackNode(Vertical,Middle);
    
   cout << " -------------- Print Root -------------- " << endl;
@@ -93,7 +93,7 @@ int main(int argc, char* argv[])
   cout << "-------------- 1st Hierarchy -------------- " << endl;
   slicingTree->getChild(0)->createPushBackDevice(mapHM8, mapWM8, Middle);
   slicingTree->getChild(0)->createPushBackDevice(mapHM5, mapWM5, Middle);
-  slicingTree->getChild(0)->createPushBackDevice(mapHM7, mapWM7, Middle);
+  slicingTree->getChild(0)->createPushBackDevice(mapHM7, mapWM7);
   slicingTree->getChild(0)->printChildren();
 
   cout << "-------------- 2nd Hierarchy -------------- " << endl;

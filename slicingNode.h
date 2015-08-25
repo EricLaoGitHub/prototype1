@@ -30,6 +30,7 @@ class SlicingNode
     // Common Virtual
     virtual void print() const;
     virtual void place(float x = 0, float y = 0) = 0;
+    virtual void _place(float x = 0, float y = 0) = 0;
 
     // HVSlicingNode Virtual
     virtual void                        createPushBackNode(
@@ -73,6 +74,7 @@ class SlicingNode
                 float         h = 0
                );
     virtual ~SlicingNode();
+
 
   protected:
     SlicingType   _type;
@@ -119,6 +121,7 @@ class HVSlicingNode: public SlicingNode
 
     CenteringType               getCenteringType  () const;
     void                        place             (float x = 0, float y = 0);
+    void                        _place(float x = 0, float y = 0);
     // Error Message Methods
 
   protected:
@@ -170,6 +173,7 @@ class DSlicingNode: public SlicingNode
                                   );
     void                 print    () const;
     void                 place    (float x, float y);
+    void                 _place   (float x = 0, float y = 0);
 
     // Error Message Methods
     void                        createPushBackNode(
