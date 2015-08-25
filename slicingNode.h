@@ -7,7 +7,9 @@
 
 using namespace std;
 
-enum SlicingType { Unknown = 0, Horizontal = 1, Vertical = 2, DeviceNode = 3 };
+enum HCenteringType { Left = 1, HMiddle = 2, Right = 3 };
+enum VCenteringType { Bot  = 1, VMiddle = 2, Top   = 3 };
+enum SlicingType    { Unknown = 0, Horizontal = 1, Vertical = 2, DeviceNode = 3 };
 
 class SlicingNode
 {
@@ -36,7 +38,9 @@ class SlicingNode
                                                            float x = 0, 
                                                            float y = 0, 
                                                            float w = 0, 
-                                                           float h = 0
+                                                           float h = 0,
+                                                           HCenteringType hc = Left,
+                                                           VCenteringType vc = Bot
                                                            ) = 0;
     virtual int                         getNbChild        ()          const              = 0;
     virtual SlicingNode*                getChild          (int index) const              = 0;
@@ -79,7 +83,9 @@ class HVSlicingNode: public SlicingNode
                                                    float x = 0, 
                                                    float y = 0, 
                                                    float w = 0, 
-                                                   float h = 0
+                                                   float h = 0,
+                                                   HCenteringType hc = Left,
+                                                   VCenteringType vc = Bot
                                                   );
     int                         getNbChild        ()          const;
     SlicingNode*                getChild          (int index) const;
@@ -115,21 +121,27 @@ class HVSlicingNode: public SlicingNode
 class VSlicingNode: public HVSlicingNode
 {
   public:
-    static VSlicingNode* create(float x = 0, float y = 0, float w = 0, float h = 0);
+    static VSlicingNode* create(float x = 0, float y = 0, float w = 0, float h = 0, VCenteringType c = Bot);
 
   private:
-    VSlicingNode(SlicingType type, float x = 0, float y = 0, float w = 0, float h = 0);
+    VSlicingNode(SlicingType type, float x = 0, float y = 0, float w = 0, float h = 0, VCenteringType c = Bot);
     ~VSlicingNode();
+
+  private:
+    VCenteringType _c;
 };
 
 class HSlicingNode: public HVSlicingNode
 {
   public:
-    static HSlicingNode* create(float x = 0, float y = 0, float w = 0, float h = 0);
+    static HSlicingNode* create(float x = 0, float y = 0, float w = 0, float h = 0, HCenteringType c = Left);
 
   private:
-    HSlicingNode(SlicingType type, float x = 0, float y = 0, float w = 0, float h = 0);
+    HSlicingNode(SlicingType type, float x = 0, float y = 0, float w = 0, float h = 0, HCenteringType c = Left);
     ~HSlicingNode();
+
+  private:
+    HCenteringType _c;
 };
 
 class DSlicingNode: public SlicingNode
@@ -154,7 +166,9 @@ class DSlicingNode: public SlicingNode
                                                    float x = 0, 
                                                    float y = 0, 
                                                    float w = 0, 
-                                                   float h = 0
+                                                   float h = 0,
+                                                   HCenteringType hc = Left,
+                                                   VCenteringType vc = Bot
                                                   );
     int                         getNbChild        ()          const;
     SlicingNode*                getChild          (int index) const;

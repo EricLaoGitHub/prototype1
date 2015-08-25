@@ -46,17 +46,19 @@ void HVSlicingNode::createPushBackNode(
                                        float x, 
                                        float y, 
                                        float w, 
-                                       float h
+                                       float h,
+                                       HCenteringType hc,
+                                       VCenteringType vc
                                       ) 
 { 
   if (type == Horizontal)
     {
-      this->pushBackNode(HSlicingNode::create(x,y,w,h));
+      this->pushBackNode(HSlicingNode::create(x,y,w,h,hc));
       
     }
   else if (type == Vertical)
     {
-      this->pushBackNode(VSlicingNode::create(x,y,w,h));
+      this->pushBackNode(VSlicingNode::create(x,y,w,h,vc));
     }
   else if (type == DeviceNode)
     {
@@ -145,19 +147,50 @@ float HVSlicingNode::updateWidth()
   return width;
 }
 
-void HVSlicingNode::place(float x, float y){}
+void HVSlicingNode::place(float x, float y)
+{}
 
 
 // Error Message Methods
 
 // class HSlicingNode
-HSlicingNode* HSlicingNode::create(float x, float y, float w, float h){ return new HSlicingNode(Horizontal,x,y,w,h); }
-HSlicingNode::HSlicingNode(SlicingType type, float x, float y, float w, float h):HVSlicingNode(type,x,y,w,h){}
+HSlicingNode* HSlicingNode::create(
+                                   float x, 
+                                   float y, 
+                                   float w, 
+                                   float h, 
+                                   HCenteringType c
+                                  ){ return new HSlicingNode(Horizontal,x,y,w,h,c); }
+
+HSlicingNode::HSlicingNode(
+                           SlicingType type, 
+                           float x, 
+                           float y, 
+                           float w, 
+                           float h, 
+                           HCenteringType c
+                          ):HVSlicingNode(type,x,y,w,h),
+                            _c(c){}
 HSlicingNode::~HSlicingNode(){}
 
 // class VSlicingNode
-VSlicingNode* VSlicingNode::create(float x, float y, float w, float h){ return new VSlicingNode(Vertical,x,y,w,h); }
-VSlicingNode::VSlicingNode(SlicingType type, float x, float y, float w, float h):HVSlicingNode(type,x,y,w,h){}
+VSlicingNode* VSlicingNode::create(
+                                   float x, 
+                                   float y, 
+                                   float w, 
+                                   float h, 
+                                   VCenteringType c
+                                  ){ return new VSlicingNode(Vertical,x,y,w,h,c); }
+
+VSlicingNode::VSlicingNode(
+                           SlicingType type, 
+                           float x, 
+                           float y, 
+                           float w, 
+                           float h, 
+                           VCenteringType c
+                          ):HVSlicingNode(type,x,y,w,h),
+                            _c(c){}
 VSlicingNode::~VSlicingNode(){}
 
 // class DSlicingNode
@@ -169,6 +202,7 @@ DSlicingNode* DSlicingNode::create(
                                    float w, 
                                    float h
                                   ){ return new DSlicingNode(DeviceNode,mapH,mapW,x,y,w,h); }
+
 DSlicingNode::DSlicingNode(
                            SlicingType type, 
                            map<float,float>* mapH, 
@@ -214,7 +248,9 @@ void DSlicingNode::createPushBackNode(
                                       float x, 
                                       float y, 
                                       float w, 
-                                      float h
+                                      float h,
+                                      HCenteringType hc,
+                                      VCenteringType vc
                                      )
 {
   cerr << " Error(createPushBackNode(SlicingType type, map<float,float>* mapH, map<float,float>* mapW, float x, float y, float w, float h)): Device do not have child." << endl;
@@ -256,12 +292,6 @@ void DSlicingNode::removeNode(SlicingNode* node)
  cerr << " Error(void DSlicingNode::removeNode(SlicingNode* node)): Device do not have child." << endl;
 }
 
-float DSlicingNode::updateHeight()
-{
- return _h;
-}
+float DSlicingNode::updateHeight(){ return _h; }
 
-float DSlicingNode::updateWidth()
-{
- return _w;
-}
+float DSlicingNode::updateWidth(){ return _w; }
