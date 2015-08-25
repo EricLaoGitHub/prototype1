@@ -96,8 +96,7 @@ int main(int argc, char* argv[])
   slicingTree->getChild(0)->createPushBackDevice(mapHM7, mapWM7);
   slicingTree->getChild(0)->printChildren();
 
-  // 2nd Hierarchy
-  cout << "-------------- 3nd Hierarchy -------------- " << endl;
+  cout << "-------------- 2nd Hierarchy -------------- " << endl;
   slicingTree->getChild(2)->createPushBackDevice(mapHM9  , mapWM9);
   slicingTree->getChild(2)->createPushBackDevice(mapHCM34, mapWCM34);
   slicingTree->getChild(2)->createPushBackDevice(mapHM6  , mapWM6);
