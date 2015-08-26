@@ -15,14 +15,13 @@ class SlicingNode
 {
   public:
     // Accessors & Mutators
-    SlicingType       getType           () const;
-    float             getWidth          () const;
-    float             getHeight         () const;
-    float             getX              () const;
-    float             getY              () const;
-    CenteringType     getCenteringType  () const;
-    pair<float,float> getPairH          (float h) const;
-    pair<float,float> getPairW          (float w) const;
+    SlicingType       getType          () const;
+    float             getWidth         () const;
+    float             getHeight        () const;
+    float             getX             () const;
+    float             getY             () const;
+    CenteringType     getCenteringType () const;
+    map<float,float>* getmapHW         () const;
 
     void  setWidth        (float w);
     void  setHeight       (float h);
@@ -34,6 +33,11 @@ class SlicingNode
     virtual void print () const;
     virtual void place (float x = 0, float y = 0) = 0;
     virtual void _place(float x = 0, float y = 0) = 0; // Not to be used
+    pair<float,float> getPairH          (float h) const;
+    pair<float,float> getPairW          (float w) const;
+    void              setPairH          (float h);
+    void              setPairW          (float w);
+
 
     // HVSlicingNode Virtual
     virtual void                        createPushBackNode(

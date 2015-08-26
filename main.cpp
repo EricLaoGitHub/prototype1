@@ -115,7 +115,11 @@ int main(int argc, char* argv[])
   cout << "2nd Hierarchy Width  = " << slicingTree->getChild(2)->updateWidth() << endl;
 
   cout << " -------------- Print SlicingTree Placement -------------- " << endl;
-  slicingTree->place(0,0);
+  float hvalue = 2.5;
+  float wvalue = 30;
+  slicingTree->getChild(2)->getChild(2)->setPairH(hvalue);
+
+  slicingTree->place();
 
   cout << " -------------- Print Root -------------- " << endl;
   slicingTree->print();
@@ -128,8 +132,6 @@ int main(int argc, char* argv[])
   slicingTree->getChild(2)->printChildren();
   
   cout << " -------------- Print getPair H & W -------------- " << endl;
-  float hvalue = 5;
-  float wvalue = 30;
   cout << "H: " << slicingTree->getChild(2)->getChild(2)->getPairH(hvalue).first << ", W: " << slicingTree->getChild(2)->getChild(2)->getPairH(hvalue).second << endl;
   cout << "H: " << slicingTree->getChild(2)->getChild(2)->getPairW(wvalue).first << ", W: " << slicingTree->getChild(2)->getChild(2)->getPairW(wvalue).second << endl;
 

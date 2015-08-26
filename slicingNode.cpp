@@ -26,6 +26,7 @@ float             SlicingNode::getHeight       ()        const { return _h; }
 float             SlicingNode::getX            ()        const { return _x; }
 float             SlicingNode::getY            ()        const { return _y; }
 CenteringType     SlicingNode::getCenteringType()        const { return _c; }
+map<float,float>* SlicingNode::getmapHW        ()        const { return _mapHW; }
 
 pair<float,float> SlicingNode::getPairH(float h) const 
 {
@@ -41,6 +42,7 @@ pair<float,float> SlicingNode::getPairH(float h) const
     }
   return pair<float,float>(hclosest,w);
 }
+
 pair<float,float> SlicingNode::getPairW(float w) const 
 {
   float wclosest = 0;
@@ -56,7 +58,19 @@ pair<float,float> SlicingNode::getPairW(float w) const
   return pair<float,float>(h,wclosest);
 }
 
+void SlicingNode::setPairH(float h)
+{
+  pair<float,float> hw = this->getPairH(h);
+  _h                   = hw.first;
+  _w                   = hw.second;
+}
 
+void SlicingNode::setPairW(float w)
+{
+  pair<float,float> hw = this->getPairW(w);
+  _h                   = hw.first;
+  _w                   = hw.second;
+}
 
 void SlicingNode::setWidth        (float w)        { _w = w; }
 void SlicingNode::setHeight       (float h)        { _h = h; }
@@ -310,15 +324,15 @@ float HVSlicingNode::getTolerance() const         { return _tolerance; }
 
 void HVSlicingNode::updateBandSize(float tolerance)
 {
-/*if (this->getNbChild() == 1)
+  if (this->getNbChild() == 1)
     {
-      
+      _mapHW = (*_children.begin())->getmapHW();
     }
   for (vector<SlicingNode*>::iterator it = _children.begin(); it != _children.end(); it++)
     {
     //(*it)->updateHBand(tolerance);
     }
-    if (_tolerance == -1){ _tolerance = tolerance; }*/
+    if (_tolerance == -1){ _tolerance = tolerance; }
   
 }
 
