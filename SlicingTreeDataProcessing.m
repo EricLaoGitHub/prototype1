@@ -43,6 +43,10 @@ for i=1:sizeData
     else
         fill(x, y, uniqueColor)
     end;
+        
+    strmin = ['\bf\fontsize{15}',num2str(i)];
+    text(left+ width/2,bottom+ height/2,strmin,'HorizontalAlignment','center');
+   
     
     % Process for the global window
     if right > xmax

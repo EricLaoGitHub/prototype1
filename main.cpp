@@ -51,38 +51,38 @@ int main(int argc, char* argv[])
 
 
   cout << " -------------- DP12 -------------- " << endl;
-  map <float,float>* mapHDP12 = createMapH(wMinDP12,wMaxDP12,hMinDP12,hMaxDP12,NDP12);
-  map <float,float>* mapWDP12 = setMapW(mapHDP12);
+  map <float,float>* mapHWDP12 = createMapH(wMinDP12,wMaxDP12,hMinDP12,hMaxDP12,NDP12);
+  //map <float,float>* mapWDP12 = setMapW(mapHDP12);
   
   cout << " -------------- CM34 -------------- " << endl;
-  map <float,float>* mapHCM34 = createMapH(wMinCM34,wMaxCM34,hMinCM34,hMaxCM34,NCM34);
-  map <float,float>* mapWCM34 = setMapW(mapHCM34);
+  map <float,float>* mapHWCM34 = createMapH(wMinCM34,wMaxCM34,hMinCM34,hMaxCM34,NCM34);
+  //map <float,float>* mapWCM34 = setMapW(mapHCM34);
 
   cout << " -------------- M5 -------------- " << endl;
-  map <float,float>* mapHM5 = createMapH(wMinM5,wMaxM5,hMinM5,hMaxM5,NM5);
-  map <float,float>* mapWM5 = setMapW(mapHM5);
+  map <float,float>* mapHWM5 = createMapH(wMinM5,wMaxM5,hMinM5,hMaxM5,NM5);
+  //map <float,float>* mapWM5 = setMapW(mapHM5);
 
   cout << " -------------- M6 -------------- " << endl;
-  map <float,float>* mapHM6 = createMapH(wMinM6,wMaxM6,hMinM6,hMaxM6,NM6);
-  map <float,float>* mapWM6 = setMapW(mapHM6);
+  map <float,float>* mapHWM6 = createMapH(wMinM6,wMaxM6,hMinM6,hMaxM6,NM6);
+  //map <float,float>* mapWM6 = setMapW(mapHM6);
   
   cout << " -------------- M7 -------------- " << endl;
-  map <float,float>* mapHM7 = createMapH(wMinM7,wMaxM7,hMinM7,hMaxM7,NM7);
-  map <float,float>* mapWM7 = setMapW(mapHM7);
+  map <float,float>* mapHWM7 = createMapH(wMinM7,wMaxM7,hMinM7,hMaxM7,NM7);
+  //map <float,float>* mapWM7 = setMapW(mapHM7);
   
   cout << " -------------- M8 -------------- " << endl;
-  map <float,float>* mapHM8 = createMapH(wMinM8,wMaxM8,hMinM8,hMaxM8,NM8);
-  map <float,float>* mapWM8 = setMapW(mapHM8);
+  map <float,float>* mapHWM8 = createMapH(wMinM8,wMaxM8,hMinM8,hMaxM8,NM8);
+  //map <float,float>* mapWM8 = setMapW(mapHM8);
 
   cout << " -------------- M9 -------------- " << endl;
-  map <float,float>* mapHM9 = createMapH(wMinM9,wMaxM9,hMinM9,hMaxM9,NM9);
-  map <float,float>* mapWM9 = setMapW(mapHM9);
+  map <float,float>* mapHWM9 = createMapH(wMinM9,wMaxM9,hMinM9,hMaxM9,NM9);
+  //map <float,float>* mapWM9 = setMapW(mapHM9);
 
   cout << endl;
   cout << " -------------- Build Slicing Tree -------------- " << endl;
   HSlicingNode* slicingTree = HSlicingNode::create(Middle);
   slicingTree->createPushBackNode(Vertical,Middle);
-  slicingTree->createPushBackDevice(mapHDP12, mapWDP12);
+  slicingTree->createPushBackDevice(mapHWDP12);
   slicingTree->createPushBackNode(Vertical,Middle);
    
   cout << " -------------- Print Root -------------- " << endl;
@@ -91,15 +91,15 @@ int main(int argc, char* argv[])
   slicingTree->printChildren();
 
   cout << "-------------- 1st Hierarchy -------------- " << endl;
-  slicingTree->getChild(0)->createPushBackDevice(mapHM8, mapWM8, Middle);
-  slicingTree->getChild(0)->createPushBackDevice(mapHM5, mapWM5, Middle);
-  slicingTree->getChild(0)->createPushBackDevice(mapHM7, mapWM7);
+  slicingTree->getChild(0)->createPushBackDevice(mapHWM8, Middle);
+  slicingTree->getChild(0)->createPushBackDevice(mapHWM5, Middle);
+  slicingTree->getChild(0)->createPushBackDevice(mapHWM7);
   slicingTree->getChild(0)->printChildren();
 
   cout << "-------------- 2nd Hierarchy -------------- " << endl;
-  slicingTree->getChild(2)->createPushBackDevice(mapHM9  , mapWM9, Middle);
-  slicingTree->getChild(2)->createPushBackDevice(mapHCM34, mapWCM34, Middle);
-  slicingTree->getChild(2)->createPushBackDevice(mapHM6  , mapWM6, Middle);
+  slicingTree->getChild(2)->createPushBackDevice(mapHWM9  , Middle);
+  slicingTree->getChild(2)->createPushBackDevice(mapHWCM34, Middle);
+  slicingTree->getChild(2)->createPushBackDevice(mapHWM6  , Middle);
   slicingTree->getChild(2)->printChildren();
 
   cout << " -------------- Print Global H/W -------------- " << endl;
@@ -141,6 +141,6 @@ int main(int argc, char* argv[])
       myfile << tab[j][0] << " " << tab[j][1] << " " << tab[j][2] << " " << tab[j][3] << endl;
     }
   myfile.close();
-  
+
   return 0;
 }
