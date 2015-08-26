@@ -126,10 +126,16 @@ int main(int argc, char* argv[])
   slicingTree->getChild(0)->printChildren();
   cout << "-------------- 2nd Hierarchy -------------- " << endl;
   slicingTree->getChild(2)->printChildren();
+  
+  cout << " -------------- Print getPair H & W -------------- " << endl;
+  float hvalue = 5;
+  float wvalue = 30;
+  cout << "H: " << slicingTree->getChild(2)->getChild(2)->getPairH(hvalue).first << ", W: " << slicingTree->getChild(2)->getChild(2)->getPairH(hvalue).second << endl;
+  cout << "H: " << slicingTree->getChild(2)->getChild(2)->getPairW(wvalue).first << ", W: " << slicingTree->getChild(2)->getChild(2)->getPairW(wvalue).second << endl;
 
   cout << " -------------- End -------------- " << endl;
 
-
+  // Writing Datas in a file to be plotted in matlab 
   ofstream myfile;
   myfile.open (SlicingTreeData);
 
@@ -141,6 +147,7 @@ int main(int argc, char* argv[])
       myfile << tab[j][0] << " " << tab[j][1] << " " << tab[j][2] << " " << tab[j][3] << endl;
     }
   myfile.close();
+  
 
   return 0;
 }

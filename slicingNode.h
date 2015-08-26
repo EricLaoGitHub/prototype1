@@ -15,12 +15,14 @@ class SlicingNode
 {
   public:
     // Accessors & Mutators
-    SlicingType   getType           () const;
-    float         getWidth          () const;
-    float         getHeight         () const;
-    float         getX              () const;
-    float         getY              () const;
-    CenteringType getCenteringType  () const;
+    SlicingType       getType           () const;
+    float             getWidth          () const;
+    float             getHeight         () const;
+    float             getX              () const;
+    float             getY              () const;
+    CenteringType     getCenteringType  () const;
+    pair<float,float> getPairH          (float h) const;
+    pair<float,float> getPairW          (float w) const;
 
     void  setWidth        (float w);
     void  setHeight       (float h);
@@ -73,23 +75,25 @@ class SlicingNode
 
   protected:
     SlicingNode(
-                SlicingType   type, 
-                CenteringType c = LB,
-                float         x = 0, 
-                float         y = 0, 
-                float         w = 0, 
-                float         h = 0
+                SlicingType       type, 
+                map<float,float>* mapHW = NULL,
+                CenteringType     c     = LB,
+                float             x     = 0, 
+                float             y     = 0, 
+                float             w     = 0, 
+                float             h     = 0
                );
     virtual ~SlicingNode();
 
 
   protected:
-    SlicingType   _type;
-    CenteringType _c;
-    float         _x;
-    float         _y;
-    float         _w;
-    float         _h;
+    SlicingType       _type;
+    map<float,float>* _mapHW;
+    CenteringType     _c;
+    float             _x;
+    float             _y;
+    float             _w;
+    float             _h;
 };
 
 class HVSlicingNode: public SlicingNode
@@ -151,7 +155,6 @@ class HVSlicingNode: public SlicingNode
   protected:
     vector<SlicingNode*> _children;
     float                _tolerance;
-    map<float,float>*    _mapHW;
 };
 
 class VSlicingNode: public HVSlicingNode
@@ -269,7 +272,6 @@ class DSlicingNode: public SlicingNode
     ~DSlicingNode();
 
   private:
-    map<float,float>* _mapHW;
 
 };
 #endif

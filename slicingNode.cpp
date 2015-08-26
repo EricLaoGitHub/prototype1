@@ -4,13 +4,15 @@ using namespace std;
 
 // class Node
 SlicingNode::SlicingNode(
-                         SlicingType type, 
-                         CenteringType c, 
-                         float x, 
-                         float y, 
-                         float w, 
-                         float h
+                         SlicingType       type, 
+                         map<float,float>* mapHW,
+                         CenteringType     c, 
+                         float             x, 
+                         float             y, 
+                         float             w, 
+                         float             h
                         ):_type(type),
+                          _mapHW(mapHW),
                           _c(c),
                           _x(x),
                           _y(y),
@@ -18,12 +20,43 @@ SlicingNode::SlicingNode(
                           _h(h){} 
 SlicingNode::~SlicingNode(){}
 
-SlicingType   SlicingNode::getType         () const { return _type; }
-float         SlicingNode::getWidth        () const { return _w; }
-float         SlicingNode::getHeight       () const { return _h; }
-float         SlicingNode::getX            () const { return _x; }
-float         SlicingNode::getY            () const { return _y; }
-CenteringType SlicingNode::getCenteringType() const { return _c; }
+SlicingType       SlicingNode::getType         ()        const { return _type; }
+float             SlicingNode::getWidth        ()        const { return _w; }
+float             SlicingNode::getHeight       ()        const { return _h; }
+float             SlicingNode::getX            ()        const { return _x; }
+float             SlicingNode::getY            ()        const { return _y; }
+CenteringType     SlicingNode::getCenteringType()        const { return _c; }
+
+pair<float,float> SlicingNode::getPairH(float h) const 
+{
+  float w        = 0;
+  float hclosest = 0;
+  for (map <float,float>::const_iterator itHW = _mapHW->begin(); itHW != _mapHW->end(); itHW++)
+    { 
+      if ( (itHW->first > hclosest) && (h >= itHW->first) )
+        {
+          hclosest = itHW->first;
+          w        = itHW->second;
+        }
+    }
+  return pair<float,float>(hclosest,w);
+}
+pair<float,float> SlicingNode::getPairW(float w) const 
+{
+  float wclosest = 0;
+  float h        = 0;
+  for (map <float,float>::const_iterator itHW = _mapHW->begin(); itHW != _mapHW->end(); itHW++)
+    { 
+      if ( (itHW->second > wclosest) && (w >= itHW->second) )
+        {
+          h        = itHW->first;
+          wclosest = itHW->second;
+        }
+    }
+  return pair<float,float>(h,wclosest);
+}
+
+
 
 void SlicingNode::setWidth        (float w)        { _w = w; }
 void SlicingNode::setHeight       (float h)        { _h = h; }
@@ -77,7 +110,7 @@ HVSlicingNode::HVSlicingNode(
                              float         y, 
                              float         w, 
                              float         h
-                            ):SlicingNode(type,c,x,y,w,h),
+                            ):SlicingNode(type,NULL,c,x,y,w,h),
                               _tolerance(tolerance){}
 HVSlicingNode::~HVSlicingNode(){}
 
@@ -351,8 +384,7 @@ DSlicingNode::DSlicingNode(
                            float             y, 
                            float             w, 
                            float             h
-                          ):SlicingNode(type,c,x,y,w,h),
-                            _mapHW(mapHW)
+                          ):SlicingNode(type,mapHW, c,x,y,w,h)
 {
   if ((w == 0)&&(h == 0))
     {
@@ -366,9 +398,9 @@ void DSlicingNode::print() const
 {
   SlicingNode::print();
 
-  map <float,float>::const_iterator itL = _mapHW->begin();
-  cout << "MapH:" << endl;
-  for (; itL != _mapHW->end(); itL++){ cout << "H = " << itL->first << ", W = " << itL->second << endl;}
+  map <float,float>::const_iterator itHW = _mapHW->begin();
+  cout << "MapHW:" << endl;
+  for (; itHW != _mapHW->end(); itHW++){ cout << "H = " << itHW->first << ", W = " << itHW->second << endl;}
   cout << endl;
   cout << endl;
 }
