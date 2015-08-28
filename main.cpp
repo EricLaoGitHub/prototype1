@@ -126,14 +126,12 @@ int main(int argc, char* argv[])
   cout << " -------------- Print Children -------------- " << endl;
   slicingTree->printChildren();
 
-  cout << "-------------- 1st Hierarchy -------------- " << endl;
-  slicingTree->getChild(0)->printChildren();
   cout << "-------------- 2nd Hierarchy -------------- " << endl;
   slicingTree->getChild(2)->printChildren();
   
   cout << " -------------- Print getPair H & W -------------- " << endl;
-  cout << "H: " << slicingTree->getChild(2)->getChild(2)->getPairH(hvalue).first << ", W: " << slicingTree->getChild(2)->getChild(2)->getPairH(hvalue).second << endl;
-  cout << "H: " << slicingTree->getChild(2)->getChild(2)->getPairW(wvalue).first << ", W: " << slicingTree->getChild(2)->getChild(2)->getPairW(wvalue).second << endl;
+  cout << "hvalue= " << hvalue << ", H: " << slicingTree->getChild(2)->getChild(2)->getPairH(hvalue).first << ", W: " << slicingTree->getChild(2)->getChild(2)->getPairH(hvalue).second << endl;
+  cout << "wvalue= " << wvalue << ", H: " << slicingTree->getChild(2)->getChild(2)->getPairW(wvalue).first << ", W: " << slicingTree->getChild(2)->getChild(2)->getPairW(wvalue).second << endl;
 
   cout << " -------------- End -------------- " << endl;
 
@@ -149,7 +147,30 @@ int main(int argc, char* argv[])
       myfile << tab[j][0] << " " << tab[j][1] << " " << tab[j][2] << " " << tab[j][3] << endl;
     }
   myfile.close();
-  
+
+  slicingTree->getChild(2)->setTolerance(0);
+  slicingTree->getChild(2)->updateBandSize();
+  slicingTree->getChild(2)->print();
+
+/*
+  std::map<char,int> mymap;
+  std::map<char,int>::iterator itlow,itup;
+
+  mymap['a']=20;
+  mymap['b']=40;
+  mymap['c']=60;
+  mymap['d']=80;
+  mymap['e']=100;
+
+  for (std::map<char,int>::iterator it=mymap.begin(); it!=mymap.end(); ++it)
+    std::cout << it->first << " => " << it->second << '\n';
+
+  itlow=mymap.upper_bound ('e');  
+  if (itlow==mymap.end())
+  cout <<"True"<< endl;*/
+
+
+
 
   return 0;
 }

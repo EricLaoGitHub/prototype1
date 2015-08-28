@@ -1,6 +1,7 @@
 #ifndef DEF_SLICINGNODE
 #define DEF_SLICINGNODE
 
+#include <iterator>     
 #include <iostream>
 #include <vector>
 #include <map>
@@ -43,7 +44,7 @@ class SlicingNode
     virtual void                        createPushBackNode(
                                                            SlicingType   type, 
                                                            CenteringType c         = LB,
-                                                           float         tolerance = -1,
+                                                           float         tolerance = 0,
                                                            float         x         = 0, 
                                                            float         y         = 0, 
                                                            float         w         = 0, 
@@ -73,8 +74,8 @@ class SlicingNode
     virtual void                        setTolerance      (float tolerance)              = 0;
     virtual float                       getTolerance      () const                       = 0;
 
-    virtual void                        updateBandSize    (float tolerance)              = 0;
-
+    virtual void                        updateBandSize    ()                             = 0;
+    virtual bool                        emptyChildren     () const                       = 0;
     // DSlicingNode Virtual
 
   protected:
@@ -106,7 +107,7 @@ class HVSlicingNode: public SlicingNode
     void                        createPushBackNode(
                                                    SlicingType   type,      
                                                    CenteringType c         = LB,
-                                                   float         tolerance = -1,
+                                                   float         tolerance = 0,
                                                    float         x         = 0, 
                                                    float         y         = 0, 
                                                    float         w         = 0, 
@@ -123,7 +124,6 @@ class HVSlicingNode: public SlicingNode
     int                         getNbChild        ()          const;
     SlicingNode*                getChild          (int index) const;
     const vector<SlicingNode*>& getChildren       ()          const;
-    void                        print             ()          const;
     void                        printChildren     ();
 
     void                        addNode           (SlicingNode* node, int index); 
@@ -141,14 +141,15 @@ class HVSlicingNode: public SlicingNode
     void                        setTolerance      (float tolerance);
     float                       getTolerance      () const;
 
-    void                        updateBandSize    (float tolerance = 0);
+    void                        updateBandSize    ();
+    bool                        emptyChildren     () const;
     // Error Message Methods
 
   protected:
     HVSlicingNode(
                   SlicingType   type,
                   CenteringType c         = LB, 
-                  float         tolerance = -1,
+                  float         tolerance = 0,
                   float         x         = 0, 
                   float         y         = 0, 
                   float         w         = 0, 
@@ -166,7 +167,7 @@ class VSlicingNode: public HVSlicingNode
   public:
     static VSlicingNode* create(
                                 CenteringType c         = LB, 
-                                float         tolerance = -1,
+                                float         tolerance = 0,
                                 float         x         = 0, 
                                 float         y         = 0, 
                                 float         w         = 0, 
@@ -177,7 +178,7 @@ class VSlicingNode: public HVSlicingNode
     VSlicingNode(
                  SlicingType   type, 
                  CenteringType c         = LB, 
-                 float         tolerance = -1,
+                 float         tolerance = 0,
                  float         x         = 0, 
                  float         y         = 0, 
                  float         w         = 0, 
@@ -191,7 +192,7 @@ class HSlicingNode: public HVSlicingNode
   public:
     static HSlicingNode* create(
                                 CenteringType c = LB, 
-                                float         tolerance = -1,
+                                float         tolerance = 0,
                                 float         x = 0, 
                                 float         y = 0, 
                                 float         w = 0, 
@@ -202,7 +203,7 @@ class HSlicingNode: public HVSlicingNode
     HSlicingNode(
                  SlicingType   type, 
                  CenteringType c = LB, 
-                 float         tolerance = -1,
+                 float         tolerance = 0,
                  float         x = 0, 
                  float         y = 0, 
                  float         w = 0, 
@@ -222,7 +223,6 @@ class DSlicingNode: public SlicingNode
                                           float             w     = 0, 
                                           float             h     = 0
                                          );
-    void                 print           () const;
     void                 place           (float x = 0, float y = 0);
     void                 _place          (float x = 0, float y = 0); // Not to be used
     CenteringType        getCenteringType() const;
@@ -231,7 +231,7 @@ class DSlicingNode: public SlicingNode
     void                        createPushBackNode(
                                                    SlicingType   type, 
                                                    CenteringType c         = LB,
-                                                   float         tolerance = -1,
+                                                   float         tolerance = 0,
                                                    float         x         = 0, 
                                                    float         y         = 0, 
                                                    float         w         = 0, 
@@ -261,7 +261,8 @@ class DSlicingNode: public SlicingNode
     void                        setTolerance      (float tolerance);
     float                       getTolerance      () const;
 
-    void                        updateBandSize    (float tolerance = 0);
+    void                        updateBandSize    ();
+    bool                        emptyChildren     () const;
 
   private:
     DSlicingNode(

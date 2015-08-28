@@ -12,12 +12,15 @@ SlicingNode::SlicingNode(
                          float             w, 
                          float             h
                         ):_type(type),
-                          _mapHW(mapHW),
                           _c(c),
                           _x(x),
                           _y(y),
                           _w(w),
-                          _h(h){} 
+                          _h(h)
+{ 
+  if (mapHW == NULL){ _mapHW = new map <float,float>(); } 
+  else              { _mapHW = mapHW; }
+} 
 SlicingNode::~SlicingNode(){}
 
 SlicingType       SlicingNode::getType         ()        const { return _type; }
@@ -112,6 +115,10 @@ void SlicingNode::print() const
   cout << "X      = "  << _x << endl;
   cout << "Y      = "  << _y << endl;
   cout << endl;
+
+  cout << "MapHW:" << endl;
+  for (map <float,float>::const_iterator itHW = _mapHW->begin(); itHW != _mapHW->end(); itHW++){ cout << "H = " << itHW->first << ", W = " << itHW->second << endl;}
+  cout << endl;
 }
 
 
@@ -160,14 +167,14 @@ void HVSlicingNode::createPushBackDevice(
                                          float             w, 
                                          float             h
                                         )
-{ this->pushBackNode(DSlicingNode::create(mapHW,c,x,y,w,h)); }
+{ 
+  this->pushBackNode(DSlicingNode::create(mapHW,c,x,y,w,h)); }
 
 
 int                         HVSlicingNode::getNbChild()        const { return _children.size(); }
 SlicingNode*                HVSlicingNode::getChild(int index) const { return _children[index]; }
 const vector<SlicingNode*>& HVSlicingNode::getChildren()       const { return _children; }
 
-void HVSlicingNode::print() const {SlicingNode::print();}
 void HVSlicingNode::printChildren()
 {
   for (vector<SlicingNode*>::iterator it = _children.begin(); it != _children.end(); it++)
@@ -322,18 +329,146 @@ void HVSlicingNode::_place(float x, float y)
 void  HVSlicingNode::setTolerance(float tolerance){ _tolerance = tolerance; }
 float HVSlicingNode::getTolerance() const         { return _tolerance; }
 
-void HVSlicingNode::updateBandSize(float tolerance)
+void HVSlicingNode::updateBandSize()
 {
+  for (vector<SlicingNode*>::iterator it = _children.begin(); it != _children.end(); it++)
+    {
+      (*it)->updateBandSize();
+    }
+
   if (this->getNbChild() == 1)
     {
       _mapHW = (*_children.begin())->getmapHW();
     }
-  for (vector<SlicingNode*>::iterator it = _children.begin(); it != _children.end(); it++)
+  else if (this->emptyChildren() != true)
     {
-    //(*it)->updateHBand(tolerance);
+      //cout << "1) On commence le test" << endl;
+      // childrenmapHW: On recupère les maps de chacun des fils dans un vector 
+      vector<map<float,float>*> childrenmapHW;
+      for (vector<SlicingNode*>::iterator itSN = _children.begin(); itSN != _children.end(); itSN++)
+        {
+          childrenmapHW.push_back( (*itSN)->getmapHW() );
+        }
+
+      //cout << "2) On a recupéré les maps " << endl;
+
+      vector< pair<float,float> > childrenpair;
+      for (vector< map<float,float>* >::iterator it = childrenmapHW.begin(); it != childrenmapHW.end(); it++)
+        {
+          childrenpair.push_back(pair<float,float>((*it)->begin()->first,(*it)->begin()->second));
+        }
+      
+      //cout << "3) On a recupéré les premieres paires de chaque map " << endl;
+
+      bool  incrementation = 1;
+      int   index     = 0;
+      int   indexNext = 0;
+      pair<float,float> nextPair = pair<float,float>((*childrenmapHW.begin())->upper_bound(index)->first,(*childrenmapHW.begin())->upper_bound(index)->second);
+      float nextPairMin          = nextPair.first;
+      float hmin                 = (*childrenmapHW.begin())->upper_bound(index)->first; // H from the first map
+      float hmax                 = (*childrenmapHW.begin())->upper_bound(index)->first;
+      list<float> feasibleH      = list<float>();
+
+      while(incrementation != 0)
+        {
+          //cout << "4)------------- Première étape de boucle while ------------- " << endl;
+          incrementation = 0;
+          index = 0;
+          vector< pair<float,float> >::iterator itpair = childrenpair.begin();
+          for (vector<map<float,float>*>::iterator itmap = childrenmapHW.begin(); itmap != childrenmapHW.end(); itmap++)
+            {
+              //cout << "Debut boucle for des maps" << endl;
+              if (itmap == childrenmapHW.begin())
+                {
+                  hmin     = childrenpair.begin()->first;
+                  hmax     = childrenpair.begin()->first;
+                //if ( (*itpair).first != (*itmap)->end()->first )
+                  if ( (*itmap)->upper_bound((*itpair).first) != (*itmap)->end() )
+                    {
+                      indexNext      = index;
+                      incrementation = 1;
+                      nextPairMin    = (*itpair).first;
+                      nextPair       = pair<float,float>(
+                                                         (*itmap)->upper_bound((*itpair).first)->first,
+                                                         (*itmap)->upper_bound((*itpair).first)->second
+                                                        );
+                    }
+                  //cout << "4.1) Premier tour de boucle, initialisation de hmin et hmax " << endl;
+                  //cout << "hmin          : " << hmin << endl;
+                  //cout << "hmax          : " << hmax << endl;
+                  //cout << "incrementation: " << incrementation << endl;
+                }
+              else 
+                {
+                  //cout << "4.2) 2nd+ tour de boucle" << endl;
+                  //cout << "hactuel: " << (*itpair).first << endl;
+                  //cout << "hmin   : " << hmin << endl;
+                  //cout << "hmax   : " << hmax << endl;
+
+                  if (hmin > (*itpair).first){ hmin = (*itpair).first; }
+                  if (hmax < (*itpair).first){ hmax = (*itpair).first; }
+                //                  if ( (*itpair).first != (*itmap)->end()->first )
+                  if ( (*itmap)->upper_bound((*itpair).first) != (*itmap)->end() )
+                    if ((incrementation == 0) || (nextPairMin > (*itpair).first) )
+                      {
+                        indexNext      = index;
+                        incrementation = 1;
+                        nextPairMin    = (*itpair).first;
+                        nextPair       = pair<float,float>(
+                                                           (*itmap)->upper_bound((*itpair).first)->first,
+                                                           (*itmap)->upper_bound((*itpair).first)->second
+                                                          );
+                      }
+                }
+              index++;
+              itpair++;
+              //cout << "Fin de la boucle for, index: " << index << endl;
+            }
+
+          //cout << "5) On a calculé le min et max de la serie de pair en cours " << endl;
+          //cout << "hmin: " << hmin << endl;
+          //cout << "hmax: " << hmax << endl;
+          
+          // Mis a jour du vecteur de pair
+          //cout << "5.1) On met a jour le vector de pair " << endl;
+          //cout << "indexNext: " << indexNext << endl;
+          //cout << "h: " << nextPair.first << ", w: " << nextPair.second << endl;
+          childrenpair[indexNext] = nextPair; 
+
+          if (incrementation == 1){
+            if ((hmax-hmin) <= _tolerance)
+              {
+                feasibleH.push_back(hmax);
+              }
+          //cout << "6) On a une valeur de pour H viable qui est: " << hmax << endl;
+          }
+          //cout << "7) incrementation vaux: " << incrementation << endl;
+        }
+      
+      //cout << "8) Fin du while. Creation de la map avec les feasibles H" << endl;
+      map <float,float>* mapHW = new map <float,float>();
+      float w = 0; 
+      for (list<float>::iterator it1 = feasibleH.begin(); it1 != feasibleH.end(); it1++)
+        {
+          w = 0;
+          for (vector<SlicingNode*>::iterator it2 = _children.begin(); it2 != _children.end(); it2++)
+            {
+              w += (*it2)->getPairH((*it1)).second;
+            }
+          mapHW->insert(pair<float,float>((*it1),w));
+        }
+      _mapHW = mapHW;
     }
-    if (_tolerance == -1){ _tolerance = tolerance; }
-  
+}
+
+bool HVSlicingNode::emptyChildren() const
+{
+  bool flag = false;
+  for (vector<SlicingNode*>::const_iterator it = _children.begin(); it != _children.end(); it++)
+    {
+      if ((*it)->getmapHW()->empty() == true) {flag = true;}
+    }
+  return flag;
 }
 
 // Error Message Methods
@@ -398,7 +533,7 @@ DSlicingNode::DSlicingNode(
                            float             y, 
                            float             w, 
                            float             h
-                          ):SlicingNode(type,mapHW, c,x,y,w,h)
+                          ):SlicingNode(type,mapHW,c,x,y,w,h)
 {
   if ((w == 0)&&(h == 0))
     {
@@ -407,17 +542,6 @@ DSlicingNode::DSlicingNode(
     }
 }
 DSlicingNode::~DSlicingNode(){}
-
-void DSlicingNode::print() const
-{
-  SlicingNode::print();
-
-  map <float,float>::const_iterator itHW = _mapHW->begin();
-  cout << "MapHW:" << endl;
-  for (; itHW != _mapHW->end(); itHW++){ cout << "H = " << itHW->first << ", W = " << itHW->second << endl;}
-  cout << endl;
-  cout << endl;
-}
 
 void DSlicingNode::place(float x, float y)
 {
@@ -508,7 +632,11 @@ float DSlicingNode::getTolerance() const
  return 0;
 }
 
-void DSlicingNode::updateBandSize(float tolerance)
+
+void DSlicingNode::updateBandSize(){} // just do nothing
+
+bool DSlicingNode::emptyChildren() const
 {
-  cerr << " Error(DSlicingNode::updateBandSize(float tolerance)): A Device is not a band, only Vertical or Horizontal Slicing are." << endl;
-}
+ cerr << " Error(DSlicingNode::emptyChildren()): Device do not have child." << endl;
+return true;
+} 
