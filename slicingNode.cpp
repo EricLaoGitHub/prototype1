@@ -470,7 +470,7 @@ void HVSlicingNode::updateBandSize()
       if (this->getType() == Horizontal)
         {
           
-          cout << "1) On commence le test" << endl;
+        // cout << "1) On commence le test" << endl;
         // childrenmapHW: On recupère les maps de chacun des fils dans un vector 
           vector<map<float,float>*> childrenmapHW;
           for (vector<SlicingNode*>::iterator itSN = _children.begin(); itSN != _children.end(); itSN++)
@@ -478,7 +478,7 @@ void HVSlicingNode::updateBandSize()
               childrenmapHW.push_back( (*itSN)->getmapHW() );
             }
           
-          cout << "2) On a recupéré les maps " << endl;
+        // cout << "2) On a recupéré les maps " << endl;
           
           vector< pair<float,float> > childrenpair;
           for (vector< map<float,float>* >::iterator it = childrenmapHW.begin(); it != childrenmapHW.end(); it++)
@@ -486,7 +486,7 @@ void HVSlicingNode::updateBandSize()
               childrenpair.push_back(pair<float,float>((*it)->begin()->first,(*it)->begin()->second));
             }
           
-          cout << "3) On a recupéré les premieres paires de chaque map " << endl;
+        //  cout << "3) On a recupéré les premieres paires de chaque map " << endl;
           
           bool  incrementation = 1;
           int   index     = 0;
@@ -499,13 +499,13 @@ void HVSlicingNode::updateBandSize()
           
           while(incrementation != 0)
             {
-              cout << "4)------------- Première étape de boucle while ------------- " << endl;
+            // cout << "4)------------- Première étape de boucle while ------------- " << endl;
               incrementation = 0;
               index = 0;
               vector< pair<float,float> >::iterator itpair = childrenpair.begin();
               for (vector<map<float,float>*>::iterator itmap = childrenmapHW.begin(); itmap != childrenmapHW.end(); itmap++)
                 {
-                  cout << "Debut boucle for des maps" << endl;
+                // cout << "Debut boucle for des maps" << endl;
                   if (itmap == childrenmapHW.begin())
                     {
                       wmin     = childrenpair.begin()->second;
@@ -520,17 +520,17 @@ void HVSlicingNode::updateBandSize()
                                                              (*itmap)->upper_bound((*itpair).first)->second
                                                             );
                         }
-                      cout << "4.1) Premier tour de boucle, initialisation de wmin et wmax " << endl;
-                      cout << "wmin          : " << wmin << endl;
-                      cout << "wmax          : " << wmax << endl;
-                      cout << "incrementation: " << incrementation << endl;
+                    // cout << "4.1) Premier tour de boucle, initialisation de wmin et wmax " << endl;
+                    // cout << "wmin          : " << wmin << endl;
+                    // cout << "wmax          : " << wmax << endl;
+                    //  cout << "incrementation: " << incrementation << endl;
                     }
                   else 
                     {
-                      cout << "4.2) 2nd+ tour de boucle" << endl;
-                      cout << "hactuel: " << (*itpair).second << endl;
-                      cout << "wmin   : " << wmin << endl;
-                      cout << "wmax   : " << wmax << endl;
+                    //  cout << "4.2) 2nd+ tour de boucle" << endl;
+                    //   cout << "hactuel: " << (*itpair).second << endl;
+                    //   cout << "wmin   : " << wmin << endl;
+                    //  cout << "wmax   : " << wmax << endl;
                       
                       if (wmin > (*itpair).second){ wmin = (*itpair).second; }
                       if (wmax < (*itpair).second){ wmax = (*itpair).second; }
@@ -548,32 +548,32 @@ void HVSlicingNode::updateBandSize()
                     }
                   index++;
                   itpair++;
-                  cout << "Fin de la boucle for, index: " << index << endl;
+                //  cout << "Fin de la boucle for, index: " << index << endl;
                 }
               
-              cout << "5) On a calculé le min et max de la serie de pair en cours " << endl;
-              cout << "wmin: " << wmin << endl;
-              cout << "wmax: " << wmax << endl;
+            // cout << "5) On a calculé le min et max de la serie de pair en cours " << endl;
+            // cout << "wmin: " << wmin << endl;
+            // cout << "wmax: " << wmax << endl;
               
             // Mis a jour du vecteur de pair
-              cout << "5.1) On met a jour le vector de pair " << endl;
-              cout << "indexNext: " << indexNext << endl;
-              cout << "h: " << nextPair.first << ", w: " << nextPair.second << endl;
+            // cout << "5.1) On met a jour le vector de pair " << endl;
+            // cout << "indexNext: " << indexNext << endl;
+            // cout << "h: " << nextPair.first << ", w: " << nextPair.second << endl;
               childrenpair[indexNext] = nextPair; 
               
               
               if ((wmax-wmin) <= _tolerance)
                 {
                   feasibleW.push_back(wmax);
-                  cout << "6) On a une valeur de pour W viable qui est: " << wmax << endl;
+                  // cout << "6) On a une valeur de pour W viable qui est: " << wmax << endl;
                 }
                 
 
 
-              cout << "7) incrementation vaux: " << incrementation << endl;
+            // cout << "7) incrementation vaux: " << incrementation << endl;
             }
           
-          cout << "8) Fin du while. Creation de la map avec les feasibles W" << endl;
+        // cout << "8) Fin du while. Creation de la map avec les feasibles W" << endl;
           map <float,float>* mapHW = new map <float,float>();
           float h = 0; 
           for (list<float>::iterator it1 = feasibleW.begin(); it1 != feasibleW.end(); it1++)
