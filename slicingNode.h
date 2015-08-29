@@ -72,6 +72,7 @@ class SlicingNode
     virtual float                       updateWidth       ()                             = 0;
 
     virtual void                        setTolerance      (float tolerance)              = 0;
+    virtual void                        setAllTolerance   (float tolerance)              = 0;
     virtual float                       getTolerance      () const                       = 0;
 
     virtual void                        updateBandSize    ()                             = 0;
@@ -139,6 +140,7 @@ class HVSlicingNode: public SlicingNode
     void                        _place            (float x = 0, float y = 0); // Not to be used
 
     void                        setTolerance      (float tolerance);
+    void                        setAllTolerance   (float tolerance);
     float                       getTolerance      () const;
 
     void                        updateBandSize    ();
@@ -259,6 +261,7 @@ class DSlicingNode: public SlicingNode
     float                       updateWidth       ();
 
     void                        setTolerance      (float tolerance);
+    void                        setAllTolerance   (float tolerance);
     float                       getTolerance      () const;
 
     void                        updateBandSize    ();

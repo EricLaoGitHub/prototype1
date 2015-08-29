@@ -45,13 +45,13 @@
 
 */
 #define wMinM9 1
-#define wMaxM9 15
+#define wMaxM9 22
 #define hMinM9 1
 #define hMaxM9 15
 #define NM9    15
 
 #define wMinM6 1
-#define wMaxM6 15
+#define wMaxM6 20
 #define hMinM6 1
 #define hMaxM6 15
 #define NM6    15
