@@ -45,21 +45,21 @@
 
 */
 #define wMinM9 1
-#define wMaxM9 22
+#define wMaxM9 5
 #define hMinM9 1
-#define hMaxM9 15
-#define NM9    15
+#define hMaxM9 5
+#define NM9    5
 
 #define wMinM6 1
-#define wMaxM6 20
+#define wMaxM6 5
 #define hMinM6 1
-#define hMaxM6 15
-#define NM6    15
+#define hMaxM6 5
+#define NM6    5
 
 #define wMinCM34 1
-#define wMaxCM34 15
+#define wMaxCM34 5
 #define hMinCM34 1
-#define hMaxCM34 15
-#define NCM34    15
+#define hMaxCM34 5
+#define NCM34    5
 
 #define SlicingTreeData "SlicingTreeData.txt"

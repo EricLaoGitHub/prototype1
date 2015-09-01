@@ -349,18 +349,20 @@ void HVSlicingNode::updateBandSize()
       _mapHW = (*_children.begin())->getmapHW();
     }
   else if (this->emptyChildren() != true)
-    {
+    {        
       if (this->getType() == Vertical)
         {
-        //cout << "1) On commence le test" << endl;
-        // childrenmapHW: On recupère les maps de chacun des fils dans un vector 
+        /* 1) On recupère les maps
+           2) On utilise la vector de pair <float,float> commme liste d'iterateur
+           3) On incremente toujours l'iterator en fonction du modulo (combinaison)
+           4) Traitement classique apres en rangeant la combinaison de solution en cours en utilisant les methodes de <list>
+           5) Ajout à la mapHW
+         */
           vector<map<float,float>*> childrenmapHW;
           for (vector<SlicingNode*>::iterator itSN = _children.begin(); itSN != _children.end(); itSN++)
             {
               childrenmapHW.push_back( (*itSN)->getmapHW() );
             }
-          
-        //cout << "2) On a recupéré les maps " << endl;
           
           vector< pair<float,float> > childrenpair;
           for (vector< map<float,float>* >::iterator it = childrenmapHW.begin(); it != childrenmapHW.end(); it++)
@@ -368,227 +370,193 @@ void HVSlicingNode::updateBandSize()
               childrenpair.push_back(pair<float,float>((*it)->begin()->first,(*it)->begin()->second));
             }
           
-        //cout << "3) On a recupéré les premieres paires de chaque map " << endl;
-          
-          bool  incrementation = 1;
           int   index     = 0;
-          int   indexNext = 0;
-          pair<float,float> nextPair = pair<float,float>((*childrenmapHW.begin())->upper_bound(index)->first,(*childrenmapHW.begin())->upper_bound(index)->second);
-          float nextPairMin          = nextPair.first;
           float hmin                 = (*childrenmapHW.begin())->upper_bound(index)->first; // H from the first map
           float hmax                 = (*childrenmapHW.begin())->upper_bound(index)->first;
-          list<float> feasibleH      = list<float>();
           
-          while(incrementation != 0)
+          list< pair<float,float> > currentHs = list< pair<float,float> >();
+          vector <int> modulos                = vector<int>();
+          int modulo                          = 1;
+          int counter                         = 0;
+          int endCounter                      = 1;
+          float currentW                      = 0;
+          map <float,float>* mapHW            = new map <float,float>();
+
+          modulos.push_back(0);
+          for (vector<map<float,float>*>::iterator itmap = childrenmapHW.begin(); itmap != childrenmapHW.end(); itmap++)
             {
-            //cout << "4)------------- Première étape de boucle while ------------- " << endl;
-              incrementation = 0;
-              index = 0;
+              if (itmap != childrenmapHW.begin())
+                {
+                  modulos.push_back(modulo);
+                }
+              modulo *= (*itmap)->size();
+              endCounter *= (*itmap)->size();
+            }
+
+          while( counter != endCounter )
+            {
+              index                                        = 0;
               vector< pair<float,float> >::iterator itpair = childrenpair.begin();
+              currentHs                                    = list< pair<float,float> >();
+              currentW                                     = 0;
+
               for (vector<map<float,float>*>::iterator itmap = childrenmapHW.begin(); itmap != childrenmapHW.end(); itmap++)
                 {
-                //cout << "Debut boucle for des maps" << endl;
+                  currentHs.push_back(pair<float,float>((*itpair).first,(*itpair).second));
+                  currentW += (*itpair).second;
                   if (itmap == childrenmapHW.begin())
                     {
-                      hmin     = childrenpair.begin()->first;
-                      hmax     = childrenpair.begin()->first;
                       if ( (*itmap)->upper_bound((*itpair).first) != (*itmap)->end() )
                         {
-                          indexNext      = index;
-                          incrementation = 1;
-                          nextPairMin    = (*itpair).first;
-                          nextPair       = pair<float,float>(
-                                                             (*itmap)->upper_bound((*itpair).first)->first,
-                                                             (*itmap)->upper_bound((*itpair).first)->second
-                                                            );
+                          childrenpair[index] = pair<float,float>(
+                                                                  (*itmap)->upper_bound((*itpair).first)->first,
+                                                                  (*itmap)->upper_bound((*itpair).first)->second
+                                                                 );
                         }
-                    //cout << "4.1) Premier tour de boucle, initialisation de hmin et hmax " << endl;
-                    //cout << "hmin          : " << hmin << endl;
-                    //cout << "hmax          : " << hmax << endl;
-                    //cout << "incrementation: " << incrementation << endl;
-                    }
-                  else 
+                      else
+                        {
+                          childrenpair[index] = pair<float,float>(
+                                                                  (*itmap)->begin()->first,
+                                                                  (*itmap)->begin()->second
+                                                                 );
+                        }
+                    } 
+                  else
                     {
-                    //cout << "4.2) 2nd+ tour de boucle" << endl;
-                    //cout << "hactuel: " << (*itpair).first << endl;
-                    //cout << "hmin   : " << hmin << endl;
-                    //cout << "hmax   : " << hmax << endl;
-                      
-                      if (hmin > (*itpair).first){ hmin = (*itpair).first; }
-                      if (hmax < (*itpair).first){ hmax = (*itpair).first; }
-                      if ( (*itmap)->upper_bound((*itpair).first) != (*itmap)->end() )
-                        if ((incrementation == 0) || (nextPairMin > (*itpair).first) )
-                          {
-                            indexNext      = index;
-                            incrementation = 1;
-                            nextPairMin    = (*itpair).first;
-                            nextPair       = pair<float,float>(
-                                                               (*itmap)->upper_bound((*itpair).first)->first,
-                                                               (*itmap)->upper_bound((*itpair).first)->second
-                                                              );
-                          }
+                      if (( counter%modulos[index] == modulos[index]-1 ) && ( counter != 0 ))
+                        {
+                          if ( (*itmap)->upper_bound((*itpair).first) != (*itmap)->end() )
+                            {
+                              childrenpair[index] = pair<float,float>(
+                                                                      (*itmap)->upper_bound((*itpair).first)->first,
+                                                                      (*itmap)->upper_bound((*itpair).first)->second
+                                                                     );
+                            }
+                          else
+                            {
+                              childrenpair[index] = pair<float,float>(
+                                                                      (*itmap)->begin()->first,
+                                                                      (*itmap)->begin()->second
+                                                                     );
+                                
+                            }
+                        }
                     }
                   index++;
                   itpair++;
-                //cout << "Fin de la boucle for, index: " << index << endl;
                 }
-              
-            //cout << "5) On a calculé le min et max de la serie de pair en cours " << endl;
-            //cout << "hmin: " << hmin << endl;
-            //cout << "hmax: " << hmax << endl;
-              
-            // Mis a jour du vecteur de pair
-            //cout << "5.1) On met a jour le vector de pair " << endl;
-            //cout << "indexNext: " << indexNext << endl;
-            //cout << "h: " << nextPair.first << ", w: " << nextPair.second << endl;
-              childrenpair[indexNext] = nextPair; 
-              
+              counter++;
+              currentHs.sort();
+              hmin = currentHs.front().first;
+              hmax = currentHs.back().first;
+
               if ((hmax-hmin) <= _tolerance)
                 {
-                  feasibleH.push_back(hmax);
+                  mapHW->insert(pair<float,float> ( currentHs.back().first, currentW) );
                 }
-            //cout << "6) On a une valeur de pour H viable qui est: " << hmax << endl;
-            //cout << "7) incrementation vaux: " << incrementation << endl;
-            }
-          
-        //cout << "8) Fin du while. Creation de la map avec les feasibles H" << endl;
-          map <float,float>* mapHW = new map <float,float>();
-          float w = 0; 
-          for (list<float>::iterator it1 = feasibleH.begin(); it1 != feasibleH.end(); it1++)
-            {
-              w = 0;
-              for (vector<SlicingNode*>::iterator it2 = _children.begin(); it2 != _children.end(); it2++)
-                {
-                  w += (*it2)->getPairH((*it1)).second;
-                }
-              mapHW->insert(pair<float,float>((*it1),w));
             }
           _mapHW = mapHW;
-          _h = mapHW->begin()->first;
-          _w = mapHW->begin()->second;
         }
-      if (this->getType() == Horizontal)
+      else if (this->getType() == Horizontal)
         {
-          
-        // cout << "1) On commence le test" << endl;
-        // childrenmapHW: On recupère les maps de chacun des fils dans un vector 
           vector<map<float,float>*> childrenmapHW;
           for (vector<SlicingNode*>::iterator itSN = _children.begin(); itSN != _children.end(); itSN++)
             {
               childrenmapHW.push_back( (*itSN)->getmapHW() );
             }
           
-        // cout << "2) On a recupéré les maps " << endl;
-          
           vector< pair<float,float> > childrenpair;
           for (vector< map<float,float>* >::iterator it = childrenmapHW.begin(); it != childrenmapHW.end(); it++)
             {
               childrenpair.push_back(pair<float,float>((*it)->begin()->first,(*it)->begin()->second));
             }
-          
-        //  cout << "3) On a recupéré les premieres paires de chaque map " << endl;
-          
-          bool  incrementation = 1;
+         
           int   index     = 0;
-          int   indexNext = 0;
-          pair<float,float> nextPair = pair<float,float>((*childrenmapHW.begin())->upper_bound(index)->first,(*childrenmapHW.begin())->upper_bound(index)->second);
-          float nextPairMax          = nextPair.second;
-          float wmin                 = (*childrenmapHW.begin())->upper_bound(index)->second; // H from the first map
+          float wmin                 = (*childrenmapHW.begin())->upper_bound(index)->second; 
           float wmax                 = (*childrenmapHW.begin())->upper_bound(index)->second;
-          list<float> feasibleW      = list<float>();
           
-          while(incrementation != 0)
+          list< pair<float,float> > currentWs = list< pair<float,float> >();
+          vector <int> modulos                = vector<int>();
+          int modulo                          = 1;
+          int counter                         = 0;
+          int endCounter                      = 1;
+          float currentH                      = 0;
+          map <float,float>* mapHW            = new map <float,float>();
+
+          modulos.push_back(0);
+          for (vector<map<float,float>*>::iterator itmap = childrenmapHW.begin(); itmap != childrenmapHW.end(); itmap++)
             {
-            // cout << "4)------------- Première étape de boucle while ------------- " << endl;
-              incrementation = 0;
-              index = 0;
+              if (itmap != childrenmapHW.begin())
+                {
+                  modulos.push_back(modulo);
+                }
+              modulo *= (*itmap)->size();
+              endCounter *= (*itmap)->size();
+            }
+
+          while( counter != endCounter )
+            {
+              index                                        = 0;
               vector< pair<float,float> >::iterator itpair = childrenpair.begin();
+              currentWs                                    = list< pair<float,float> >();
+              currentH                                     = 0;
+
               for (vector<map<float,float>*>::iterator itmap = childrenmapHW.begin(); itmap != childrenmapHW.end(); itmap++)
                 {
-                // cout << "Debut boucle for des maps" << endl;
+                  currentWs.push_back(pair<float,float>((*itpair).second,(*itpair).first));
+                  currentH += (*itpair).first;
                   if (itmap == childrenmapHW.begin())
                     {
-                      wmin     = childrenpair.begin()->second;
-                      wmax     = childrenpair.begin()->second;
                       if ( (*itmap)->upper_bound((*itpair).first) != (*itmap)->end() )
                         {
-                          indexNext      = index;
-                          incrementation = 1;
-                          nextPairMax    = (*itpair).second;
-                          nextPair       = pair<float,float>(
-                                                             (*itmap)->upper_bound((*itpair).first)->first,
-                                                             (*itmap)->upper_bound((*itpair).first)->second
-                                                            );
+                          childrenpair[index] = pair<float,float>(
+                                                                  (*itmap)->upper_bound((*itpair).first)->first,
+                                                                  (*itmap)->upper_bound((*itpair).first)->second
+                                                                 );
                         }
-                    // cout << "4.1) Premier tour de boucle, initialisation de wmin et wmax " << endl;
-                    // cout << "wmin          : " << wmin << endl;
-                    // cout << "wmax          : " << wmax << endl;
-                    //  cout << "incrementation: " << incrementation << endl;
-                    }
-                  else 
+                      else
+                        {
+                          childrenpair[index] = pair<float,float>(
+                                                                  (*itmap)->begin()->first,
+                                                                  (*itmap)->begin()->second
+                                                                 );
+                        }
+                    } 
+                  else
                     {
-                    //  cout << "4.2) 2nd+ tour de boucle" << endl;
-                    //   cout << "hactuel: " << (*itpair).second << endl;
-                    //   cout << "wmin   : " << wmin << endl;
-                    //  cout << "wmax   : " << wmax << endl;
-                      
-                      if (wmin > (*itpair).second){ wmin = (*itpair).second; }
-                      if (wmax < (*itpair).second){ wmax = (*itpair).second; }
-                      if ( (*itmap)->upper_bound((*itpair).first) != (*itmap)->end() )
-                        if ((incrementation == 0) || (nextPairMax < (*itpair).second) )
-                          {
-                            indexNext      = index;
-                            incrementation = 1;
-                            nextPairMax    = (*itpair).second;
-                            nextPair       = pair<float,float>(
-                                                               (*itmap)->upper_bound((*itpair).first)->first,
-                                                               (*itmap)->upper_bound((*itpair).first)->second
-                                                              );
-                          }
+                      if (( counter%modulos[index] == modulos[index]-1 ) && ( counter != 0 ))
+                        {
+                          if ( (*itmap)->upper_bound((*itpair).first) != (*itmap)->end() )
+                            {
+                              childrenpair[index] = pair<float,float>(
+                                                                      (*itmap)->upper_bound((*itpair).first)->first,
+                                                                      (*itmap)->upper_bound((*itpair).first)->second
+                                                                     );
+                            }
+                          else
+                            {
+                              childrenpair[index] = pair<float,float>(
+                                                                      (*itmap)->begin()->first,
+                                                                      (*itmap)->begin()->second
+                                                                     );
+                                
+                            }
+                        }
                     }
                   index++;
                   itpair++;
-                //  cout << "Fin de la boucle for, index: " << index << endl;
                 }
-              
-            // cout << "5) On a calculé le min et max de la serie de pair en cours " << endl;
-            // cout << "wmin: " << wmin << endl;
-            // cout << "wmax: " << wmax << endl;
-              
-            // Mis a jour du vecteur de pair
-            // cout << "5.1) On met a jour le vector de pair " << endl;
-            // cout << "indexNext: " << indexNext << endl;
-            // cout << "h: " << nextPair.first << ", w: " << nextPair.second << endl;
-              childrenpair[indexNext] = nextPair; 
-              
-              
+              counter++;
+              currentWs.sort();
+              wmin = currentWs.front().first;
+              wmax = currentWs.back().first;
+
               if ((wmax-wmin) <= _tolerance)
                 {
-                  feasibleW.push_back(wmax);
-                  // cout << "6) On a une valeur de pour W viable qui est: " << wmax << endl;
+                  mapHW->insert(pair<float,float> ( currentH, currentWs.back().second) );
                 }
-                
-
-
-            // cout << "7) incrementation vaux: " << incrementation << endl;
-            }
-          
-        // cout << "8) Fin du while. Creation de la map avec les feasibles W" << endl;
-          map <float,float>* mapHW = new map <float,float>();
-          float h = 0; 
-          for (list<float>::iterator it1 = feasibleW.begin(); it1 != feasibleW.end(); it1++)
-            {
-              cout << "wActual is: " << (*it1) << endl;
-              h = 0;
-              for (vector<SlicingNode*>::iterator it2 = _children.begin(); it2 != _children.end(); it2++)
-                {
-                  h += (*it2)->getPairW((*it1)).first;
-                }
-              mapHW->insert(pair<float,float>(h,(*it1)));
             }
           _mapHW = mapHW;
-          _h = mapHW->begin()->first;
-          _w = mapHW->begin()->second;
         }
     }
 }
