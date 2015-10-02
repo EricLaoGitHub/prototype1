@@ -7,23 +7,17 @@
 
 using namespace std;
 
-map <float,float>* setMapW(map <float,float>* mapL)
-{
-  map <float,float>* mapW = new map <float,float>();
-  map <float,float>::const_iterator itL = mapL->begin();
-  for (; itL != mapL->end(); itL++)
-  {
-    mapW->insert(pair<float,float>( itL->second, itL->first ));
-  }
-  return mapW;
-}
-
-map <float,float>* createMapH(float widthmin, float widthmax, float heightmin, float heightmax, float nmax)
+map<float, vector< vector<float> > >* createMapH(float widthmin, float widthmax, float heightmin, float heightmax, float nmax)
 {
   float ldelta = (widthmax-widthmin)/nmax;
   float hdelta = (heightmax-heightmin)/nmax;
-  map <float,float>* mapL = new map <float,float>();
-  for (int i = 0; i <= nmax; i++){ mapL->insert(pair<float,float>(heightmax-hdelta*i, widthmin+ldelta*i)); }
+  map<float, vector< vector<float> > >* mapL = new map<float, vector< vector<float> > >();
+  for (int i = 0; i <= nmax; i++){ 
+    vector< vector<float> > vec;
+    vector<float>           vec2;
+    vec.push_back(vec2.push_back(widthmin+ldelta*i));
+    mapL->insert(pair<float,float>(heightmax-hdelta*i, vec)); 
+  }
   return mapL;
 }
 void createSlicingTreeData(SlicingNode* data, float tab[][4], int& i)
@@ -51,32 +45,25 @@ int main(int argc, char* argv[])
 
 
   cout << " -------------- DP12 -------------- " << endl;
-  map <float,float>* mapHWDP12 = createMapH(wMinDP12,wMaxDP12,hMinDP12,hMaxDP12,NDP12);
-  //map <float,float>* mapWDP12 = setMapW(mapHDP12);
+  map<float, vector < vector<float> > >* mapHWDP12 = createMapH(wMinDP12,wMaxDP12,hMinDP12,hMaxDP12,NDP12);
   
   cout << " -------------- CM34 -------------- " << endl;
-  map <float,float>* mapHWCM34 = createMapH(wMinCM34,wMaxCM34,hMinCM34,hMaxCM34,NCM34);
-  //map <float,float>* mapWCM34 = setMapW(mapHCM34);
+  map<float, vector < vector<float> > >* mapHWCM34 = createMapH(wMinCM34,wMaxCM34,hMinCM34,hMaxCM34,NCM34);
 
   cout << " -------------- M5 -------------- " << endl;
-  map <float,float>* mapHWM5 = createMapH(wMinM5,wMaxM5,hMinM5,hMaxM5,NM5);
-  //map <float,float>* mapWM5 = setMapW(mapHM5);
+  map<float, vector < vector<float> > >* mapHWM5 = createMapH(wMinM5,wMaxM5,hMinM5,hMaxM5,NM5);
 
   cout << " -------------- M6 -------------- " << endl;
-  map <float,float>* mapHWM6 = createMapH(wMinM6,wMaxM6,hMinM6,hMaxM6,NM6);
-  //map <float,float>* mapWM6 = setMapW(mapHM6);
+  map<float, vector < vector<float> > >* mapHWM6 = createMapH(wMinM6,wMaxM6,hMinM6,hMaxM6,NM6);
   
   cout << " -------------- M7 -------------- " << endl;
-  map <float,float>* mapHWM7 = createMapH(wMinM7,wMaxM7,hMinM7,hMaxM7,NM7);
-  //map <float,float>* mapWM7 = setMapW(mapHM7);
+  map<float, vector < vector<float> > >* mapHWM7 = createMapH(wMinM7,wMaxM7,hMinM7,hMaxM7,NM7);
   
   cout << " -------------- M8 -------------- " << endl;
-  map <float,float>* mapHWM8 = createMapH(wMinM8,wMaxM8,hMinM8,hMaxM8,NM8);
-  //map <float,float>* mapWM8 = setMapW(mapHM8);
+  map<float, vector < vector<float> > >* mapHWM8 = createMapH(wMinM8,wMaxM8,hMinM8,hMaxM8,NM8);
 
   cout << " -------------- M9 -------------- " << endl;
-  map <float,float>* mapHWM9 = createMapH(wMinM9,wMaxM9,hMinM9,hMaxM9,NM9);
-  //map <float,float>* mapWM9 = setMapW(mapHM9);
+  map<float, vector < vector<float> > >* mapHWM9 = createMapH(wMinM9,wMaxM9,hMinM9,hMaxM9,NM9);
 
   cout << endl;
   cout << " -------------- Build Slicing Tree -------------- " << endl;
@@ -128,13 +115,29 @@ int main(int argc, char* argv[])
 
   cout << "-------------- 2nd Hierarchy -------------- " << endl;
   slicingTree->getChild(2)->printChildren();
+
+
+
+
+
+
+
+
+
+
+
+
+/*
   
   cout << " -------------- Print getPair H & W -------------- " << endl;
+  /* RETEST
   cout << "hvalue= " << hvalue << ", H: " << slicingTree->getChild(2)->getChild(2)->getPairH(hvalue).first << ", W: " << slicingTree->getChild(2)->getChild(2)->getPairH(hvalue).second << endl;
   cout << "wvalue= " << wvalue << ", H: " << slicingTree->getChild(2)->getChild(2)->getPairW(wvalue).first << ", W: " << slicingTree->getChild(2)->getChild(2)->getPairW(wvalue).second << endl;
-
+  */
+/*
+  
   cout << " -------------- End -------------- " << endl;
-
+*/
   // Writing Datas in a file to be plotted in matlab 
   ofstream myfile;
   myfile.open (SlicingTreeData);
@@ -148,10 +151,15 @@ int main(int argc, char* argv[])
     }
   myfile.close();
 
+/*
   slicingTree->getChild(2)->setTolerance(0.5);
   slicingTree->getChild(2)->updateBandSize();
   cout << " -------------- Print Root -------------- " << endl;
   slicingTree->getChild(2)->print();
+*/
+
+
+
 //cout << " -------------- Print Children -------------- " << endl;
 //slicingTree->printChildren();
 
@@ -171,6 +179,8 @@ int main(int argc, char* argv[])
   itlow=mymap.upper_bound ('e');  
   if (itlow==mymap.end())
   cout <<"True"<< endl;*/
+
+
 
 
 

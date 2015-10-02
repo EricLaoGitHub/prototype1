@@ -2,10 +2,11 @@
 
 using namespace std;
 
+
 // class Node
-SlicingNode::SlicingNode(
+SlicingNode::SlicingNode(//to be modified
                          SlicingType       type, 
-                         map<float,float>* mapHW,
+                         map<float, vector< vector<float> > >* mapHW,
                          CenteringType     c, 
                          float             x, 
                          float             y, 
@@ -18,24 +19,25 @@ SlicingNode::SlicingNode(
                           _w(w),
                           _h(h)
 { 
-  if (mapHW == NULL){ _mapHW = new map <float,float>(); } 
+  if (mapHW == NULL){ _mapHW = new map<float, vector< vector<float> > >(); } 
   else              { _mapHW = mapHW; }
 } 
 SlicingNode::~SlicingNode(){}
 
-SlicingType       SlicingNode::getType         ()        const { return _type; }
-float             SlicingNode::getWidth        ()        const { return _w; }
-float             SlicingNode::getHeight       ()        const { return _h; }
-float             SlicingNode::getX            ()        const { return _x; }
-float             SlicingNode::getY            ()        const { return _y; }
-CenteringType     SlicingNode::getCenteringType()        const { return _c; }
-map<float,float>* SlicingNode::getmapHW        ()        const { return _mapHW; }
+SlicingType                           SlicingNode::getType         () const { return _type; }
+float                                 SlicingNode::getWidth        () const { return _w; }
+float                                 SlicingNode::getHeight       () const { return _h; }
+float                                 SlicingNode::getX            () const { return _x; }
+float                                 SlicingNode::getY            () const { return _y; }
+CenteringType                         SlicingNode::getCenteringType() const { return _c; }
+map<float, vector< vector<float> > >* SlicingNode::getmapHW        () const { return _mapHW; }
 
-pair<float,float> SlicingNode::getPairH(float h) const 
+// RETEST
+pair<float, vector< vector<float> > > SlicingNode::getPairH(float h) const
 {
-  float w        = 0;
-  float hclosest = 0;
-  for (map <float,float>::const_iterator itHW = _mapHW->begin(); itHW != _mapHW->end(); itHW++)
+  vector< vector<float> > w        = 0;
+  float                   hclosest = 0;
+  for (map<float, vector< vector<float> > >::const_iterator itHW = _mapHW->begin(); itHW != _mapHW->end(); itHW++)
     { 
       if ( (itHW->first > hclosest) && (h >= itHW->first) )
         {
@@ -43,14 +45,14 @@ pair<float,float> SlicingNode::getPairH(float h) const
           w        = itHW->second;
         }
     }
-  return pair<float,float>(hclosest,w);
+  return pair<float, vector< vector<float> > >(hclosest,w);
 }
 
-pair<float,float> SlicingNode::getPairW(float w) const 
+pair<float, vector< vector<float> > > SlicingNode::getPairW(float w) const 
 {
-  float wclosest = 0;
-  float h        = 0;
-  for (map <float,float>::const_iterator itHW = _mapHW->begin(); itHW != _mapHW->end(); itHW++)
+  float                   wclosest = 0;
+  vector< vector<float> > h        = 0;
+  for (map<float, vector< vector<float> > >::const_iterator itHW = _mapHW->begin(); itHW != _mapHW->end(); itHW++)
     { 
       if ( (itHW->second > wclosest) && (w >= itHW->second) )
         {
@@ -58,21 +60,21 @@ pair<float,float> SlicingNode::getPairW(float w) const
           wclosest = itHW->second;
         }
     }
-  return pair<float,float>(h,wclosest);
+  return pair<float, vector< vector<float> > >(h,wclosest);
 }
 
 void SlicingNode::setPairH(float h)
 {
-  pair<float,float> hw = this->getPairH(h);
-  _h                   = hw.first;
-  _w                   = hw.second;
+  pair<float, vector< vector<float> > > hw = this->getPairH(h);
+  _h = hw.first;
+  _w = hw.second;
 }
 
 void SlicingNode::setPairW(float w)
 {
-  pair<float,float> hw = this->getPairW(w);
-  _h                   = hw.first;
-  _w                   = hw.second;
+  pair<float, vector< vector<float> > > hw = this->getPairW(w);
+  _h = hw.first;
+  _w = hw.second;
 }
 
 void SlicingNode::setWidth        (float w)        { _w = w; }
@@ -81,7 +83,7 @@ void SlicingNode::setX            (float x)        { _x = x; }
 void SlicingNode::setY            (float y)        { _y = y; }
 void SlicingNode::setCenteringType(CenteringType c){ _c = c; }
 
-void SlicingNode::print() const
+void SlicingNode::print() const //RETEST
 {
   cout << "- Print from Slicing Node- " << endl;
   if      (_type == Horizontal )
@@ -117,7 +119,18 @@ void SlicingNode::print() const
   cout << endl;
 
   cout << "MapHW:" << endl;
-  for (map <float,float>::const_iterator itHW = _mapHW->begin(); itHW != _mapHW->end(); itHW++){ cout << "H = " << itHW->first << ", W = " << itHW->second << endl;}
+  for (map<float, vector< vector<float> > >::const_iterator itHW = _mapHW->begin(); itHW != _mapHW->end(); itHW++)
+    { 
+      cout << "H = " << itHW->first << ", W = ";
+      int wcount = 0;
+      for (size_t i = 0; i < itHW->second.size(); i++)
+        {
+          if (i != 0){cout << '+';}
+          cout << itHW->second[i];
+          wcount += itHW->second[i];
+        }
+      cout << " = " << wcount << endl;  
+    }
   cout << endl;
 }
 
@@ -160,12 +173,12 @@ void HVSlicingNode::createPushBackNode(
     }
 }
 void HVSlicingNode::createPushBackDevice(
-                                         map<float,float>* mapHW,  
-                                         CenteringType     c,
-                                         float             x, 
-                                         float             y, 
-                                         float             w, 
-                                         float             h
+                                         map<float, vector< vector<float> > >* mapHW,  
+                                         CenteringType                         c,
+                                         float                                 x, 
+                                         float                                 y, 
+                                         float                                 w, 
+                                         float                                 h
                                         )
 { 
   this->pushBackNode(DSlicingNode::create(mapHW,c,x,y,w,h)); }
@@ -337,7 +350,7 @@ void  HVSlicingNode::setAllTolerance(float tolerance)
 }
 float HVSlicingNode::getTolerance() const         { return _tolerance; }
 
-void HVSlicingNode::updateBandSize()
+void HVSlicingNode::updateBandSize()//to be modified
 {
   for (vector<SlicingNode*>::iterator it = _children.begin(); it != _children.end(); it++)
     {
@@ -358,32 +371,32 @@ void HVSlicingNode::updateBandSize()
            4) Traitement classique apres en rangeant la combinaison de solution en cours en utilisant les methodes de <list>
            5) Ajout à la mapHW
          */
-          vector<map<float,float>*> childrenmapHW;
+          vector<map<float, vector< vector<float> > >* > childrenmapHW;
           for (vector<SlicingNode*>::iterator itSN = _children.begin(); itSN != _children.end(); itSN++)
             {
               childrenmapHW.push_back( (*itSN)->getmapHW() );
             }
           
-          vector< pair<float,float> > childrenpair;
-          for (vector< map<float,float>* >::iterator it = childrenmapHW.begin(); it != childrenmapHW.end(); it++)
+          vector< pair<float, vector<float> > > childrenpair;
+          for (vector< map<float, vector< vector<float> > >* >::iterator it = childrenmapHW.begin(); it != childrenmapHW.end(); it++)
             {
-              childrenpair.push_back(pair<float,float>((*it)->begin()->first,(*it)->begin()->second));
+              childrenpair.push_back(pair<float,vector< vector<float> > >((*it)->begin()->first,(*it)->begin()->second));
             }
           
           int   index     = 0;
           float hmin                 = (*childrenmapHW.begin())->upper_bound(index)->first; // H from the first map
           float hmax                 = (*childrenmapHW.begin())->upper_bound(index)->first;
           
-          list< pair<float,float> > currentHs = list< pair<float,float> >();
-          vector <int> modulos                = vector<int>();
-          int modulo                          = 1;
-          int counter                         = 0;
-          int endCounter                      = 1;
-          float currentW                      = 0;
-          map <float,float>* mapHW            = new map <float,float>();
+          list< pair<float,float> > currentHs  = list< pair<float,float> >();
+          vector <int>              modulos    = vector<int>();
+          int                       modulo     = 1;
+          int                       counter    = 0;
+          int                       endCounter = 1;
+          float                     currentW   = 0;
+          map <float,float>*        mapHW      = new map <float,float>();
 
           modulos.push_back(0);
-          for (vector<map<float,float>*>::iterator itmap = childrenmapHW.begin(); itmap != childrenmapHW.end(); itmap++)
+          for (vector<map<float, vector< vector<float> > > >::iterator itmap = childrenmapHW.begin(); itmap != childrenmapHW.end(); itmap++)
             {
               if (itmap != childrenmapHW.begin())
                 {
@@ -400,7 +413,7 @@ void HVSlicingNode::updateBandSize()
               currentHs                                    = list< pair<float,float> >();
               currentW                                     = 0;
 
-              for (vector<map<float,float>*>::iterator itmap = childrenmapHW.begin(); itmap != childrenmapHW.end(); itmap++)
+              for (vector<map<float, vector< vector<float> > >>::iterator itmap = childrenmapHW.begin(); itmap != childrenmapHW.end(); itmap++)
                 {
                   currentHs.push_back(pair<float,float>((*itpair).first,(*itpair).second));
                   currentW += (*itpair).second;
@@ -459,14 +472,14 @@ void HVSlicingNode::updateBandSize()
         }
       else if (this->getType() == Horizontal)
         {
-          vector<map<float,float>*> childrenmapHW;
+          vector<map<float, vector< vector<float> > >> childrenmapHW;
           for (vector<SlicingNode*>::iterator itSN = _children.begin(); itSN != _children.end(); itSN++)
             {
               childrenmapHW.push_back( (*itSN)->getmapHW() );
             }
           
           vector< pair<float,float> > childrenpair;
-          for (vector< map<float,float>* >::iterator it = childrenmapHW.begin(); it != childrenmapHW.end(); it++)
+          for (vector< map<float, vector< vector<float> > > >::iterator it = childrenmapHW.begin(); it != childrenmapHW.end(); it++)
             {
               childrenpair.push_back(pair<float,float>((*it)->begin()->first,(*it)->begin()->second));
             }
@@ -484,7 +497,7 @@ void HVSlicingNode::updateBandSize()
           map <float,float>* mapHW            = new map <float,float>();
 
           modulos.push_back(0);
-          for (vector<map<float,float>*>::iterator itmap = childrenmapHW.begin(); itmap != childrenmapHW.end(); itmap++)
+          for (vector<map<float, vector< vector<float> > >>::iterator itmap = childrenmapHW.begin(); itmap != childrenmapHW.end(); itmap++)
             {
               if (itmap != childrenmapHW.begin())
                 {
@@ -501,7 +514,7 @@ void HVSlicingNode::updateBandSize()
               currentWs                                    = list< pair<float,float> >();
               currentH                                     = 0;
 
-              for (vector<map<float,float>*>::iterator itmap = childrenmapHW.begin(); itmap != childrenmapHW.end(); itmap++)
+              for (vector<map<float, vector< vector<float> > > >::iterator itmap = childrenmapHW.begin(); itmap != childrenmapHW.end(); itmap++)
                 {
                   currentWs.push_back(pair<float,float>((*itpair).second,(*itpair).first));
                   currentH += (*itpair).first;
@@ -616,29 +629,33 @@ VSlicingNode::VSlicingNode(
 VSlicingNode::~VSlicingNode(){}
 
 // class DSlicingNode
-DSlicingNode* DSlicingNode::create(
-                                   map<float,float>* mapHW, 
-                                   CenteringType     c, 
-                                   float             x, 
-                                   float             y, 
-                                   float             w, 
-                                   float             h
+DSlicingNode* DSlicingNode::create(//to be modified
+                                   map<float, vector< vector<float> > >* mapHW, 
+                                   CenteringType                         c, 
+                                   float                                 x, 
+                                   float                                 y, 
+                                   float                                 w, 
+                                   float                                 h
                                   ){ return new DSlicingNode(DeviceNode,mapHW,c,x,y,w,h); }
 
-DSlicingNode::DSlicingNode(
-                           SlicingType       type, 
-                           map<float,float>* mapHW, 
-                           CenteringType     c,
-                           float             x, 
-                           float             y, 
-                           float             w, 
-                           float             h
+DSlicingNode::DSlicingNode(//to be modified
+                           SlicingType                           type, 
+                           map<float, vector< vector<float> > >* mapHW, 
+                           CenteringType                         c,
+                           float                                 x, 
+                           float                                 y, 
+                           float                                 w, 
+                           float                                 h
                           ):SlicingNode(type,mapHW,c,x,y,w,h)
 {
   if ((w == 0)&&(h == 0))
     {
       _h = _mapHW->begin()->first;
-      _w = _mapHW->begin()->second;
+      _w = 0;
+      for (size_t i = 0; i < _mapHW->begin()->second[0].size(); i++)
+        {
+          _w += _mapHW->begin()->second[0][1];
+        }
     }
 }
 DSlicingNode::~DSlicingNode(){}
@@ -668,16 +685,16 @@ void DSlicingNode::createPushBackNode(
   cerr << " Error(createPushBackNode(SlicingType type, CenteringType c, float tolerance, float x, float y, float w, float h)): Device do not have child." << endl;
 }
 
-void DSlicingNode::createPushBackDevice(
-                                        map<float,float>* mapHW, 
-                                        CenteringType     c, 
-                                        float             x, 
-                                        float             y, 
-                                        float             w, 
-                                        float             h
+void DSlicingNode::createPushBackDevice(//to be modified
+                                        map<float, vector< vector<float> > >* mapHW, 
+                                        CenteringType                         c, 
+                                        float                                 x, 
+                                        float                                 y, 
+                                        float                                 w, 
+                                        float                                 h
                                        )
 {
-  cerr << " Error(createPushBackNode(map<float,float>* mapHW, CenteringType c, float x, float y, float w, float h)): Device do not have child." << endl;
+  cerr << " Error(createPushBackNode(map<float, vector< vector<float> > >* mapHW, CenteringType c, float x, float y, float w, float h)): Device do not have child." << endl;
 }
 
 int DSlicingNode::getNbChild() const
@@ -736,7 +753,6 @@ float DSlicingNode::getTolerance() const
  cerr << " Error(DSlicingNode::getTolerance()): Device do not have tolerance parameter." << endl;
  return 0;
 }
-
 
 void DSlicingNode::updateBandSize(){} // just do nothing
 
