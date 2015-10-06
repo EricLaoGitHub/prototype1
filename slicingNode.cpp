@@ -2,11 +2,10 @@
 
 using namespace std;
 
-
 // class Node
-SlicingNode::SlicingNode(//to be modified
+SlicingNode::SlicingNode(
                          SlicingType       type, 
-                         map<float, vector< vector<float> > >* mapHW,
+                         map<float,float>* mapHW,
                          CenteringType     c, 
                          float             x, 
                          float             y, 
@@ -19,25 +18,24 @@ SlicingNode::SlicingNode(//to be modified
                           _w(w),
                           _h(h)
 { 
-  if (mapHW == NULL){ _mapHW = new map<float, vector< vector<float> > >(); } 
+  if (mapHW == NULL){ _mapHW = new map <float,float>(); } 
   else              { _mapHW = mapHW; }
 } 
 SlicingNode::~SlicingNode(){}
 
-SlicingType                           SlicingNode::getType         () const { return _type; }
-float                                 SlicingNode::getWidth        () const { return _w; }
-float                                 SlicingNode::getHeight       () const { return _h; }
-float                                 SlicingNode::getX            () const { return _x; }
-float                                 SlicingNode::getY            () const { return _y; }
-CenteringType                         SlicingNode::getCenteringType() const { return _c; }
-map<float, vector< vector<float> > >* SlicingNode::getmapHW        () const { return _mapHW; }
+SlicingType       SlicingNode::getType         ()        const { return _type; }
+float             SlicingNode::getWidth        ()        const { return _w; }
+float             SlicingNode::getHeight       ()        const { return _h; }
+float             SlicingNode::getX            ()        const { return _x; }
+float             SlicingNode::getY            ()        const { return _y; }
+CenteringType     SlicingNode::getCenteringType()        const { return _c; }
+map<float,float>* SlicingNode::getmapHW        ()        const { return _mapHW; }
 
-// RETEST
-pair<float, vector< vector<float> > > SlicingNode::getPairH(float h) const
+pair<float,float> SlicingNode::getPairH(float h) const 
 {
-  vector< vector<float> > w        = 0;
-  float                   hclosest = 0;
-  for (map<float, vector< vector<float> > >::const_iterator itHW = _mapHW->begin(); itHW != _mapHW->end(); itHW++)
+  float w        = 0;
+  float hclosest = 0;
+  for (map <float,float>::const_iterator itHW = _mapHW->begin(); itHW != _mapHW->end(); itHW++)
     { 
       if ( (itHW->first > hclosest) && (h >= itHW->first) )
         {
@@ -45,14 +43,14 @@ pair<float, vector< vector<float> > > SlicingNode::getPairH(float h) const
           w        = itHW->second;
         }
     }
-  return pair<float, vector< vector<float> > >(hclosest,w);
+  return pair<float,float>(hclosest,w);
 }
 
-pair<float, vector< vector<float> > > SlicingNode::getPairW(float w) const 
+pair<float,float> SlicingNode::getPairW(float w) const 
 {
-  float                   wclosest = 0;
-  vector< vector<float> > h        = 0;
-  for (map<float, vector< vector<float> > >::const_iterator itHW = _mapHW->begin(); itHW != _mapHW->end(); itHW++)
+  float wclosest = 0;
+  float h        = 0;
+  for (map <float,float>::const_iterator itHW = _mapHW->begin(); itHW != _mapHW->end(); itHW++)
     { 
       if ( (itHW->second > wclosest) && (w >= itHW->second) )
         {
@@ -60,21 +58,21 @@ pair<float, vector< vector<float> > > SlicingNode::getPairW(float w) const
           wclosest = itHW->second;
         }
     }
-  return pair<float, vector< vector<float> > >(h,wclosest);
+  return pair<float,float>(h,wclosest);
 }
 
 void SlicingNode::setPairH(float h)
 {
-  pair<float, vector< vector<float> > > hw = this->getPairH(h);
-  _h = hw.first;
-  _w = hw.second;
+  pair<float,float> hw = this->getPairH(h);
+  _h                   = hw.first;
+  _w                   = hw.second;
 }
 
 void SlicingNode::setPairW(float w)
 {
-  pair<float, vector< vector<float> > > hw = this->getPairW(w);
-  _h = hw.first;
-  _w = hw.second;
+  pair<float,float> hw = this->getPairW(w);
+  _h                   = hw.first;
+  _w                   = hw.second;
 }
 
 void SlicingNode::setWidth        (float w)        { _w = w; }
@@ -83,7 +81,7 @@ void SlicingNode::setX            (float x)        { _x = x; }
 void SlicingNode::setY            (float y)        { _y = y; }
 void SlicingNode::setCenteringType(CenteringType c){ _c = c; }
 
-void SlicingNode::print() const //RETEST
+void SlicingNode::print() const
 {
   cout << "- Print from Slicing Node- " << endl;
   if      (_type == Horizontal )
@@ -119,18 +117,7 @@ void SlicingNode::print() const //RETEST
   cout << endl;
 
   cout << "MapHW:" << endl;
-  for (map<float, vector< vector<float> > >::const_iterator itHW = _mapHW->begin(); itHW != _mapHW->end(); itHW++)
-    { 
-      cout << "H = " << itHW->first << ", W = ";
-      int wcount = 0;
-      for (size_t i = 0; i < itHW->second.size(); i++)
-        {
-          if (i != 0){cout << '+';}
-          cout << itHW->second[i];
-          wcount += itHW->second[i];
-        }
-      cout << " = " << wcount << endl;  
-    }
+  for (map <float,float>::const_iterator itHW = _mapHW->begin(); itHW != _mapHW->end(); itHW++){ cout << "H = " << itHW->first << ", W = " << itHW->second << endl;}
   cout << endl;
 }
 
@@ -173,12 +160,12 @@ void HVSlicingNode::createPushBackNode(
     }
 }
 void HVSlicingNode::createPushBackDevice(
-                                         map<float, vector< vector<float> > >* mapHW,  
-                                         CenteringType                         c,
-                                         float                                 x, 
-                                         float                                 y, 
-                                         float                                 w, 
-                                         float                                 h
+                                         map<float,float>* mapHW,  
+                                         CenteringType     c,
+                                         float             x, 
+                                         float             y, 
+                                         float             w, 
+                                         float             h
                                         )
 { 
   this->pushBackNode(DSlicingNode::create(mapHW,c,x,y,w,h)); }
@@ -350,11 +337,11 @@ void  HVSlicingNode::setAllTolerance(float tolerance)
 }
 float HVSlicingNode::getTolerance() const         { return _tolerance; }
 
-void HVSlicingNode::updateBandSize()//to be modified
+void HVSlicingNode::updateGlobalSize()
 {
   for (vector<SlicingNode*>::iterator it = _children.begin(); it != _children.end(); it++)
     {
-      (*it)->updateBandSize();
+      (*it)->updateGlobalSize();
     }
 
   if (this->getNbChild() == 1)
@@ -365,56 +352,67 @@ void HVSlicingNode::updateBandSize()//to be modified
     {        
       if (this->getType() == Vertical)
         {
-        /* 1) On recupère les maps
-           2) On utilise la vector de pair <float,float> commme liste d'iterateur
-           3) On incremente toujours l'iterator en fonction du modulo (combinaison)
-           4) Traitement classique apres en rangeant la combinaison de solution en cours en utilisant les methodes de <list>
-           5) Ajout à la mapHW
-         */
-          vector<map<float, vector< vector<float> > >* > childrenmapHW;
+        // Clear the content of the map
+          _mapHW->clear(); 
+
+        // childrenHW contains the map from each children.
+          vector<map<float,float>*> childrenmapHW;
           for (vector<SlicingNode*>::iterator itSN = _children.begin(); itSN != _children.end(); itSN++)
             {
               childrenmapHW.push_back( (*itSN)->getmapHW() );
             }
-          
-          vector< pair<float, vector<float> > > childrenpair;
-          for (vector< map<float, vector< vector<float> > >* >::iterator it = childrenmapHW.begin(); it != childrenmapHW.end(); it++)
+        // childrenpair represents 1 state of the combinations
+          vector< pair<float,float> > childrenpair;
+          for (vector< map<float,float>* >::iterator it = childrenmapHW.begin(); it != childrenmapHW.end(); it++)
             {
-              childrenpair.push_back(pair<float,vector< vector<float> > >((*it)->begin()->first,(*it)->begin()->second));
+              childrenpair.push_back(pair<float,float>((*it)->begin()->first,(*it)->begin()->second));
             }
           
-          int   index     = 0;
-          float hmin                 = (*childrenmapHW.begin())->upper_bound(index)->first; // H from the first map
-          float hmax                 = (*childrenmapHW.begin())->upper_bound(index)->first;
+          int   index = 0; // index used to modify childrenpair content
+          float hmin  = (*childrenmapHW.begin())->upper_bound(index)->first; // min height from the current combinations
+          float hmax  = (*childrenmapHW.begin())->upper_bound(index)->first; // max height from the current combinations
           
-          list< pair<float,float> > currentHs  = list< pair<float,float> >();
-          vector <int>              modulos    = vector<int>();
-          int                       modulo     = 1;
-          int                       counter    = 0;
-          int                       endCounter = 1;
-          float                     currentW   = 0;
-          map <float,float>*        mapHW      = new map <float,float>();
+          list< pair<float,float> >             currentHs  = list< pair<float,float> >(); // heights from the current combination
+          vector <int>                          modulos    = vector<int>();               // vectors of the modulos
+          int                                   modulo     = 1;                           // to calculate modulos
+          int                                   counter    = 0;                           
+          int                                   endCounter = 1;
+          float                                 currentW   = 0;                           // total width of the current combination
+          vector< pair<float,float> >::iterator itpair     = childrenpair.begin();        // iterator to go through childrenpair
 
+        // Set the modulos
           modulos.push_back(0);
-          for (vector<map<float, vector< vector<float> > > >::iterator itmap = childrenmapHW.begin(); itmap != childrenmapHW.end(); itmap++)
+          for (vector<map<float,float>*>::iterator itmap = childrenmapHW.begin(); itmap != childrenmapHW.end(); itmap++)
             {
-              if (itmap != childrenmapHW.begin())
-                {
-                  modulos.push_back(modulo);
-                }
+              if (itmap != childrenmapHW.begin()){ modulos.push_back(modulo); }
               modulo *= (*itmap)->size();
               endCounter *= (*itmap)->size();
             }
 
           while( counter != endCounter )
             {
-              index                                        = 0;
-              vector< pair<float,float> >::iterator itpair = childrenpair.begin();
-              currentHs                                    = list< pair<float,float> >();
-              currentW                                     = 0;
+            //cout << "----------- Start -----------" << endl;
+            //cout << "counter = " << counter << endl;
 
-              for (vector<map<float, vector< vector<float> > >>::iterator itmap = childrenmapHW.begin(); itmap != childrenmapHW.end(); itmap++)
+            // Need to be reset at each loop
+              index     = 0;
+              itpair    = childrenpair.begin();
+              currentHs = list< pair<float,float> >();
+              currentW  = 0;
+
+            /* We go through all the possible combinations (childrenmap). childrenpair represent 1 combinations.
+               For each combinations, we find the max height and its corresponding width.
+               Once found, we check if it's already in the map, if no, we add this pair
+               Otherwise we check if the pair <max heigh, width> has a higher width than the previous one, if yes, we add it.
+             */
+
+              for (vector<map<float,float>*>::iterator itmap = childrenmapHW.begin(); itmap != childrenmapHW.end(); itmap++)
                 {
+                /*cout << "Element: " << index << endl;
+                  cout << "h = " << (*itpair).first << endl;
+                  cout << "w = " << (*itpair).second << endl;
+                */
+
                   currentHs.push_back(pair<float,float>((*itpair).first,(*itpair).second));
                   currentW += (*itpair).second;
                   if (itmap == childrenmapHW.begin())
@@ -455,6 +453,7 @@ void HVSlicingNode::updateBandSize()//to be modified
                             }
                         }
                     }
+
                   index++;
                   itpair++;
                 }
@@ -463,59 +462,89 @@ void HVSlicingNode::updateBandSize()//to be modified
               hmin = currentHs.front().first;
               hmax = currentHs.back().first;
 
+            /*cout << "----------- Result -----------" << endl;
+              cout << "hmax = " << hmax << endl;
+              cout << "hmin = " << hmin << endl;
+            */
+
               if ((hmax-hmin) <= _tolerance)
                 {
-                  mapHW->insert(pair<float,float> ( currentHs.back().first, currentW) );
+                //cout << "Add-or-not" << endl;
+
+                  if ( _mapHW->find(currentHs.back().first) != _mapHW->end() )
+                    {
+                      if ( (*_mapHW->find(currentHs.back().first)).second < currentW )
+                        { 
+                        /*cout << "We add a new pair" << endl;
+                          cout << "Previous pair: h = " <<(*_mapHW->find(currentHs.back().first)).first << ", w = " << (*_mapHW->find(currentHs.back().first)).second << endl;
+                          cout << "New pair: h = " << currentHs.back().first << ", w = " << currentW << endl;
+                        */
+                          _mapHW->insert(pair<float,float> ( currentHs.back().first, currentW) ); 
+                        }
+                    }
+                  else 
+                    { 
+                    //cout << "New pair: h = " << currentHs.back().first << ", w = " << currentW << endl;
+                      _mapHW->insert(pair<float,float> ( currentHs.back().first, currentW) ); 
+                    }
                 }
             }
-          _mapHW = mapHW;
         }
       else if (this->getType() == Horizontal)
         {
-          vector<map<float, vector< vector<float> > >> childrenmapHW;
+        // Similar to Vertical type but instead, we pay attention to the width instead of the height
+
+          _mapHW->clear(); 
+
+          vector<map<float,float>*> childrenmapHW;
           for (vector<SlicingNode*>::iterator itSN = _children.begin(); itSN != _children.end(); itSN++)
             {
               childrenmapHW.push_back( (*itSN)->getmapHW() );
             }
           
           vector< pair<float,float> > childrenpair;
-          for (vector< map<float, vector< vector<float> > > >::iterator it = childrenmapHW.begin(); it != childrenmapHW.end(); it++)
+          for (vector< map<float,float>* >::iterator it = childrenmapHW.begin(); it != childrenmapHW.end(); it++)
             {
               childrenpair.push_back(pair<float,float>((*it)->begin()->first,(*it)->begin()->second));
             }
          
-          int   index     = 0;
-          float wmin                 = (*childrenmapHW.begin())->upper_bound(index)->second; 
-          float wmax                 = (*childrenmapHW.begin())->upper_bound(index)->second;
+          int   index = 0;
+          float wmin  = (*childrenmapHW.begin())->upper_bound(index)->second; 
+          float wmax  = (*childrenmapHW.begin())->upper_bound(index)->second;
           
-          list< pair<float,float> > currentWs = list< pair<float,float> >();
-          vector <int> modulos                = vector<int>();
-          int modulo                          = 1;
-          int counter                         = 0;
-          int endCounter                      = 1;
-          float currentH                      = 0;
-          map <float,float>* mapHW            = new map <float,float>();
+          list< pair<float,float> >             currentWs  = list< pair<float,float> >();
+          vector <int>                          modulos    = vector<int>();
+          int                                   modulo     = 1;
+          int                                   counter    = 0;
+          int                                   endCounter = 1;
+          float                                 currentH   = 0;
+          vector< pair<float,float> >::iterator itpair     = childrenpair.begin();
 
           modulos.push_back(0);
-          for (vector<map<float, vector< vector<float> > >>::iterator itmap = childrenmapHW.begin(); itmap != childrenmapHW.end(); itmap++)
+          for (vector<map<float,float>*>::iterator itmap = childrenmapHW.begin(); itmap != childrenmapHW.end(); itmap++)
             {
-              if (itmap != childrenmapHW.begin())
-                {
-                  modulos.push_back(modulo);
-                }
+              if (itmap != childrenmapHW.begin()){ modulos.push_back(modulo);}
               modulo *= (*itmap)->size();
               endCounter *= (*itmap)->size();
             }
 
           while( counter != endCounter )
             {
-              index                                        = 0;
-              vector< pair<float,float> >::iterator itpair = childrenpair.begin();
-              currentWs                                    = list< pair<float,float> >();
-              currentH                                     = 0;
+            //cout << "----------- Start -----------" << endl;
+            //cout << "counter = " << counter << endl;
 
-              for (vector<map<float, vector< vector<float> > > >::iterator itmap = childrenmapHW.begin(); itmap != childrenmapHW.end(); itmap++)
+              index     = 0;
+              itpair    = childrenpair.begin();
+              currentWs = list< pair<float,float> >();
+              currentH  = 0;
+
+              for (vector<map<float,float>*>::iterator itmap = childrenmapHW.begin(); itmap != childrenmapHW.end(); itmap++)
                 {
+                /*cout << "Element: " << index << endl;
+                  cout << "h = " << (*itpair).first << endl;
+                  cout << "w = " << (*itpair).second << endl;
+                */
+
                   currentWs.push_back(pair<float,float>((*itpair).second,(*itpair).first));
                   currentH += (*itpair).first;
                   if (itmap == childrenmapHW.begin())
@@ -564,12 +593,34 @@ void HVSlicingNode::updateBandSize()//to be modified
               wmin = currentWs.front().first;
               wmax = currentWs.back().first;
 
+            /*cout << "----------- Result -----------" << endl;
+              cout << "wmax = " << wmax << endl;
+              cout << "wmin = " << wmin << endl;
+            */
+
               if ((wmax-wmin) <= _tolerance)
                 {
-                  mapHW->insert(pair<float,float> ( currentH, currentWs.back().second) );
+                //cout << "Add-or-not" << endl;
+
+                  if ( _mapHW->find(currentH) != _mapHW->end() )
+                    {
+                      if ( (*_mapHW->find(currentH)).second < currentWs.back().second )
+                        {  
+                        /*cout << "We add a new pair" << endl;
+                          cout << "Previous pair: h = " << currentH << ", w = " << (*_mapHW->find(currentH)).second << endl;
+                          cout << "New pair: h = " <<  currentH << ", w = " <<  currentWs.back().second << endl;
+                        */
+                          _mapHW->insert(pair<float,float> ( currentH, currentWs.back().second) ); 
+                        }
+                    }
+                  else 
+                    { 
+                    //cout << "New pair: h = " <<  currentH << ", w = " <<  currentWs.back().second << endl;
+                      
+                      _mapHW->insert(pair<float,float> ( currentH, currentWs.back().second) ); 
+                    }
                 }
             }
-          _mapHW = mapHW;
         }
     }
 }
@@ -629,33 +680,29 @@ VSlicingNode::VSlicingNode(
 VSlicingNode::~VSlicingNode(){}
 
 // class DSlicingNode
-DSlicingNode* DSlicingNode::create(//to be modified
-                                   map<float, vector< vector<float> > >* mapHW, 
-                                   CenteringType                         c, 
-                                   float                                 x, 
-                                   float                                 y, 
-                                   float                                 w, 
-                                   float                                 h
+DSlicingNode* DSlicingNode::create(
+                                   map<float,float>* mapHW, 
+                                   CenteringType     c, 
+                                   float             x, 
+                                   float             y, 
+                                   float             w, 
+                                   float             h
                                   ){ return new DSlicingNode(DeviceNode,mapHW,c,x,y,w,h); }
 
-DSlicingNode::DSlicingNode(//to be modified
-                           SlicingType                           type, 
-                           map<float, vector< vector<float> > >* mapHW, 
-                           CenteringType                         c,
-                           float                                 x, 
-                           float                                 y, 
-                           float                                 w, 
-                           float                                 h
+DSlicingNode::DSlicingNode(
+                           SlicingType       type, 
+                           map<float,float>* mapHW, 
+                           CenteringType     c,
+                           float             x, 
+                           float             y, 
+                           float             w, 
+                           float             h
                           ):SlicingNode(type,mapHW,c,x,y,w,h)
 {
   if ((w == 0)&&(h == 0))
     {
       _h = _mapHW->begin()->first;
-      _w = 0;
-      for (size_t i = 0; i < _mapHW->begin()->second[0].size(); i++)
-        {
-          _w += _mapHW->begin()->second[0][1];
-        }
+      _w = _mapHW->begin()->second;
     }
 }
 DSlicingNode::~DSlicingNode(){}
@@ -685,16 +732,16 @@ void DSlicingNode::createPushBackNode(
   cerr << " Error(createPushBackNode(SlicingType type, CenteringType c, float tolerance, float x, float y, float w, float h)): Device do not have child." << endl;
 }
 
-void DSlicingNode::createPushBackDevice(//to be modified
-                                        map<float, vector< vector<float> > >* mapHW, 
-                                        CenteringType                         c, 
-                                        float                                 x, 
-                                        float                                 y, 
-                                        float                                 w, 
-                                        float                                 h
+void DSlicingNode::createPushBackDevice(
+                                        map<float,float>* mapHW, 
+                                        CenteringType     c, 
+                                        float             x, 
+                                        float             y, 
+                                        float             w, 
+                                        float             h
                                        )
 {
-  cerr << " Error(createPushBackNode(map<float, vector< vector<float> > >* mapHW, CenteringType c, float x, float y, float w, float h)): Device do not have child." << endl;
+  cerr << " Error(createPushBackNode(map<float,float>* mapHW, CenteringType c, float x, float y, float w, float h)): Device do not have child." << endl;
 }
 
 int DSlicingNode::getNbChild() const
@@ -702,17 +749,20 @@ int DSlicingNode::getNbChild() const
   cerr << " Error(int DSlicingNode::getNbChild()): Device do not have child." << endl;
   return 0;
 }
+
 SlicingNode* DSlicingNode::getChild(int index) const
 {
   cerr << " Error(SlicingNode* DSlicingNode::getChild(int index)): Device do not have child." << endl;
   return NULL;
 }
+
 const vector<SlicingNode*>& DSlicingNode::getChildren() const
 {
   cerr << " Error(vector<SlicingNode*> DSlicingNode::getChildren()): Device do not have child." << endl;
   static vector<SlicingNode*> dummyVectorSlicingNode;
   return dummyVectorSlicingNode;
 }
+
 void DSlicingNode::printChildren()
 {
   cerr << " Error(void DSlicingNode::printChildren()): Device do not have child." << endl;
@@ -721,14 +771,17 @@ void DSlicingNode::addNode(SlicingNode* node, int index)
 {
   cerr << " Error(void DSlicingNode::addNode(SlicingNode* node, int index)): Device do not have child." << endl;
 }
+
 void DSlicingNode::pushBackNode(SlicingNode* node)
 {
   cerr << " Error(void DSlicingNode::pushBackNode(SlicingNode* node)): Device do not have child." << endl;
 }
+
 void DSlicingNode::removeAllNodes()
 {
   cerr << " Error(void DSlicingNode::removeAllNodes()): Device do not have child." << endl;
 }
+
 void DSlicingNode::removeNode(SlicingNode* node)
 {
  cerr << " Error(void DSlicingNode::removeNode(SlicingNode* node)): Device do not have child." << endl;
@@ -754,7 +807,7 @@ float DSlicingNode::getTolerance() const
  return 0;
 }
 
-void DSlicingNode::updateBandSize(){} // just do nothing
+void DSlicingNode::updateGlobalSize(){} // just do nothing
 
 bool DSlicingNode::emptyChildren() const
 {
