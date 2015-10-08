@@ -33,7 +33,6 @@ class SlicingNode
     // Common Virtual
     virtual void print () const;
     virtual void place (float x = 0, float y = 0) = 0;   // Place the node in the plan at (x,y)
-    virtual void _place(float x = 0, float y = 0) = 0;   // Not to be used
     pair<float,float> getPairH          (float h) const; // Given a height, return width
     pair<float,float> getPairW          (float w) const; // Given a width , return height
     void              setPairH          (float h);       // Given a height, set width
@@ -75,8 +74,9 @@ class SlicingNode
     virtual void                        setAllTolerance   (float tolerance)              = 0;
     virtual float                       getTolerance      () const                       = 0;
 
-    virtual void                        updateGlobalSize    ()                             = 0;
-    virtual bool                        emptyChildren     () const                       = 0;
+    virtual bool                        emptyChildrenMap  () const                       = 0;
+    virtual void                        updateGlobalSize  ()                             = 0;
+  //virtual pair<float, float>          setGlobalSize     (float height, float width = 0)= 0;
     // DSlicingNode Virtual
 
   protected:
@@ -140,14 +140,14 @@ class HVSlicingNode: public SlicingNode
 
     CenteringType               getCenteringType  () const;
     void                        place             (float x = 0, float y = 0);
-    void                        _place            (float x = 0, float y = 0); // Not to be used
 
     void                        setTolerance      (float tolerance);
     void                        setAllTolerance   (float tolerance);
     float                       getTolerance      () const;
 
-    void                        updateGlobalSize    ();
-    bool                        emptyChildren     () const;
+    bool                        emptyChildrenMap  () const;
+    void                        updateGlobalSize  ();
+  //pair<float, float>          setGlobalSize     (float height, float width = 0);
     // Error Message Methods
 
   protected:
@@ -229,7 +229,6 @@ class DSlicingNode: public SlicingNode
                                           float             h     = 0
                                          );
     void                 place           (float x = 0, float y = 0);
-    void                 _place          (float x = 0, float y = 0); // Not to be used
     CenteringType        getCenteringType() const;
 
     // Error Message Methods
@@ -267,8 +266,9 @@ class DSlicingNode: public SlicingNode
     void                        setAllTolerance   (float tolerance);
     float                       getTolerance      () const;
 
-    void                        updateGlobalSize    ();
-    bool                        emptyChildren     () const;
+    bool                        emptyChildrenMap  () const;
+    void                        updateGlobalSize  ();
+  //pair<float, float>          setGlobalSize     (float height, float width = 0);
 
   private:
     DSlicingNode(

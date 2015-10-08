@@ -154,8 +154,13 @@ int main(int argc, char* argv[])
   if (itlow==mymap.end())
   cout <<"True"<< endl;*/
 
-
-
+  map<float,float> maptest;
+  maptest.insert(pair<float,float>(1.5,2.2));
+  maptest[1.5] = 5.2;
+  for (map<float,float>::iterator it = maptest.begin(); it != maptest.end(); it++)
+    {
+      cout << "h = " << (*it).first << ", w = " << (*it).second << endl;
+    }
 
   return 0;
 }

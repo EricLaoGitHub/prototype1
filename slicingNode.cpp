@@ -2,6 +2,14 @@
 
 using namespace std;
 
+void printMap(map<float,float>* mapPrint)
+{
+  cout << "PrintMap - MapHW:" << endl;
+  for (map <float,float>::iterator itPrint = mapPrint->begin(); itPrint != mapPrint->end(); itPrint++)
+   { cout << "H = " << itPrint->first << ", W = " << itPrint->second << endl;}
+  cout << endl;
+}
+
 // class Node
 SlicingNode::SlicingNode(
                          SlicingType       type, 
@@ -43,6 +51,7 @@ pair<float,float> SlicingNode::getPairH(float h) const
           w        = itHW->second;
         }
     }
+  if ( (w == 0) && (hclosest == 0) ){ cerr << "No solution for h = " << h << " has been found." << endl; }
   return pair<float,float>(hclosest,w);
 }
 
@@ -58,6 +67,7 @@ pair<float,float> SlicingNode::getPairW(float w) const
           wclosest = itHW->second;
         }
     }
+  if ( (h == 0) && (wclosest == 0) ){ cerr << "No solution for w = " << w << " has been found." << endl; }
   return pair<float,float>(h,wclosest);
 }
 
@@ -252,12 +262,6 @@ CenteringType HVSlicingNode::getCenteringType() const{ return _c; }
 
 void HVSlicingNode::place(float x, float y)
 {
-  updateHeight();
-  updateWidth();
-  this->_place(x,y);
-}
-void HVSlicingNode::_place(float x, float y)
-{
   float xref = x;
   float yref = y;
   if (this->getType() == Horizontal)
@@ -282,9 +286,9 @@ void HVSlicingNode::_place(float x, float y)
               }
           }
 
-          if      ((*it)->getCenteringType() == LB)     { (*it)->_place(xref                                 , yref); }
-          else if ((*it)->getCenteringType() == Middle) { (*it)->_place(xref + (_w/2) - ((*it)->getWidth()/2), yref); }
-          else if ((*it)->getCenteringType() == RT)     { (*it)->_place(xref + _w     - (*it)->getWidth()    , yref); }
+          if      ((*it)->getCenteringType() == LB)     { (*it)->place(xref                                 , yref); }
+          else if ((*it)->getCenteringType() == Middle) { (*it)->place(xref + (_w/2) - ((*it)->getWidth()/2), yref); }
+          else if ((*it)->getCenteringType() == RT)     { (*it)->place(xref + _w     - (*it)->getWidth()    , yref); }
           else { cerr << " Error(place(float x, float y)): Unknown CenteringType in SlicingTree." << endl; }
 
           xref =  x;
@@ -314,9 +318,9 @@ void HVSlicingNode::_place(float x, float y)
               }
             }
 
-          if      ((*it)->getCenteringType() == LB)     { (*it)->_place(xref, yref); }
-          else if ((*it)->getCenteringType() == Middle) { (*it)->_place(xref, yref + (_h/2) - ((*it)->getHeight()/2)); }
-          else if ((*it)->getCenteringType() == RT)     { (*it)->_place(xref, yref + _h     - (*it)->getHeight()); }
+          if      ((*it)->getCenteringType() == LB)     { (*it)->place(xref, yref); }
+          else if ((*it)->getCenteringType() == Middle) { (*it)->place(xref, yref + (_h/2) - ((*it)->getHeight()/2)); }
+          else if ((*it)->getCenteringType() == RT)     { (*it)->place(xref, yref + _h     - (*it)->getHeight()); }
           else { cerr << " Error(place(float x, float y)): Unknown CenteringType in SlicingTree." << endl; }
 
           xref += (*it)->getWidth();
@@ -348,7 +352,7 @@ void HVSlicingNode::updateGlobalSize()
     {
       _mapHW = (*_children.begin())->getmapHW();
     }
-  else if (this->emptyChildren() != true)
+  else if (this->emptyChildrenMap() != true)
     {        
       if (this->getType() == Vertical)
         {
@@ -479,7 +483,7 @@ void HVSlicingNode::updateGlobalSize()
                           cout << "Previous pair: h = " <<(*_mapHW->find(currentHs.back().first)).first << ", w = " << (*_mapHW->find(currentHs.back().first)).second << endl;
                           cout << "New pair: h = " << currentHs.back().first << ", w = " << currentW << endl;
                         */
-                          _mapHW->insert(pair<float,float> ( currentHs.back().first, currentW) ); 
+                          (*_mapHW->find(currentHs.back().first)).second = currentW;
                         }
                     }
                   else 
@@ -610,22 +614,39 @@ void HVSlicingNode::updateGlobalSize()
                           cout << "Previous pair: h = " << currentH << ", w = " << (*_mapHW->find(currentH)).second << endl;
                           cout << "New pair: h = " <<  currentH << ", w = " <<  currentWs.back().second << endl;
                         */
-                          _mapHW->insert(pair<float,float> ( currentH, currentWs.back().second) ); 
+                          (*_mapHW->find(currentH)).second = currentWs.back().second;
                         }
                     }
                   else 
                     { 
                     //cout << "New pair: h = " <<  currentH << ", w = " <<  currentWs.back().second << endl;
-                      
                       _mapHW->insert(pair<float,float> ( currentH, currentWs.back().second) ); 
                     }
                 }
             }
+          map<float,float>* mapWH = new map<float,float>();
+          for (map<float,float>::iterator itHW = _mapHW->begin(); itHW != _mapHW->end(); itHW++)
+            {
+              if ( mapWH->find((*itHW).second) != mapWH->end() )
+                {
+                  if ( (*itHW).first > (*mapWH->find((*itHW).second)).second )
+                    { 
+                      (*mapWH->find((*itHW).second)).second = (*itHW).first ; 
+                    }
+                }
+              else { mapWH->insert(pair<float,float> ( (*itHW).second, (*itHW).first )); }
+            }
+          _mapHW->clear();
+          for (map<float,float>::iterator itWH = mapWH->begin(); itWH != mapWH->end(); itWH++)
+            {
+              _mapHW->insert(pair<float,float> ( (*itWH).second, (*itWH).first ));
+            }
         }
+      if (_mapHW->empty()) { cerr << "No solution has been found. Try to set a larger tolerance." << endl; }
     }
 }
 
-bool HVSlicingNode::emptyChildren() const
+bool HVSlicingNode::emptyChildrenMap() const
 {
   bool flag = false;
   for (vector<SlicingNode*>::const_iterator it = _children.begin(); it != _children.end(); it++)
@@ -634,6 +655,44 @@ bool HVSlicingNode::emptyChildren() const
     }
   return flag;
 }
+/*
+pair<float, float> HVSlicingNode::setGlobalSize(float height, float width)
+{
+  float heightfinal = 0;
+  float widthfinal  = 0;
+// Find the closest (not higher) possible height for every children. Doing so will provide the lowest width possible.
+ 
+  
+  if (this->getType() == Vertical)
+    {
+      for (vector<SlicingNode*>::const_iterator it = _children.begin(); it != _children.end(); it++)
+        {
+          (*it)->setGlobalSize((*it)->getPairH(height).first,(*it)->getPairH(height).second);
+        }
+
+      for (vector<SlicingNode*>::const_iterator it = _children.begin(); it != _children.end(); it++)
+        {
+          if (it == _children.begin())
+            {
+              heightfinal = (*it)->getHeight();
+              widthfinal  = (*it)->getWidth();
+            }
+          else
+            {
+              if ((*it)->getHeight() > heightfinal){ heightfinal = (*it)->getHeight(); }
+              widthfinal += (*it)->getWidth();
+            }
+        }
+      _h = heightfinal;
+      _w = widthfinal;
+    }
+  else if (this->getType() == Horizontal)
+    {
+    // Find the closest (not higher) possible width for every children. Doing so will provide the lowest height possible.
+     
+      
+    }
+    }*/
 
 // Error Message Methods
 
@@ -708,11 +767,6 @@ DSlicingNode::DSlicingNode(
 DSlicingNode::~DSlicingNode(){}
 
 void DSlicingNode::place(float x, float y)
-{
-  this->_place(x,y);
-}
-
-void DSlicingNode::_place(float x, float y)
 {
   _x = x;
   _y = y;
@@ -809,8 +863,15 @@ float DSlicingNode::getTolerance() const
 
 void DSlicingNode::updateGlobalSize(){} // just do nothing
 
-bool DSlicingNode::emptyChildren() const
+bool DSlicingNode::emptyChildrenMap() const
 {
- cerr << " Error(DSlicingNode::emptyChildren()): Device do not have child." << endl;
+ cerr << " Error(DSlicingNode::emptyChildrenMap()): Device do not have child." << endl;
 return true;
 } 
+/*
+pair<float, float> DSlicingNode::setGlobalSize(float height, float width)
+{
+  this->setPairH(height);
+  return pair<float,float>(_h,_w);
+}
+*/
