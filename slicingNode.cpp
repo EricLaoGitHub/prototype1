@@ -624,25 +624,8 @@ void HVSlicingNode::updateGlobalSize()
                     }
                 }
             }
-          map<float,float>* mapWH = new map<float,float>();
-          for (map<float,float>::iterator itHW = _mapHW->begin(); itHW != _mapHW->end(); itHW++)
-            {
-              if ( mapWH->find((*itHW).second) != mapWH->end() )
-                {
-                  if ( (*itHW).first > (*mapWH->find((*itHW).second)).second )
-                    { 
-                      (*mapWH->find((*itHW).second)).second = (*itHW).first ; 
-                    }
-                }
-              else { mapWH->insert(pair<float,float> ( (*itHW).second, (*itHW).first )); }
-            }
-          _mapHW->clear();
-          for (map<float,float>::iterator itWH = mapWH->begin(); itWH != mapWH->end(); itWH++)
-            {
-              _mapHW->insert(pair<float,float> ( (*itWH).second, (*itWH).first ));
-            }
         }
-      if (_mapHW->empty()) { cerr << "No solution has been found. Try to set a larger tolerance." << endl; }
+      if (_mapHW->empty()) { cerr << "Error(void HVSlicingNode::updateGlobalSize()): No solution has been found. Try to set a larger tolerance." << endl; }
     }
 }
 
@@ -655,19 +638,18 @@ bool HVSlicingNode::emptyChildrenMap() const
     }
   return flag;
 }
-/*
+
 pair<float, float> HVSlicingNode::setGlobalSize(float height, float width)
 {
   float heightfinal = 0;
   float widthfinal  = 0;
 // Find the closest (not higher) possible height for every children. Doing so will provide the lowest width possible.
- 
-  
   if (this->getType() == Vertical)
     {
       for (vector<SlicingNode*>::const_iterator it = _children.begin(); it != _children.end(); it++)
         {
-          (*it)->setGlobalSize((*it)->getPairH(height).first,(*it)->getPairH(height).second);
+          if ( ((*it)->getHeight() == 0) || ((*it)->getWidth() == 0) )
+            { (*it)->setGlobalSize((*it)->getPairH(height).first,(*it)->getPairH(height).second); }
         }
 
       for (vector<SlicingNode*>::const_iterator it = _children.begin(); it != _children.end(); it++)
@@ -683,16 +665,17 @@ pair<float, float> HVSlicingNode::setGlobalSize(float height, float width)
               widthfinal += (*it)->getWidth();
             }
         }
-      _h = heightfinal;
-      _w = widthfinal;
     }
   else if (this->getType() == Horizontal)
     {
-    // Find the closest (not higher) possible width for every children. Doing so will provide the lowest height possible.
+    // 
      
-      
+
     }
-    }*/
+  _h = heightfinal;
+  _w = widthfinal;
+  return pair<float,float>(_h,_w);
+}
 
 // Error Message Methods
 
@@ -770,6 +753,12 @@ void DSlicingNode::place(float x, float y)
 {
   _x = x;
   _y = y;
+}
+
+pair<float, float> DSlicingNode::setGlobalSize(float height, float width)
+{
+  this->setPairH(height);
+  return pair<float,float>(_h,_w);
 }
 
 // Error Message Methods
@@ -868,10 +857,4 @@ bool DSlicingNode::emptyChildrenMap() const
  cerr << " Error(DSlicingNode::emptyChildrenMap()): Device do not have child." << endl;
 return true;
 } 
-/*
-pair<float, float> DSlicingNode::setGlobalSize(float height, float width)
-{
-  this->setPairH(height);
-  return pair<float,float>(_h,_w);
-}
-*/
+

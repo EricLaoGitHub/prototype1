@@ -76,7 +76,7 @@ class SlicingNode
 
     virtual bool                        emptyChildrenMap  () const                       = 0;
     virtual void                        updateGlobalSize  ()                             = 0;
-  //virtual pair<float, float>          setGlobalSize     (float height, float width = 0)= 0;
+    virtual pair<float, float>          setGlobalSize     (float height, float width = 0)= 0;
     // DSlicingNode Virtual
 
   protected:
@@ -147,7 +147,7 @@ class HVSlicingNode: public SlicingNode
 
     bool                        emptyChildrenMap  () const;
     void                        updateGlobalSize  ();
-  //pair<float, float>          setGlobalSize     (float height, float width = 0);
+    pair<float, float>          setGlobalSize     (float height, float width = 0);
     // Error Message Methods
 
   protected:
@@ -268,7 +268,7 @@ class DSlicingNode: public SlicingNode
 
     bool                        emptyChildrenMap  () const;
     void                        updateGlobalSize  ();
-  //pair<float, float>          setGlobalSize     (float height, float width = 0);
+    pair<float, float>          setGlobalSize     (float height, float width = 0);
 
   private:
     DSlicingNode(
