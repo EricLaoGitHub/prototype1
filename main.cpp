@@ -12,10 +12,10 @@ map <float,float>* createMapH(float widthmin, float widthmax, float heightmin, f
   float ldelta = (widthmax-widthmin)/nmax;
   float hdelta = (heightmax-heightmin)/nmax;
   map <float,float>* mapL = new map <float,float>();
-  for (int i = 0; i <= nmax; i++){ mapL->insert(pair<float,float>(heightmax-hdelta*i, widthmin+ldelta*i)); }
+  for (int i = 0; i < nmax; i++){ mapL->insert(pair<float,float>(heightmin+hdelta*i, widthmax-ldelta*i)); }
   return mapL;
 }
-void createSlicingTreeData(SlicingNode* data, float tab[][4], int& i)
+void createSlicingTreeData(SlicingNode* data, float tab[][5], int& i)
 {
   for (vector<SlicingNode*>::const_iterator it = data->getChildren().begin(); it != data->getChildren().end(); it++)
     {
@@ -25,6 +25,16 @@ void createSlicingTreeData(SlicingNode* data, float tab[][4], int& i)
           tab[i][1]=(*it)->getY();
           tab[i][2]=(*it)->getWidth();
           tab[i][3]=(*it)->getHeight();
+          tab[i][4]=1;
+          i++;
+        }
+      else if ((*it)->getType() == RoutingNode)
+        {  
+          tab[i][0]=(*it)->getX();
+          tab[i][1]=(*it)->getY();
+          tab[i][2]=(*it)->getWidth();
+          tab[i][3]=(*it)->getHeight();
+          tab[i][4]=0;
           i++;
         }
       else if (((*it)->getType() == Horizontal)||((*it)->getType() == Vertical))
@@ -63,9 +73,9 @@ int main(int argc, char* argv[])
   cout << endl;
   cout << " -------------- Build Slicing Tree -------------- " << endl;
   HSlicingNode* slicingTree = HSlicingNode::create(Middle);
+  slicingTree->createPushBackNode(Vertical);
+  slicingTree->createPushBackDevice(mapHWDP12,Middle);
   slicingTree->createPushBackNode(Vertical,Middle);
-  slicingTree->createPushBackDevice(mapHWDP12);
-  slicingTree->createPushBackNode(Horizontal,Middle);
    
   cout << " -------------- Print Root -------------- " << endl;
   slicingTree->print();
@@ -75,6 +85,7 @@ int main(int argc, char* argv[])
   cout << "-------------- 1st Hierarchy -------------- " << endl;
   slicingTree->getChild(0)->createPushBackDevice(mapHWM8, Middle);
   slicingTree->getChild(0)->createPushBackDevice(mapHWM5, Middle);
+  slicingTree->getChild(0)->createPushBackRouting(1);
   slicingTree->getChild(0)->createPushBackDevice(mapHWM7);
   slicingTree->getChild(0)->printChildren();
 
@@ -99,9 +110,6 @@ int main(int argc, char* argv[])
   cout << " -------------- Print SlicingTree Placement -------------- " << endl;
   float hvalue = 2.5;
   float wvalue = 30;
-//slicingTree->getChild(2)->getChild(2)->setPairH(hvalue);
-
-  slicingTree->place();
 
   cout << " -------------- Print Root -------------- " << endl;
   slicingTree->print();
@@ -112,55 +120,85 @@ int main(int argc, char* argv[])
   slicingTree->getChild(2)->printChildren();
   
   cout << " -------------- Print getPair H & W -------------- " << endl;
-  cout << "hvalue= " << hvalue << ", H: " << slicingTree->getChild(2)->getChild(2)->getPairH(hvalue).first << ", W: " << slicingTree->getChild(2)->getChild(2)->getPairH(hvalue).second << endl;
-  cout << "wvalue= " << wvalue << ", H: " << slicingTree->getChild(2)->getChild(2)->getPairW(wvalue).first << ", W: " << slicingTree->getChild(2)->getChild(2)->getPairW(wvalue).second << endl;
-
+  cout << "hvalue = " << hvalue << ", H: " << slicingTree->getChild(2)->getChild(2)->getPairH(hvalue).first << ", W: " << slicingTree->getChild(2)->getChild(2)->getPairH(hvalue).second << endl;
+  cout << "wvalue = " << wvalue << ", H: " << slicingTree->getChild(2)->getChild(2)->getPairW(wvalue).first << ", W: " << endl;
   cout << " -------------- End -------------- " << endl;
 
+
+  cout << "-------------- Test updateGlobalsize: Vertical/Horizontal -------------- " << endl;
+  /* 
+     0)Check Routing Space 
+     1)Child(0) Vertical or Horizontal
+     2)Test on Child n°0 with these parameters
+    #define wMinM5 1
+    #define wMaxM5 6
+    #define hMinM5 1
+    #define hMaxM5 6
+    #define NM5    5
+    
+    #define wMinM7 1
+    #define wMaxM7 6
+    #define hMinM7 1
+    #define hMaxM7 6
+    #define NM7    5
+    
+    #define wMinM8 1
+    #define wMaxM8 6
+    #define hMinM8 1
+    #define hMaxM8 6
+    #define NM8    5
+    3) Verify by hand the values of the map
+  */
+  slicingTree->setAllToleranceH(0); // toleranceH = 1 - test Vertical
+  slicingTree->setAllToleranceW(10); // toleranceW = 1 - test Horizontal
+  cout << " -------------- Print Children -------------- " << endl;
+  slicingTree->getChild(0)->printChildren();
+  slicingTree->getChild(0)->updateGlobalSize();
+  cout << " -------------- Print Root -------------- " << endl;
+  slicingTree->getChild(0)->print();
+
+  cout << "-------------- Test updateGlobalsize: Vertical/Horizontal -------------- " << endl;
+  /* 
+     0) Use updateGlobalSize results to choose values for H/W
+     1) Test on root with these parameters
+     #define wMinM9 1
+     #define wMaxM9 6
+     #define hMinM9 1
+     #define hMaxM9 6
+     #define NM9    5
+     
+     #define wMinM6 1
+     #define wMaxM6 6
+     #define hMinM6 1
+     #define hMaxM6 6
+     #define NM6    5
+     
+     #define wMinCM34 1
+     #define wMaxCM34 6
+     #define hMinCM34 1
+     #define hMaxCM34 6
+     #define NCM34    5
+    2) Verify the evolution of the values of HW with toleranceH, different achivable width
+    3) Test preset status
+  */
+  slicingTree->getChild(0)->setPreset(true);
+  slicingTree->updateGlobalSize();
+  slicingTree->setGlobalSize(16,0); 
+  slicingTree->print();
+
   // Writing Datas in a file to be plotted in matlab 
+  slicingTree->place();
   ofstream myfile;
   myfile.open (SlicingTreeData);
 
-  float tab[7][4]; 
+  float tab[8][5]; 
   int i = 0;
   createSlicingTreeData(slicingTree, tab, i);
-  for (int j = 0; j < 7; j++)
+  for (int j = 0; j < 8; j++)
     {
-      myfile << tab[j][0] << " " << tab[j][1] << " " << tab[j][2] << " " << tab[j][3] << endl;
+      myfile << tab[j][0] << " " << tab[j][1] << " " << tab[j][2] << " " << tab[j][3] << " " << tab[j][4] << endl;
     }
   myfile.close();
-
-  slicingTree->getChild(2)->setTolerance(100);
-  slicingTree->getChild(2)->updateGlobalSize();
-  cout << " -------------- Print Root -------------- " << endl;
-  slicingTree->getChild(2)->print();
-//cout << " -------------- Print Children -------------- " << endl;
-//slicingTree->printChildren();
-
-/*
-  std::map<char,int> mymap;
-  std::map<char,int>::iterator itlow,itup;
-
-  mymap['a']=20;
-  mymap['b']=40;
-  mymap['c']=60;
-  mymap['d']=80;
-  mymap['e']=100;
-
-  for (std::map<char,int>::iterator it=mymap.begin(); it!=mymap.end(); ++it)
-    std::cout << it->first << " => " << it->second << '\n';
-
-  itlow=mymap.upper_bound ('e');  
-  if (itlow==mymap.end())
-  cout <<"True"<< endl;*/
-
-  map<float,float> maptest;
-  maptest.insert(pair<float,float>(1.5,2.2));
-  maptest[1.5] = 5.2;
-  for (map<float,float>::iterator it = maptest.begin(); it != maptest.end(); it++)
-    {
-      cout << "h = " << (*it).first << ", w = " << (*it).second << endl;
-    }
 
   return 0;
 }

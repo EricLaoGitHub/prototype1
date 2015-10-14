@@ -3,7 +3,7 @@ close all;
 hold on;
 
 % Parameters
-NbDevices    = 7;
+NbDevices    = 8;
 dataFileName = 'SlicingTreeData.txt';
 
 colors       = ['y','m','c','r','g','b'];
@@ -12,7 +12,7 @@ colorsFlag   = 1;
 
 % File
 dataFile = fopen(dataFileName);
-data = textscan(dataFile,'%f %f %f %f');
+data = textscan(dataFile,'%f %f %f %f %f' );
 fclose(dataFile);
 
 sizeinter = size(data{1}(:));
@@ -23,37 +23,39 @@ ymax = 0;
 
 for i=1:sizeData
     % Data Extraction
-    x      = data{1}(i);
-    y      = data{2}(i);
-    width  = data{3}(i);
-    height = data{4}(i);
-    
-    left   = x;
-    right  = left + width;
-    bottom = y;
-    top    = bottom + height;
-    
-    x = [left left right right];
-    y = [bottom top top bottom];
-    
-    % Plotting device
-    if colorsFlag == 1
-        colorSize = size(colors);
-        fill(x, y, colors(mod(i,colorSize(1,2))+1))
-    else
-        fill(x, y, uniqueColor)
-    end;
-        
-    strmin = ['\bf\fontsize{15}',num2str(i)];
-    text(left+ width/2,bottom+ height/2,strmin,'HorizontalAlignment','center');
-   
-    
-    % Process for the global window
-    if right > xmax
-        xmax = right;
-    end;
-    if top > ymax
-        ymax = top;
+    if data{5}(i) == 1
+        x      = data{1}(i);
+        y      = data{2}(i);
+        width  = data{3}(i);
+        height = data{4}(i);
+
+        left   = x;
+        right  = left + width;
+        bottom = y;
+        top    = bottom + height;
+
+        x = [left left right right];
+        y = [bottom top top bottom];
+
+        % Plotting device
+        if colorsFlag == 1
+            colorSize = size(colors);
+            fill(x, y, colors(mod(i,colorSize(1,2))+1))
+        else
+            fill(x, y, uniqueColor)
+        end;
+
+        strmin = ['\bf\fontsize{15}',num2str(i)];
+        text(left+ width/2,bottom+ height/2,strmin,'HorizontalAlignment','center');
+
+
+        % Process for the global window
+        if right > xmax
+            xmax = right;
+        end;
+        if top > ymax
+            ymax = top;
+        end;
     end;
 end;
 
