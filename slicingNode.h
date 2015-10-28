@@ -6,11 +6,13 @@
 #include <vector>
 #include <map>
 #include <list>
+#include <algorithm>
 
 using namespace std;
 
-enum CenteringType { LB = 1, Middle = 2, RT = 3, UnknownCentering = 4 }; // Left or Bot, Middle, Right or Top
-enum SlicingType   { Unknown = 0, Horizontal = 1, Vertical = 2, DeviceNode = 3, RoutingNode = 4 };
+enum CenteringType  { LB = 1, Middle = 2, RT = 3, UnknownCentering = 4 }; // Left or Bot, Middle, Right or Top
+enum SlicingType    { Unknown = 0, Horizontal = 1, Vertical = 2, DeviceNode = 3, RoutingNode = 4 };
+enum Transformation { None = 0, MX = 1, MY = 2 };
 
 class SlicingNode
 {
@@ -25,53 +27,55 @@ class SlicingNode
     map<float,float>* getMapHW         () const;
     bool              getPreset        () const;
 
-    void  setWidth        (float w);
-    void  setHeight       (float h);
-    void  setX            (float x);
-    void  setY            (float y);
-    void  setCenteringType(CenteringType type);
-    void  setPreset       (bool preset);
+    void setWidth         (float w);
+    void setHeight        (float h);
+    void setX             (float x);
+    void setY             (float y);
+    void setCenteringType (CenteringType type);
+    void setPreset        (bool preset);
+    void setMapHW         (map<float,float>* mapHW);
 
     // Common Virtual
     virtual void print () const;
-    virtual void place (float x = 0, float y = 0) = 0;   // Place the node in the plan at (x,y)
-    pair<float,float> getPairH          (float h) const; // Given a height, return width
-    pair<float,float> getPairW          (float w) const; // Given a width , return height
-    void              setPairH          (float h);       // Given a height, set width
-    void              setPairW          (float w);       // Given a width , set height
+    virtual void place (float x = 0, float y = 0) = 0; // Place the node in the plan at (x,y)
 
+    pair<float,float> getPairH (float h) const; // Given a height, return width
+    pair<float,float> getPairW (float w) const; // Given a width , return height
+    void              setPairH (float h);       // Given a height, set width
+    void              setPairW  (float w);      // Given a width , set height
 
     // HVSlicingNode Virtual (see HVSlicingNode)
-    virtual void                        createPushBackNode(
-                                                           SlicingType   type, 
-                                                           CenteringType c          = LB,
-                                                           float         toleranceH = 0,
-                                                           float         toleranceW = 0,
-                                                           float         x          = 0, 
-                                                           float         y          = 0, 
-                                                           float         w          = 0, 
-                                                           float         h          = 0
+    virtual void                        createPushBackNode (
+                                                            SlicingType   type, 
+                                                            CenteringType c          = LB,
+                                                            float         toleranceH = 0,
+                                                            float         toleranceW = 0,
+                                                            float         x          = 0, 
+                                                            float         y          = 0, 
+                                                            float         w          = 0, 
+                                                            float         h          = 0
                                                            ) = 0;
-    virtual void                        createPushBackDevice(
-                                                             map<float,float>* mapHW = NULL, 
-                                                             CenteringType     c     = LB,
-                                                             float             x     = 0, 
-                                                             float             y     = 0, 
-                                                             float             w     = 0, 
-                                                             float             h     = 0
-                                                            ) = 0;
-    virtual void                        createPushBackRouting( 
-                                                              float hw = 0,
-                                                              float x  = 0, 
-                                                              float y  = 0 
-                                                            ) = 0;
+    virtual void                        createPushBackDevice (
+                                                              map<float,float>* mapHW = NULL, 
+                                                              CenteringType     c     = LB,
+                                                              float             x     = 0, 
+                                                              float             y     = 0, 
+                                                              float             w     = 0, 
+                                                              float             h     = 0
+                                                             ) = 0;
+    virtual void                        createPushBackRouting ( 
+                                                               float hw = 0,
+                                                               float x  = 0, 
+                                                               float y  = 0 
+                                                              ) = 0;
     virtual int                         getNbChild       ()          const              = 0;
     virtual SlicingNode*                getChild         (int index) const              = 0;
     virtual const vector<SlicingNode*>& getChildren      ()          const              = 0;
     virtual void                        printChildren    ()                             = 0;
 
-    virtual void                        addNode          (SlicingNode* node, int index)      = 0; 
+    virtual void                        insertNode       (SlicingNode* node, int index)      = 0; 
     virtual void                        pushBackNode     (SlicingNode* node)                 = 0; 
+    virtual void                        pushFrontNode    (SlicingNode* node)                 = 0; 
     virtual void                        removeAllNodes   ()                                  = 0;
     virtual void                        removeNode       (SlicingNode* node)                 = 0;
 
@@ -87,21 +91,27 @@ class SlicingNode
 
     virtual bool                        emptyChildrenMap () const                            = 0;
     virtual void                        updateGlobalSize ()                                  = 0;
-    virtual pair<float, float>          setGlobalSize    (float height = 0, float width = 0) = 0;
-    // DSlicingNode Virtual
+    virtual pair<float,float>           setGlobalSize    (float height = 0, float width = 0) = 0;
+
+    virtual SlicingNode*                clone            (Transformation tr = None)                                = 0;
+    virtual void                        createSymmetry   (int childIndex, int copyIndex, Transformation tr = None) = 0;
+    virtual void                        setSymmetry      (int childIndex, int copyIndex)                           = 0;
+    virtual list<pair< int,int> >       getSymmetries    () const                                                  = 0;
+    virtual int                         getLeafNumber    () const                                                  = 0;
+    virtual void                        checkSymmetries  ()                                                        = 0;
 
   protected:
   // Constructor & destructor
-    SlicingNode(
-                SlicingType       type,         
-                map<float,float>* mapHW = NULL,
-                CenteringType     c     = LB,
-                float             x     = 0,
-                float             y     = 0,
-                float             w     = 0,
-                float             h     = 0
-               );
-    virtual ~SlicingNode();
+    SlicingNode (
+                 SlicingType       type,         
+                 map<float,float>* mapHW = NULL,
+                 CenteringType     c     = LB,
+                 float             x     = 0,
+                 float             y     = 0,
+                 float             w     = 0,
+                 float             h     = 0
+                );
+    virtual ~SlicingNode ();
 
 
   protected:
@@ -119,37 +129,38 @@ class HVSlicingNode: public SlicingNode
 {
   public:
   // Add a SlicingNode
-    void                        createPushBackNode(
-                                                   SlicingType   type,      
-                                                   CenteringType c          = LB,
-                                                   float         toleranceH = 0,
-                                                   float         toleranceW = 0,
-                                                   float         x          = 0, 
-                                                   float         y          = 0, 
-                                                   float         w          = 0, 
-                                                   float         h          = 0
-                                                  );
+    void                        createPushBackNode (
+                                                    SlicingType   type,      
+                                                    CenteringType c          = LB,
+                                                    float         toleranceH = 0,
+                                                    float         toleranceW = 0,
+                                                    float         x          = 0, 
+                                                    float         y          = 0, 
+                                                    float         w          = 0, 
+                                                    float         h          = 0
+                                                   );
   // Create and add a SlicingNode
-    void                        createPushBackDevice(
-                                                     map<float,float>* mapHW = NULL, 
-                                                     CenteringType     c     = LB,
-                                                     float             x     = 0, 
-                                                     float             y     = 0, 
-                                                     float             w     = 0, 
-                                                     float             h     = 0
-                                                    );
-    void                        createPushBackRouting(
-                                                      float hw = 0,
-                                                      float x  = 0, 
-                                                      float y  = 0
+    void                        createPushBackDevice (
+                                                      map<float,float>* mapHW = NULL, 
+                                                      CenteringType     c     = LB,
+                                                      float             x     = 0, 
+                                                      float             y     = 0, 
+                                                      float             w     = 0, 
+                                                      float             h     = 0
                                                      );
+    void                        createPushBackRouting (
+                                                       float hw = 0,
+                                                       float x  = 0, 
+                                                       float y  = 0
+                                                      );
     int                         getNbChild       ()          const;
     SlicingNode*                getChild         (int index) const;
     const vector<SlicingNode*>& getChildren      ()          const;
     void                        printChildren    ();
 
-    void                        addNode          (SlicingNode* node, int index); 
-    void                        pushBackNode     (SlicingNode* node); 
+    void                        insertNode       (SlicingNode* node, int index); 
+    void                        pushBackNode     (SlicingNode* node);  
+    void                        pushFrontNode    (SlicingNode* node); 
     void                        removeAllNodes   ();
     void                        removeNode       (SlicingNode* node);
 
@@ -168,12 +179,56 @@ class HVSlicingNode: public SlicingNode
 
     bool                        emptyChildrenMap () const;
     void                        updateGlobalSize ();
-    pair<float, float>          setGlobalSize (float height = 0, float width = 0);
+    pair<float,float>           setGlobalSize    (float height = 0, float width = 0);
+
+    void                        createSymmetry   (int childIndex, int copyIndex, Transformation tr = None);
+    void                        setSymmetry      (int childIndex, int copyIndex);
+    list<pair< int,int> >       getSymmetries    () const;
+
+    int                         getLeafNumber    () const;
+    void                        print            () const;
+    void                        checkSymmetries  ();
+
+    
     // Error Message Methods
 
   protected:
-    HVSlicingNode(
-                  SlicingType   type,
+    HVSlicingNode (
+                   SlicingType   type,
+                   CenteringType c          = LB, 
+                   float         toleranceH = 0,
+                   float         toleranceW = 0,
+                   float         x          = 0, 
+                   float         y          = 0, 
+                   float         w          = 0, 
+                   float         h          = 0
+                  );
+    virtual ~HVSlicingNode ();
+
+  protected:
+    vector<SlicingNode*>    _children;
+    float                   _toleranceH;
+    float                   _toleranceW;
+    list<pair <int,int> >   _symmetries;
+};
+
+class VSlicingNode: public HVSlicingNode
+{
+  public:
+    static VSlicingNode* create (
+                                 CenteringType c          = LB, 
+                                 float         toleranceH = 0,
+                                 float         toleranceW = 0,
+                                 float         x          = 0, 
+                                 float         y          = 0, 
+                                 float         w          = 0, 
+                                 float         h          = 0
+                                );
+    VSlicingNode* clone (Transformation tr = None);
+
+  private:
+    VSlicingNode (
+                  SlicingType   type, 
                   CenteringType c          = LB, 
                   float         toleranceH = 0,
                   float         toleranceW = 0,
@@ -182,118 +237,90 @@ class HVSlicingNode: public SlicingNode
                   float         w          = 0, 
                   float         h          = 0
                  );
-    virtual ~HVSlicingNode();
-
-  protected:
-    vector<SlicingNode*> _children;
-    float                _toleranceH;
-    float                _toleranceW;
-};
-
-class VSlicingNode: public HVSlicingNode
-{
-  public:
-    static VSlicingNode* create(
-                                CenteringType c          = LB, 
-                                float         toleranceH = 0,
-                                float         toleranceW = 0,
-                                float         x          = 0, 
-                                float         y          = 0, 
-                                float         w          = 0, 
-                                float         h          = 0
-                               );
-
-  private:
-    VSlicingNode(
-                 SlicingType   type, 
-                 CenteringType c          = LB, 
-                 float         toleranceH = 0,
-                 float         toleranceW = 0,
-                 float         x          = 0, 
-                 float         y          = 0, 
-                 float         w          = 0, 
-                 float         h          = 0
-                );
-    ~VSlicingNode();
+    ~VSlicingNode ();
 };
 
 class HSlicingNode: public HVSlicingNode
 {
   public:
-    static HSlicingNode* create(
-                                CenteringType c          = LB, 
-                                float         toleranceH = 0,
-                                float         toleranceW = 0,
-                                float         x          = 0, 
-                                float         y          = 0, 
-                                float         w          = 0, 
-                                float         h          = 0
-                               );
+    static HSlicingNode* create (
+                                 CenteringType c          = LB, 
+                                 float         toleranceH = 0,
+                                 float         toleranceW = 0,
+                                 float         x          = 0, 
+                                 float         y          = 0, 
+                                 float         w          = 0, 
+                                 float         h          = 0
+                                );
+    HSlicingNode* clone (Transformation tr = None);
 
   private:
-    HSlicingNode(
-                 SlicingType   type, 
-                 CenteringType c          = LB, 
-                 float         toleranceH = 0,
-                 float         toleranceW = 0,
-                 float         x          = 0, 
-                 float         y          = 0, 
-                 float         w          = 0, 
-                 float         h          = 0
-                );
-    ~HSlicingNode();
+    HSlicingNode (
+                  SlicingType   type, 
+                  CenteringType c          = LB, 
+                  float         toleranceH = 0,
+                  float         toleranceW = 0,
+                  float         x          = 0, 
+                  float         y          = 0, 
+                  float         w          = 0, 
+                  float         h          = 0
+                 );
+    ~HSlicingNode ();
 };
 
 class DSlicingNode: public SlicingNode
 {
   public:
-    static DSlicingNode* create          (
-                                          map<float,float>* mapHW = NULL,
-                                          CenteringType     c     = LB,
-                                          float             x     = 0, 
-                                          float             y     = 0,
-                                          float             w     = 0, 
-                                          float             h     = 0
-                                         );
-    void                 place           (float x = 0, float y = 0);
-    CenteringType        getCenteringType() const;
-    pair<float, float>   setGlobalSize   (float height = 0, float width = 0);
+    static DSlicingNode* create (
+                                 map<float,float>* mapHW = NULL,
+                                 CenteringType     c     = LB,
+                                 float             x     = 0, 
+                                 float             y     = 0,
+                                 float             w     = 0, 
+                                 float             h     = 0
+                                );
+    void                 place         (float x = 0, float y = 0);
+    pair<float,float>    setGlobalSize (float height = 0, float width = 0);
 
-    float                updateHeight    (); 
-    float                updateWidth     ();
+    float                updateHeight  (); 
+    float                updateWidth   ();
+    DSlicingNode*        clone         (Transformation tr = None);
+    int                  getLeafNumber() const;
+
     // Error Message Methods
-    void                        createPushBackNode(
-                                                   SlicingType   type, 
-                                                   CenteringType c          = LB,
-                                                   float         toleranceH = 0,
-                                                   float         toleranceW = 0,
-                                                   float         x          = 0, 
-                                                   float         y          = 0, 
-                                                   float         w          = 0, 
-                                                   float         h          = 0
-                                                  );
-    void                        createPushBackDevice(
-                                                     map<float,float>* mapHW = NULL, 
-                                                     CenteringType     c     = LB,
-                                                     float             x     = 0, 
-                                                     float             y     = 0, 
-                                                     float             w     = 0, 
-                                                     float             h     = 0
-                                                    );
-
-    void                        createPushBackRouting(
-                                                      float hw = 0,
-                                                      float x  = 0, 
-                                                      float y  = 0
+    void                        createPushBackNode (
+                                                    SlicingType   type, 
+                                                    CenteringType c          = LB,
+                                                    float         toleranceH = 0,
+                                                    float         toleranceW = 0,
+                                                    float         x          = 0, 
+                                                    float         y          = 0, 
+                                                    float         w          = 0, 
+                                                    float         h          = 0
+                                                   );
+    void                        createPushBackDevice (
+                                                      map<float,float>* mapHW = NULL, 
+                                                      CenteringType     c     = LB,
+                                                      float             x     = 0, 
+                                                      float             y     = 0, 
+                                                      float             w     = 0, 
+                                                      float             h     = 0
                                                      );
+
+    void                        createPushBackRouting (
+                                                       float hw = 0,
+                                                       float x  = 0, 
+                                                       float y  = 0
+                                                      );
 
     int                         getNbChild       ()          const;
     SlicingNode*                getChild         (int index) const;
     const vector<SlicingNode*>& getChildren      ()          const;
     void                        printChildren    ();
 
-    void                        addNode          (SlicingNode* node, int index); 
+    void                        insertNode       (SlicingNode* node, int index); 
     void                        pushBackNode     (SlicingNode* node); 
+    void                        pushFrontNode    (SlicingNode* node); 
     void                        removeAllNodes   ();
     void                        removeNode       (SlicingNode* node);
 
@@ -306,6 +333,11 @@ class DSlicingNode: public SlicingNode
 
     bool                        emptyChildrenMap () const;
     void                        updateGlobalSize ();
+
+    void                        createSymmetry   (int childIndex, int copyIndex, Transformation tr = None);
+    void                        setSymmetry      (int childIndex, int copyIndex);
+    list<pair< int,int> >       getSymmetries    () const;
+    void                        checkSymmetries  ();
 
   private:
     DSlicingNode(
@@ -324,13 +356,8 @@ class DSlicingNode: public SlicingNode
 class RHVSlicingNode: public SlicingNode
 {
   public:
-    static RHVSlicingNode* create          (
-                                          float             x     = 0, 
-                                          float             y     = 0,
-                                          float             w     = 0, 
-                                          float             h     = 0
-                                         );
-    void                 place           (float x = 0, float y = 0);
+    void          place (float x = 0, float y = 0);
+    int           getLeafNumber() const;
 
     // Error Message Methods
     CenteringType     getCenteringType () const;
@@ -339,38 +366,39 @@ class RHVSlicingNode: public SlicingNode
     pair<float,float> getPairH         (float h) const; 
     pair<float,float> getPairW         (float w) const; 
     void              setPairH         (float h);       
-    void              setPairW         (float w);       
+    void              setPairW         (float w);      
 
-    void                        createPushBackNode(
-                                                   SlicingType   type, 
-                                                   CenteringType c          = LB,
-                                                   float         toleranceH = 0,
-                                                   float         toleranceW = 0,
-                                                   float         x          = 0, 
-                                                   float         y          = 0, 
-                                                   float         w          = 0, 
-                                                   float         h          = 0
-                                                  );
-    void                        createPushBackDevice(
-                                                     map<float,float>* mapHW = NULL, 
-                                                     CenteringType     c     = LB,
-                                                     float             x     = 0, 
-                                                     float             y     = 0, 
-                                                     float             w     = 0, 
-                                                     float             h     = 0
-                                                    );
-    void                        createPushBackRouting(
-                                                      float hw = 0,
-                                                      float x  = 0, 
-                                                      float y  = 0 
+    void                        createPushBackNode (
+                                                    SlicingType   type, 
+                                                    CenteringType c          = LB,
+                                                    float         toleranceH = 0,
+                                                    float         toleranceW = 0,
+                                                    float         x          = 0, 
+                                                    float         y          = 0, 
+                                                    float         w          = 0, 
+                                                    float         h          = 0
+                                                   );
+    void                        createPushBackDevice (
+                                                      map<float,float>* mapHW = NULL, 
+                                                      CenteringType     c     = LB,
+                                                      float             x     = 0, 
+                                                      float             y     = 0, 
+                                                      float             w     = 0, 
+                                                      float             h     = 0
                                                      );
+    void                        createPushBackRouting (
+                                                       float hw = 0,
+                                                       float x  = 0, 
+                                                       float y  = 0 
+                                                      );
     int                         getNbChild       ()          const;
     SlicingNode*                getChild         (int index) const;
     const vector<SlicingNode*>& getChildren      ()          const;
     void                        printChildren    ();
 
-    void                        addNode          (SlicingNode* node, int index); 
+    void                        insertNode       (SlicingNode* node, int index); 
     void                        pushBackNode     (SlicingNode* node); 
+    void                        pushFrontNode    (SlicingNode* node); 
     void                        removeAllNodes   ();
     void                        removeNode       (SlicingNode* node);
 
@@ -386,7 +414,12 @@ class RHVSlicingNode: public SlicingNode
 
     bool                        emptyChildrenMap () const;
     void                        updateGlobalSize ();
-    pair<float, float>          setGlobalSize (float height = 0, float width = 0);
+    pair<float,float>           setGlobalSize    (float height = 0, float width = 0);
+
+    void                        createSymmetry   (int childIndex, int copyIndex, Transformation tr = None);
+    void                        setSymmetry      (int childIndex, int copyIndex);
+    list<pair< int,int> >       getSymmetries    () const;
+    void                        checkSymmetries  ();
 
   protected:
     RHVSlicingNode(
@@ -405,28 +438,30 @@ class RHSlicingNode: public RHVSlicingNode
 {
   public:
     static RHSlicingNode* create ( float h = 0, float x = 0, float y = 0 );
+    RHSlicingNode*        clone  (Transformation tr = None);
 
     // Error Message Methods
     float getWidth () const;
     void  setWidth ( float w );
 
   private:
-    RHSlicingNode(float h = 0, float x = 0, float y = 0 );
-    ~RHSlicingNode();
+    RHSlicingNode  (float h = 0, float x = 0, float y = 0 );
+    ~RHSlicingNode ();
 };
 
 class RVSlicingNode: public RHVSlicingNode
 {
   public:
-    static RVSlicingNode* create  ( float w = 0, float x = 0, float y = 0 );
+    static RVSlicingNode* create ( float w = 0, float x = 0, float y = 0 );
+    RVSlicingNode*        clone  (Transformation tr = None);
 
     // Error Message Methods
     float getHeight () const;
     void  setHeight ( float h );
 
   private:
-    RVSlicingNode( float w = 0, float x = 0, float y = 0 );
-    ~RVSlicingNode();
+    RVSlicingNode  ( float w = 0, float x = 0, float y = 0 );
+    ~RVSlicingNode ();
 };
 
 #endif

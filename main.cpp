@@ -72,61 +72,37 @@ int main(int argc, char* argv[])
 
   cout << endl;
   cout << " -------------- Build Slicing Tree -------------- " << endl;
-  HSlicingNode* slicingTree = HSlicingNode::create(Middle);
-  slicingTree->createPushBackNode(Vertical);
+  HSlicingNode* slicingTree = HSlicingNode::create();
+  slicingTree->createPushBackNode(Vertical,Middle);
   slicingTree->createPushBackDevice(mapHWDP12,Middle);
   slicingTree->createPushBackNode(Vertical,Middle);
-   
-  cout << " -------------- Print Root -------------- " << endl;
-  slicingTree->print();
-  cout << " -------------- Print Children -------------- " << endl;
-  slicingTree->printChildren();
+  slicingTree->createPushBackRouting(1);
+  slicingTree->createPushBackDevice(mapHWDP12,Middle);
 
   cout << "-------------- 1st Hierarchy -------------- " << endl;
-  slicingTree->getChild(0)->createPushBackDevice(mapHWM8, Middle);
-  slicingTree->getChild(0)->createPushBackDevice(mapHWM5, Middle);
+  slicingTree->getChild(0)->createPushBackDevice(mapHWM8,Middle);
+  slicingTree->getChild(0)->createPushBackDevice(mapHWM5,Middle);
   slicingTree->getChild(0)->createPushBackRouting(1);
-  slicingTree->getChild(0)->createPushBackDevice(mapHWM7);
-  slicingTree->getChild(0)->printChildren();
+  slicingTree->getChild(0)->createSymmetry(1,3);
+  slicingTree->getChild(0)->createSymmetry(3,4);
+  slicingTree->getChild(0)->createPushBackDevice(mapHWM8,Middle);
+  slicingTree->getChild(0)->setSymmetry(5,0);
 
   cout << "-------------- 2nd Hierarchy -------------- " << endl;
-  slicingTree->getChild(2)->createPushBackDevice(mapHWM9  , Middle);
-  slicingTree->getChild(2)->createPushBackDevice(mapHWCM34, Middle);
-  slicingTree->getChild(2)->createPushBackDevice(mapHWM6  , Middle);
-  slicingTree->getChild(2)->printChildren();
+  slicingTree->getChild(2)->createPushBackDevice(mapHWM9  ,Middle);
+  slicingTree->getChild(2)->createPushBackDevice(mapHWCM34,Middle);
+  slicingTree->getChild(2)->createPushBackDevice(mapHWM6  ,Middle);
 
-  cout << " -------------- Print Global H/W -------------- " << endl;
-  cout << "Global Height = " << slicingTree->updateHeight() << endl;
-  cout << "Global Width  = " << slicingTree->updateWidth() << endl;
+  slicingTree->setAllToleranceH(100); // toleranceH = 1 - test Vertical
+  slicingTree->setAllToleranceW(100); // toleranceW = 1 - test Horizontal
 
-  cout << " -------------- Print 1st Hierarchy H/W -------------- " << endl;
-  cout << "1st Hierarchy Height = " << slicingTree->getChild(0)->updateHeight() << endl;
-  cout << "1st Hierarchy Width  = " << slicingTree->getChild(0)->updateWidth() << endl;
-  cout << " -------------- Print 2nd Hierarchy H/W -------------- " << endl;
+//slicingTree->createSymmetry(0,5);
+//slicingTree->updateGlobalSize();
+//slicingTree->pushBackNode(slicingTree->clone());
+  slicingTree->updateGlobalSize();
+ 
+  /* cout << "-------------- Test updateGlobalsize: Vertical/Horizontal -------------- " << endl;
 
-  cout << "2nd Hierarchy Height = " << slicingTree->getChild(2)->updateHeight() << endl;
-  cout << "2nd Hierarchy Width  = " << slicingTree->getChild(2)->updateWidth() << endl;
-
-  cout << " -------------- Print SlicingTree Placement -------------- " << endl;
-  float hvalue = 2.5;
-  float wvalue = 30;
-
-  cout << " -------------- Print Root -------------- " << endl;
-  slicingTree->print();
-  cout << " -------------- Print Children -------------- " << endl;
-  slicingTree->printChildren();
-
-  cout << "-------------- 2nd Hierarchy -------------- " << endl;
-  slicingTree->getChild(2)->printChildren();
-  
-  cout << " -------------- Print getPair H & W -------------- " << endl;
-  cout << "hvalue = " << hvalue << ", H: " << slicingTree->getChild(2)->getChild(2)->getPairH(hvalue).first << ", W: " << slicingTree->getChild(2)->getChild(2)->getPairH(hvalue).second << endl;
-  cout << "wvalue = " << wvalue << ", H: " << slicingTree->getChild(2)->getChild(2)->getPairW(wvalue).first << ", W: " << endl;
-  cout << " -------------- End -------------- " << endl;
-
-
-  cout << "-------------- Test updateGlobalsize: Vertical/Horizontal -------------- " << endl;
-  /* 
      0)Check Routing Space 
      1)Child(0) Vertical or Horizontal
      2)Test on Child n°0 with these parameters
@@ -149,16 +125,8 @@ int main(int argc, char* argv[])
     #define NM8    5
     3) Verify by hand the values of the map
   */
-  slicingTree->setAllToleranceH(0); // toleranceH = 1 - test Vertical
-  slicingTree->setAllToleranceW(10); // toleranceW = 1 - test Horizontal
-  cout << " -------------- Print Children -------------- " << endl;
-  slicingTree->getChild(0)->printChildren();
-  slicingTree->getChild(0)->updateGlobalSize();
-  cout << " -------------- Print Root -------------- " << endl;
-  slicingTree->getChild(0)->print();
 
-  cout << "-------------- Test updateGlobalsize: Vertical/Horizontal -------------- " << endl;
-  /* 
+ /* cout << "-------------- Test updateGlobalsize: Vertical/Horizontal -------------- " << endl; 
      0) Use updateGlobalSize results to choose values for H/W
      1) Test on root with these parameters
      #define wMinM9 1
@@ -181,24 +149,78 @@ int main(int argc, char* argv[])
     2) Verify the evolution of the values of HW with toleranceH, different achivable width
     3) Test preset status
   */
-  slicingTree->getChild(0)->setPreset(true);
-  slicingTree->updateGlobalSize();
-  slicingTree->setGlobalSize(16,0); 
+
+  cout << " -------------- Test Symmetries -------------- " << endl;
+/*
+#define wMinDP12 3.1  
+#define wMaxDP12 25.1 
+#define hMinDP12 1.7  
+#define hMaxDP12 7.7  
+#define NDP12   10   
+
+#define wMaxM9 6
+#define hMinM9 1
+#define hMaxM9 6
+#define NM9    5
+
+#define wMinM6 1
+#define wMaxM6 7
+#define hMinM6 2
+#define hMaxM6 7
+#define NM6    5
+
+#define wMinCM34 1
+#define wMaxCM34 8
+#define hMinCM34 3
+#define hMaxCM34 8
+#define NCM34    5
+
+//
+#define wMinM5 1
+#define wMaxM5 6
+#define hMinM5 1
+#define hMaxM5 6
+#define NM5    5
+
+#define wMinM7 1
+#define wMaxM7 7
+#define hMinM7 2
+#define hMaxM7 7
+#define NM7    5
+
+#define wMinM8 1
+#define wMaxM8 8
+#define hMinM8 3
+#define hMaxM8 8
+#define NM8    5
+
+1) Test symmetries with child(0) composition, change the symmetries
+2) Do it for both Vertical and Horizontal type 
+ */
+//slicingTree->updateGlobalSize();
+  cout << " -------------- Print Children -------------- " << endl;
+  slicingTree->printChildren();
+  cout << " -------------- Print Root -------------- " << endl;
   slicingTree->print();
+  slicingTree->setGlobalSize(1000,1000); 
+//cout << " -------------- Print Root -------------- " << endl;
+//slicingTree->print();
+  cout << "Number of leaf: " <<  slicingTree->getLeafNumber() << endl;
+  
 
   // Writing Datas in a file to be plotted in matlab 
   slicingTree->place();
   ofstream myfile;
   myfile.open (SlicingTreeData);
 
-  float tab[8][5]; 
+  float tab[slicingTree->getLeafNumber()][5]; 
   int i = 0;
   createSlicingTreeData(slicingTree, tab, i);
-  for (int j = 0; j < 8; j++)
+  for (int j = 0; j < slicingTree->getLeafNumber(); j++)
     {
       myfile << tab[j][0] << " " << tab[j][1] << " " << tab[j][2] << " " << tab[j][3] << " " << tab[j][4] << endl;
     }
-  myfile.close();
+    myfile.close();
 
   return 0;
 }

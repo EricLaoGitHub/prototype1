@@ -3,7 +3,6 @@ close all;
 hold on;
 
 % Parameters
-NbDevices    = 8;
 dataFileName = 'SlicingTreeData.txt';
 
 colors       = ['y','m','c','r','g','b'];
@@ -11,7 +10,8 @@ uniqueColor  = 'g';
 colorsFlag   = 1;
 
 % File
-dataFile = fopen(dataFileName);
+
+dataFile  = fopen(dataFileName);
 data = textscan(dataFile,'%f %f %f %f %f' );
 fclose(dataFile);
 
@@ -20,6 +20,7 @@ sizeData  = sizeinter(1,1);
 
 xmax = 0;
 ymax = 0;
+
 
 for i=1:sizeData
     % Data Extraction
@@ -58,6 +59,8 @@ for i=1:sizeData
         end;
     end;
 end;
+
+
 
 % Window view 
 percent = 5;
