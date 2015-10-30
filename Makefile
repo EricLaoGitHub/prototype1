@@ -1,4 +1,4 @@
-OBJS = main.o slicingNode.o
+OBJS = main.o SlicingNode.o
 CC = g++
 DEBUG = -g 
 CFLAGS = -Wall -c $(DEBUG) 
@@ -13,7 +13,7 @@ main: $(OBJS)
 main.o: main.cpp parameters.h
 	$(CC) $(CFLAGS) main.cpp 
 
-slicingNode.o: slicingNode.cpp slicingNode.h
-	$(CC) $(CFLAGS) slicingNode.cpp 
+SlicingNode.o: SlicingNode.cpp SlicingNode.h
+	$(CC) $(CFLAGS) SlicingNode.cpp 
 clean:
 	rm -rf *.o $(EXEC) *.txt *~

@@ -3,9 +3,10 @@
 
 #include <typeinfo>
 #include "parameters.h"
-#include "slicingNode.h"
+#include "SlicingNode.h"
 
 using namespace std;
+using namespace SlicingTree;
 
 map <float,float>* createMapH(float widthmin, float widthmax, float heightmin, float heightmax, float nmax)
 {
@@ -62,7 +63,7 @@ int main(int argc, char* argv[])
   map <float,float>* mapHWM6 = createMapH(wMinM6,wMaxM6,hMinM6,hMaxM6,NM6);
   
   cout << " -------------- M7 -------------- " << endl;
-  map <float,float>* mapHWM7 = createMapH(wMinM7,wMaxM7,hMinM7,hMaxM7,NM7);
+//map <float,float>* mapHWM7 = createMapH(wMinM7,wMaxM7,hMinM7,hMaxM7,NM7);
   
   cout << " -------------- M8 -------------- " << endl;
   map <float,float>* mapHWM8 = createMapH(wMinM8,wMaxM8,hMinM8,hMaxM8,NM8);
@@ -73,25 +74,25 @@ int main(int argc, char* argv[])
   cout << endl;
   cout << " -------------- Build Slicing Tree -------------- " << endl;
   HSlicingNode* slicingTree = HSlicingNode::create();
-  slicingTree->createPushBackNode(Vertical,Middle);
-  slicingTree->createPushBackDevice(mapHWDP12,Middle);
-  slicingTree->createPushBackNode(Vertical,Middle);
+  slicingTree->createPushBackNode(Vertical,AlignCenter);
+  slicingTree->createPushBackDevice(mapHWDP12,AlignCenter);
+  slicingTree->createPushBackNode(Vertical,AlignCenter);
   slicingTree->createPushBackRouting(1);
-  slicingTree->createPushBackDevice(mapHWDP12,Middle);
+  slicingTree->createPushBackDevice(mapHWDP12,AlignCenter);
 
   cout << "-------------- 1st Hierarchy -------------- " << endl;
-  slicingTree->getChild(0)->createPushBackDevice(mapHWM8,Middle);
-  slicingTree->getChild(0)->createPushBackDevice(mapHWM5,Middle);
+  slicingTree->getChild(0)->createPushBackDevice(mapHWM8,AlignCenter);
+  slicingTree->getChild(0)->createPushBackDevice(mapHWM5,AlignCenter);
   slicingTree->getChild(0)->createPushBackRouting(1);
   slicingTree->getChild(0)->createSymmetry(1,3);
   slicingTree->getChild(0)->createSymmetry(3,4);
-  slicingTree->getChild(0)->createPushBackDevice(mapHWM8,Middle);
+  slicingTree->getChild(0)->createPushBackDevice(mapHWM8,AlignCenter);
   slicingTree->getChild(0)->setSymmetry(5,0);
 
   cout << "-------------- 2nd Hierarchy -------------- " << endl;
-  slicingTree->getChild(2)->createPushBackDevice(mapHWM9  ,Middle);
-  slicingTree->getChild(2)->createPushBackDevice(mapHWCM34,Middle);
-  slicingTree->getChild(2)->createPushBackDevice(mapHWM6  ,Middle);
+  slicingTree->getChild(2)->createPushBackDevice(mapHWM9  ,AlignCenter);
+  slicingTree->getChild(2)->createPushBackDevice(mapHWCM34,AlignCenter);
+  slicingTree->getChild(2)->createPushBackDevice(mapHWM6  ,AlignCenter);
 
   slicingTree->setAllToleranceH(100); // toleranceH = 1 - test Vertical
   slicingTree->setAllToleranceW(100); // toleranceW = 1 - test Horizontal
@@ -210,6 +211,8 @@ int main(int argc, char* argv[])
 
   // Writing Datas in a file to be plotted in matlab 
   slicingTree->place();
+  cout << " -------------- Print Children -------------- " << endl;
+  slicingTree->printChildren();
   ofstream myfile;
   myfile.open (SlicingTreeData);
 
