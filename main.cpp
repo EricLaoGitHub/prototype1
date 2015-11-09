@@ -94,8 +94,8 @@ int main(int argc, char* argv[])
   slicingTree->getChild(2)->createChild(mapHWCM34,AlignCenter); // DeviceNode
   slicingTree->getChild(2)->createChild(mapHWM6  ,AlignCenter); // DeviceNode
 
-  slicingTree->setAllToleranceH(100); // toleranceH = 1 - test Vertical
-  slicingTree->setAllToleranceW(100); // toleranceW = 1 - test Horizontal
+  slicingTree->recursiveSetToleranceH(100); // toleranceH = 1 - test Vertical
+  slicingTree->recursiveSetToleranceW(100); // toleranceW = 1 - test Horizontal
 
 //slicingTree->createChild(0,5);
 //slicingTree->updateGlobalSize();
@@ -213,6 +213,7 @@ int main(int argc, char* argv[])
   slicingTree->place();
   cout << " -------------- Print Children -------------- " << endl;
   slicingTree->printChildren();
+
   ofstream myfile;
   myfile.open (SlicingTreeData);
 
