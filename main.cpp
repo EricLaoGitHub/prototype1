@@ -20,7 +20,7 @@ void createSlicingTreeData(SlicingNode* data, float tab[][5], int& i)
 {
   for (vector<SlicingNode*>::const_iterator it = data->getChildren().begin(); it != data->getChildren().end(); it++)
     {
-      if ((*it)->getType() == DeviceNode)
+      if ( (*it)->isDevice() )
         {  
           tab[i][0]=(*it)->getX();
           tab[i][1]=(*it)->getY();
@@ -29,7 +29,7 @@ void createSlicingTreeData(SlicingNode* data, float tab[][5], int& i)
           tab[i][4]=1;
           i++;
         }
-      else if ((*it)->getType() == RoutingNode)
+      else if ( (*it)->isRouting() )
         {  
           tab[i][0]=(*it)->getX();
           tab[i][1]=(*it)->getY();
@@ -38,7 +38,7 @@ void createSlicingTreeData(SlicingNode* data, float tab[][5], int& i)
           tab[i][4]=0;
           i++;
         }
-      else if (((*it)->getType() == Horizontal)||((*it)->getType() == Vertical))
+      else if ( ((*it)->isHorizontal()) || ((*it)->isVertical()) )
         {
           createSlicingTreeData((*it), tab, i);
         }
@@ -77,13 +77,13 @@ int main(int argc, char* argv[])
   slicingTree->createChild(Vertical,AlignCenter);     // VSlicingNode
   slicingTree->createChild(mapHWDP12,AlignCenter);    // DeviceNode
   slicingTree->createChild(Vertical,AlignCenter);     // VSlicingNode
-  slicingTree->createChild(1);                        // RoutingNode H
+  slicingTree->createRouting(1);                        // RoutingNode H
   slicingTree->createChild(mapHWDP12,AlignCenter);    // DeviceNode
 
   cout << "-------------- 1st Hierarchy -------------- " << endl;
   slicingTree->getChild(0)->createChild(mapHWM8,AlignCenter); // DeviceNode
   slicingTree->getChild(0)->createChild(mapHWM5,AlignCenter); // DeviceNode
-  slicingTree->getChild(0)->createChild(1);                   // RoutingNode V
+  slicingTree->getChild(0)->createRouting(1);                   // RoutingNode V
   slicingTree->getChild(0)->createChild(1,3);                 // Symmetry, <1,3>
   slicingTree->getChild(0)->createChild(3,4);                 // Symmetry, <3,4>
   slicingTree->getChild(0)->createChild(mapHWM8,AlignCenter); // DeviceNode
@@ -93,6 +93,8 @@ int main(int argc, char* argv[])
   slicingTree->getChild(2)->createChild(mapHWM9  ,AlignCenter); // DeviceNode
   slicingTree->getChild(2)->createChild(mapHWCM34,AlignCenter); // DeviceNode
   slicingTree->getChild(2)->createChild(mapHWM6  ,AlignCenter); // DeviceNode
+
+//slicingTree->pushBackNode(slicingTree->clone());
 
   slicingTree->recursiveSetToleranceH(100); // toleranceH = 1 - test Vertical
   slicingTree->recursiveSetToleranceW(100); // toleranceW = 1 - test Horizontal

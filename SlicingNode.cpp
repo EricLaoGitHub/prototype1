@@ -6,49 +6,140 @@ namespace SlicingTree{
 
 
 // -----------------------------------------------------------------------------------------------//
+// Class : MapHW
+// -----------------------------------------------------------------------------------------------//
+
+
+  MapHW::MapHW(map <float,float>* map1)
+  {
+    if (map1 == NULL) { _mapHW = new std::map<float,float> (); }
+    else              { _mapHW = map1; }
+  }
+
+
+  MapHW::~ MapHW(){}
+
+
+  MapHW MapHW::clone ()
+  {
+    map <float,float>* mapHW = new map <float,float>();
+    for (map<float,float>::const_iterator it = _mapHW->begin(); it != _mapHW->end(); it++)
+      { mapHW->insert(pair<float,float>((*it).first, (*it).second)); }
+    return mapHW;
+  }
+
+
+  bool MapHW::compare(MapHW map2)
+  {
+    bool comp = true;
+    map <float,float>::const_iterator it2 = map2.begin();
+    if (_mapHW->size() != map2.size()) { comp = false; }
+
+    if (comp == true) {
+      for (map<float,float>::const_iterator it1 = _mapHW->begin(); it1 != _mapHW->end(); it1++){
+
+        if ( ((*it1).first != (*it2).first)||((*it1).second != (*it2).second) ){ comp = false; }
+        if (it2 != map2.end()){ it2++; }
+      }
+    }
+    return comp;
+  }
+
+  
+  void MapHW::print()
+  {
+    cout << "PrintMap - MapHW:" << endl;
+    for (map <float,float>::iterator itPrint = _mapHW->begin(); itPrint != _mapHW->end(); itPrint++)
+      { cout << "H = " << itPrint->first << ", W = " << itPrint->second << endl; } 
+    cout << endl;
+  }
+
+
+  pair<float,float> MapHW::getPairH(float h) const 
+  {
+    float w        = 0;
+    float hclosest = 0;
+
+    for (map <float,float>::const_iterator itHW = _mapHW->begin(); itHW != _mapHW->end(); itHW++){ 
+      if ( (itHW->first > hclosest) && (h >= itHW->first) ){
+        hclosest = itHW->first;
+        w        = itHW->second;
+      }
+    }
+
+    if ( (w == 0) && (hclosest == 0) ){ cerr << "No solution for h = " << h << " has been found." << endl; }
+    return pair<float,float>(hclosest,w);
+  }
+
+
+  pair<float,float> MapHW::getPairW(float w) const 
+  {
+    float wclosest = 0;
+    float h        = 0;
+
+    for (map <float,float>::const_iterator itHW = _mapHW->begin(); itHW != _mapHW->end(); itHW++){ 
+      if ( (itHW->second > wclosest) && (w >= itHW->second) ){
+        h        = itHW->first;
+        wclosest = itHW->second;
+      }
+    }
+
+    if ( (h == 0) && (wclosest == 0) ){ cerr << "No solution for w = " << w << " has been found." << endl; }
+    return pair<float,float>(h,wclosest);
+  }
+
+
+  void MapHW::insertWorst(float h, float w)
+  {
+    if ( _mapHW->find(h) != _mapHW->end() ){
+      if ( (*_mapHW->find(h)).second < w ) 
+        {( *_mapHW->find(h)).second = w; }
+    }
+    else 
+      { _mapHW->insert(pair<float,float> ( h, w ) ); }
+  }
+
+
+
+
+
+// -----------------------------------------------------------------------------------------------//
 // Class : SlicingNode
 // -----------------------------------------------------------------------------------------------//
 
 
-  SlicingNode::SlicingNode( SlicingType type
-                          , MapHW       mapHW
-                          , Alignment   alignment 
-                          , float       w        
-                          , float       h
-                          ):_type(type)
-                           ,_alignment(alignment)
-                           ,_x(0),_y(0)
+  SlicingNode::SlicingNode( unsigned int type
+                          , MapHW        mapHW
+                          , unsigned int alignment 
+                          , float        w        
+                          , float        h
+                          ):_x(0),_y(0)
                            ,_w(w),_h(h)
   {
+    _flags = 0;
+    this->setType(type);
+    this->setAlignment(alignment);
+  
     _mapHW = mapHW; 
 
-    if ( (w != 0)&&(h != 0) ){ _preset = true ; }
-    else                     { _preset = false; }
+    if ( (w != 0)&&(h != 0) ){ this->setPreset(Preset); }
   } 
 
 
   SlicingNode::~SlicingNode(){}
 
 
-  void SlicingNode::setPairH(float h)
-  {
-    pair<float,float> hw = this->getPairH(h);
-    _h                   = hw.first;
-    _w                   = hw.second;
-    }
-
-
   void SlicingNode::print() const
   {
-    if   (_preset == true){ cout << "preset = True"  << endl; }
-    else                  { cout << "preset = False" << endl; }
+    if   ( this->isPreset() ){ cout << "preset = True"  << endl; }
+    else                     { cout << "preset = False " << endl; }
     cout << "Height = " << _h << endl;
     cout << "Width  = " << _w << endl;
     cout << "X      = " << _x << endl;
     cout << "Y      = " << _y << endl;
     cout << endl;
 
-    if (_type != RoutingNode ){
+    if (this->isRouting() ){
       cout << "MapHW:" << endl;
       for (map <float,float>::const_iterator itHW = _mapHW.begin(); itHW != _mapHW.end(); itHW++)
         { cout << "H = " << itHW->first << ", W = " << itHW->second << endl; }
@@ -61,42 +152,59 @@ namespace SlicingTree{
   {
     _x = x;
     _y = y;
+  }  
+
+
+  void SlicingNode::setPairH(float h)
+  {
+    pair<float,float> hw = this->getPairH(h);
+    _h                   = hw.first;
+    _w                   = hw.second;
   }
   
+
+  pair<float, float> SlicingNode::setGlobalSize(float height, float width)
+  {
+    if ( !this->isPreset() )      { this->setPairH(height)  ; }
+    if ( (_h != 0) && (_w != 0) ) { this->setPreset(Preset) ; }
+
+    return pair<float, float> (_h,_w); 
+  }
+
+
 // Error Methods
-  void SlicingNode::createChild ( SlicingType type     
-                                , Alignment   alignment  
-                                , float       toleranceH 
-                                , float       toleranceW 
-                                , float       w          
-                                , float       h          
+  void SlicingNode::createChild ( unsigned int type     
+                                , unsigned int alignment  
+                                , float        toleranceH 
+                                , float        toleranceW 
+                                , float        w          
+                                , float        h          
                                 )
   {
-    cerr << " Error(createChild( SlicingType type, Alignment alignment = UnknownAlignment, float toleranceH = 0, float toleranceW = 0, float w = 0, float h = 0)): DeviceNode and RoutingNode do not have child." << endl; 
+    cerr << " Error(createChild( SlicingType type, Alignment alignment = UnknownAlignment, float toleranceH = 0, float toleranceW = 0, float w = 0, float h = 0)): Device and Routing do not have child." << endl; 
   }
 
 
-  void SlicingNode::createChild( MapHW     mapHW
-                               , Alignment alignment
-                               , float     w
-                               , float     h 
+  void SlicingNode::createChild( MapHW        mapHW
+                               , unsigned int alignment
+                               , float        w
+                               , float        h 
                                )
   {
-    cerr << " Error(createChild(MapHW mapHW, Alignment alignment, float w, float h)): DeviceNode and RoutingNode do not have child." << endl; 
+    cerr << " Error(createChild(MapHW mapHW, Alignment alignment, float w, float h)): Device and Routing do not have child." << endl; 
   }
 
 
-  void SlicingNode::createChild(float hw)
+  void SlicingNode::createChild( int childIndex, int copyIndex, Flags tr)
   {
-    std::cerr << " Error(createChild(float hw): DeviceNode and RoutingNode do not have child." << endl; 
+    std::cerr << " Error(createChild( int childIndex, int copyIndex, Flags tr)): Device and Routing do not have child." << endl; 
   }
 
 
-  void SlicingNode::createChild( int childIndex, int copyIndex, Transformation tr)
+  void SlicingNode::createRouting(float hw)
   {
-    std::cerr << " Error(createChild( int childIndex, int copyIndex, Transformation tr)): DeviceNode and RoutingNode do not have child." << endl; 
+    std::cerr << " Error(createChild(float hw): Device and Routing do not have child." << endl; 
   }
-
 
   int SlicingNode::getNbChild() const
   {
@@ -126,12 +234,6 @@ namespace SlicingTree{
   }
 
 
-  void SlicingNode::insertNode(SlicingNode* node, int index)
-  {
-    cerr << " Error(void SlicingNode::insertNode(SlicingNode* node, int index)): Devices do not have child." << endl; 
-  }
-
-
   void SlicingNode::pushBackNode(SlicingNode* node)
   {
     cerr << " Error(void SlicingNode::pushBackNode(SlicingNode* node)): Devices do not have child." << endl; 
@@ -150,6 +252,12 @@ namespace SlicingTree{
   }
 
 
+  void SlicingNode::insertNode(SlicingNode* node, int index)
+  {
+    cerr << " Error(void SlicingNode::insertNode(SlicingNode* node, int index)): Devices do not have child." << endl; 
+  }
+
+
   void SlicingNode::removeNode(SlicingNode* node)
   {
     cerr << " Error(void SlicingNode::removeNode(SlicingNode* node)): Devices do not have child." << endl; 
@@ -162,9 +270,9 @@ namespace SlicingTree{
   }
 
 
-  void SlicingNode::recursiveSetToleranceH(float tolerance)
+  void SlicingNode::setToleranceW(float tolerance)
   {
-    cerr << " Error(void SlicingNode::setToleranceH(float tolerance)): Devices do not have tolerance parameter." << endl; 
+    cerr << " Error(void SlicingNode::setToleranceW(float tolerance)): Devices do not have tolerance parameter." << endl; 
   }
 
 
@@ -175,22 +283,22 @@ namespace SlicingTree{
   }
 
 
-  void SlicingNode::setToleranceW(float tolerance)
+  float SlicingNode::getToleranceW() const
   {
-    cerr << " Error(void SlicingNode::setToleranceW(float tolerance)): Devices do not have tolerance parameter." << endl; 
+   cerr << " Error(SlicingNode::getToleranceW()): Devices do not have tolerance parameter." << endl;
+   return 0;
+  }
+
+
+  void SlicingNode::recursiveSetToleranceH(float tolerance)
+  {
+    cerr << " Error(void SlicingNode::setToleranceH(float tolerance)): Devices do not have tolerance parameter." << endl; 
   }
 
 
   void SlicingNode::recursiveSetToleranceW(float tolerance)
   {
     cerr << " Error(void SlicingNode::setToleranceW(float tolerance)): Devices do not have tolerance parameter." << endl; 
-  }
-
-
-  float SlicingNode::getToleranceW() const
-  {
-   cerr << " Error(SlicingNode::getToleranceW()): Devices do not have tolerance parameter." << endl;
-   return 0;
   }
 
 
@@ -201,31 +309,22 @@ namespace SlicingTree{
   } 
 
 
-  pair<float, float> SlicingNode::setGlobalSize(float height, float width)
-  {
-    if ( _preset != true      ) { this->setPairH(height); }
-    if ( (_h != 0)&&(_w != 0) ) { _preset = true        ; }
-
-    return pair<float, float> (_h,_w); 
-  }
-
-
   void SlicingNode::setSymmetry(int childIndex, int copyIndex)
   {
-    cerr << "SlicingNode::setSymmetry(int childIndex, int copyIndex) : RoutingNodes do not have symmetries." << endl; 
-  }
-
-
-  list<pair<int,int> > SlicingNode::getSymmetries() const
-  {
-    cerr << "SlicingNode::getSymmetries() const : RoutingNodes do not have symmetries." << endl; 
-    return list<pair<int,int> >();
+    cerr << "SlicingNode::setSymmetry(int childIndex, int copyIndex) : Routings do not have symmetries." << endl; 
   }
 
 
   void SlicingNode::normalizeSymmetries() 
   {
-    cerr << "SlicingNode::normalizeSymmetries() const : RoutingNodes do not have symmetries." << endl; 
+    cerr << "SlicingNode::normalizeSymmetries() const : Routings do not have symmetries." << endl; 
+  }
+
+
+  list<pair<int,int> > SlicingNode::getSymmetries() const
+  {
+    cerr << "SlicingNode::getSymmetries() const : Routings do not have symmetries." << endl; 
+    return list<pair<int,int> >();
   }
 
 
@@ -234,13 +333,13 @@ namespace SlicingTree{
 // -----------------------------------------------------------------------------------------------//
 
 
-  HVSlicingNode::HVSlicingNode( SlicingType type
-                              , Alignment   alignment 
-                              , float       toleranceH 
-                              , float       toleranceW
-                              , float       w 
-                              , float       h
-                              ):SlicingNode(type, MapHW::create(), alignment, w, h)
+  HVSlicingNode::HVSlicingNode( unsigned int type
+                              , unsigned int alignment 
+                              , float        toleranceH 
+                              , float        toleranceW
+                              , float        w 
+                              , float        h
+                              ):SlicingNode(type, MapHW(), alignment, w, h)
                                ,_toleranceH(toleranceH)
                                ,_toleranceW(toleranceW){}
 
@@ -248,154 +347,12 @@ namespace SlicingTree{
   HVSlicingNode::~HVSlicingNode(){}
 
 
-  void HVSlicingNode::createChild(int childIndex, int copyIndex, Transformation tr)
-  {
-    if (childIndex != copyIndex){
-      
-      this->insertNode(this->getChild(childIndex)->clone(tr), copyIndex); 
-      _symmetries.push_back(pair<int,int>(min(childIndex, copyIndex),max(childIndex, copyIndex)));
-      this->updateGlobalSize();
-    }
-    else { cerr << "Error(HVSlicingNode::createChild(int childIndex, int copyIndex, Transformation tr)): Indexes cannot be the same." << endl; }
-  }
-
-
-  void HVSlicingNode::printChildren()
-  {
-    int count = 1;
-    for (vector<SlicingNode*>::iterator it = _children.begin(); it != _children.end(); it++){
-      if (((*it)->getType() == DeviceNode)||((*it)->getType() == RoutingNode)){
-        cout << "-- Children: " << count << "/" << _children.size() << " --" << endl;
-        (*it)->print(); 
-      }
-      else {
-        cout << "-- Children: " << count << "/" << _children.size() << " --" << endl;
-        (*it)->print();
-        (*it)->printChildren();
-      }
-      count++;
-    }
-  }
-
-
-  void HVSlicingNode::insertNode(SlicingNode* node, int index)
-  {
-    vector<SlicingNode*>::iterator it = _children.begin();
-    for (int i = 0; i < index; i++){ if (it != _children.end()){ it++; } }
-    _children.insert(it,node);
-  }
-
-
-  void HVSlicingNode::removeNode(SlicingNode* node) 
-  {
-    for (vector<SlicingNode*>::iterator it = _children.begin(); it != _children.end(); it++)
-      { if (*it == node){  _children.erase(it); } }
-  }
-
-
-  void  HVSlicingNode::recursiveSetToleranceH(float tolerance)
-  {
-    for (vector<SlicingNode*>::iterator it = _children.begin(); it != _children.end(); it++){
-
-      if (((*it)->getType() != DeviceNode)&&((*it)->getType() != RoutingNode))
-        { (*it)->recursiveSetToleranceH(tolerance); }
-    }
-    _toleranceH = tolerance; 
-  }
-
-
-  void  HVSlicingNode::recursiveSetToleranceW(float tolerance)
-  {
-    for (vector<SlicingNode*>::iterator it = _children.begin(); it != _children.end(); it++){
-
-      if (((*it)->getType() != DeviceNode)&&((*it)->getType() != RoutingNode))
-        { (*it)->recursiveSetToleranceW(tolerance); }
-    }
-    _toleranceW = tolerance; 
-  }
-
-
-  bool HVSlicingNode::hasEmptyChildrenMap() const
-  {
-    bool flag = false;
-    for (vector<SlicingNode*>::const_iterator it = _children.begin(); it != _children.end(); it++){
-
-      if (((*it)->getMapHW().empty() != true)&&((*it)->getType() != RoutingNode))
-        { if ((*it)->getMapHW().empty() == true) {flag = true;} }
-    }
-    return flag;
-  }
-
-
-  void HVSlicingNode::setSymmetry(int childIndex, int copyIndex)
-  {
-    if (childIndex != copyIndex){
-      if (this->getChild(childIndex)->getMapHW().compare( this->getChild(copyIndex)->getMapHW() ) == true)
-        { _symmetries.push_back(pair<int,int>(min(childIndex, copyIndex), max(childIndex, copyIndex))); }
-      else
-        { cerr << "Error(HVSlicingNode::setSymmetry(int childIndex, int copyIndex)): Child are not the same, symmetry cannot be set." << endl; }
-    }
-    else { cerr << "Error(HVSlicingNode::setSymmetry(int childIndex, int copyIndex)): Indexes cannot be the same." << endl; }
-  }
-
-
-  int HVSlicingNode::getLeafNumber() const
-  {
-    int cpt = 0;
-    for (vector<SlicingNode*>::const_iterator it = _children.begin(); it != _children.end(); it++)
-      { cpt += (*it)->getLeafNumber(); }
-    return cpt;  
-  }
-
-
-  void HVSlicingNode::print() const
-  {
-    SlicingNode::print();
-    if (_symmetries.empty() == false){
-        cout << "Symmetries: " << endl;
-        for (list<pair<int,int> >::const_iterator it = _symmetries.begin(); it != _symmetries.end(); it++)
-          { cout << "Children: " << (*it).first << " and " << (*it).second << endl;  }
-        cout << endl;
-      }
-  }
-
-
-  void HVSlicingNode::normalizeSymmetries()
-  {
-    list<pair<int,int> > adjustedSymmetries = list<pair<int,int> >();
-    for (list<pair<int,int> >::const_iterator it = _symmetries.begin(); it != _symmetries.end(); it++){ 
-
-      if ((*it).first > (*it).second ){ adjustedSymmetries.push_back(pair<int,int >((*it).second,(*it).first)); } 
-      else { adjustedSymmetries.push_back(pair<int,int >((*it).first,(*it).second)); } 
-    }
-    adjustedSymmetries.sort();
-
-    bool next = false;
-    list<pair<int,int> >::iterator it2 = adjustedSymmetries.begin();
-    it2++;
-
-    for (list<pair<int,int> >::iterator it = adjustedSymmetries.begin(); it != adjustedSymmetries.end(); it++){
-      it2 = it;
-      it2++;
-
-      while(next != true){
-        if ( (*it).second == (*it2).first ){ (*it2).first = (*it).first; }
-        if ( (*it).second <  (*it2).first ){ next = true; }
-        it2++;
-        if ( it2 == adjustedSymmetries.end() ) { next = true; }
-      }
-      next = false;
-    }
-    _symmetries = adjustedSymmetries;
-  }
-
-
   vector< pair<float,float> > HVSlicingNode::initSet()
   {
     vector< pair<float,float> > nextSet;
     for (vector<SlicingNode*>::const_iterator it = _children.begin(); it != _children.end(); it++){ 
         
-      if ( (*it)->getType() != RoutingNode ) 
+      if ( !(*it)->isRouting() ) 
         { nextSet.push_back((*(*it)->getMapHW().begin())); }
       else 
         { nextSet.push_back(pair<float,float>((*it)->getHeight(),(*it)->getWidth())); }
@@ -415,11 +372,11 @@ namespace SlicingTree{
     modulos.push_back(1);
     for (vector<SlicingNode*>::const_iterator it = _children.begin(); it != _children.end(); it++){
         
-      if ( it               != _children.begin() ){ modulos.push_back(modulo); }
-      if ( (*it)->getType() != RoutingNode       ){
+      if ( it != _children.begin() ){ modulos.push_back(modulo); }
+      if ( !(*it)->isRouting()     ){
       // Check if the current child is a symmetry or not
 
-        if ( (!this->isSymmetry(index, symmetry)) && ((*it)->getPreset() != true) ){
+        if ( (!this->isSymmetry(index, symmetry)) && (!(*it)->isPreset()) ){
           modulo     *= (*it)->getMapHW().size();
           endCounter *= (*it)->getMapHW().size();
         }
@@ -494,34 +451,259 @@ namespace SlicingTree{
   }
   
 
+  void HVSlicingNode::createChild(int childIndex, int copyIndex, Flags tr)
+  {
+    if (childIndex != copyIndex){
+      
+      this->insertNode(this->getChild(childIndex)->clone(tr), copyIndex); 
+      _symmetries.push_back(pair<int,int>(min(childIndex, copyIndex),max(childIndex, copyIndex)));
+      this->updateGlobalSize();
+    }
+    else { cerr << "Error(HVSlicingNode::createChild(int childIndex, int copyIndex, Flags tr)): Indexes cannot be the same." << endl; }
+  }
+
+
+  void HVSlicingNode::printChildren()
+  {
+    int count = 1;
+    for (vector<SlicingNode*>::iterator it = _children.begin(); it != _children.end(); it++){
+      if ( ((*it)->isDevice()) || ((*it)->isRouting()) ){
+        cout << "-- Children: " << count << "/" << _children.size() << " --" << endl;
+        (*it)->print(); 
+      }
+      else {
+        cout << "-- Children: " << count << "/" << _children.size() << " --" << endl;
+        (*it)->print();
+        (*it)->printChildren();
+      }
+      count++;
+    }
+  }
+
+
+  void HVSlicingNode::insertNode(SlicingNode* node, int index)
+  {
+    vector<SlicingNode*>::iterator it = _children.begin();
+    for (int i = 0; i < index; i++){ if (it != _children.end()){ it++; } }
+    _children.insert(it,node);
+  }
+
+
+  void HVSlicingNode::removeNode(SlicingNode* node) 
+  {
+    for (vector<SlicingNode*>::iterator it = _children.begin(); it != _children.end(); it++)
+      { if (*it == node){  _children.erase(it); } }
+  }
+
+
+  void  HVSlicingNode::recursiveSetToleranceH(float tolerance)
+  {
+    for (vector<SlicingNode*>::iterator it = _children.begin(); it != _children.end(); it++){
+
+      if ( (!(*it)->isDevice()) && (!(*it)->isRouting()) )
+        { (*it)->recursiveSetToleranceH(tolerance); }
+    }
+    _toleranceH = tolerance; 
+  }
+
+
+  void  HVSlicingNode::recursiveSetToleranceW(float tolerance)
+  {
+    for (vector<SlicingNode*>::iterator it = _children.begin(); it != _children.end(); it++){
+
+      if ( (!(*it)->isDevice()) && (!(*it)->isRouting()) )
+        { (*it)->recursiveSetToleranceW(tolerance); }
+    }
+    _toleranceW = tolerance; 
+  }
+
+
+  bool HVSlicingNode::hasEmptyChildrenMap() const
+  {
+    bool flag = false;
+    for (vector<SlicingNode*>::const_iterator it = _children.begin(); it != _children.end(); it++){
+
+      if ( ((*it)->getMapHW().empty() != true) && (!(*it)->isRouting()) )
+        { if ((*it)->getMapHW().empty() == true) {flag = true;} }
+    }
+    return flag;
+  }
+
+
+  void HVSlicingNode::setSymmetry(int childIndex, int copyIndex)
+  {
+    if (childIndex != copyIndex){
+      if (this->getChild(childIndex)->getMapHW().compare( this->getChild(copyIndex)->getMapHW() ) == true)
+        { _symmetries.push_back(pair<int,int>(min(childIndex, copyIndex), max(childIndex, copyIndex))); }
+      else
+        { cerr << "Error(HVSlicingNode::setSymmetry(int childIndex, int copyIndex)): Child are not the same, symmetry cannot be set." << endl; }
+    }
+    else { cerr << "Error(HVSlicingNode::setSymmetry(int childIndex, int copyIndex)): Indexes cannot be the same." << endl; }
+  }
+
+
+  int HVSlicingNode::getLeafNumber() const
+  {
+    int cpt = 0;
+    for (vector<SlicingNode*>::const_iterator it = _children.begin(); it != _children.end(); it++)
+      { cpt += (*it)->getLeafNumber(); }
+    return cpt;  
+  }
+
+
+  void HVSlicingNode::print() const
+  {
+    SlicingNode::print();
+    if (_symmetries.empty() == false){
+        cout << "Symmetries: " << endl;
+        for (list<pair<int,int> >::const_iterator it = _symmetries.begin(); it != _symmetries.end(); it++)
+          { cout << "Children: " << (*it).first << " and " << (*it).second << endl;  }
+        cout << endl;
+      }
+  }
+
+
+  void HVSlicingNode::normalizeSymmetries()
+  {
+    list<pair<int,int> > adjustedSymmetries = list<pair<int,int> >();
+    for (list<pair<int,int> >::const_iterator it = _symmetries.begin(); it != _symmetries.end(); it++){ 
+
+      if ((*it).first > (*it).second ){ adjustedSymmetries.push_back(pair<int,int >((*it).second,(*it).first)); } 
+      else { adjustedSymmetries.push_back(pair<int,int >((*it).first,(*it).second)); } 
+    }
+    adjustedSymmetries.sort();
+
+    bool next = false;
+    list<pair<int,int> >::iterator it2 = adjustedSymmetries.begin();
+    it2++;
+
+    for (list<pair<int,int> >::iterator it = adjustedSymmetries.begin(); it != adjustedSymmetries.end(); it++){
+      it2 = it;
+      it2++;
+
+      while(next != true){
+        if ( (*it).second == (*it2).first ){ (*it2).first = (*it).first; }
+        if ( (*it).second <  (*it2).first ){ next = true; }
+        it2++;
+        if ( it2 == adjustedSymmetries.end() ) { next = true; }
+      }
+      next = false;
+    }
+    _symmetries = adjustedSymmetries;
+  }
+
+
 // -----------------------------------------------------------------------------------------------//
 // Class : VSlicingNode
 // -----------------------------------------------------------------------------------------------//
 
+  
+  VSlicingNode::VSlicingNode( unsigned int type
+                            , unsigned int alignment
+                            , float        toleranceH
+                            , float        toleranceW
+                            , float        w
+                            , float        h
+                            ):HVSlicingNode(type, alignment, toleranceH, toleranceW, w, h){}
 
-  VSlicingNode* VSlicingNode::create( Alignment alignment
-                                    , float     toleranceH
-                                    , float     toleranceW
-                                    , float     w
-                                    , float     h
+
+  VSlicingNode::~VSlicingNode(){}
+
+
+  void VSlicingNode::setNextSet ( float&                       currentW
+                                , list  < pair<float,float> >& currentHs
+                                , int&                         counter
+                                , vector<int>&                 modulos
+                                , vector< pair<float,float> >& nextSet
+                                , vector< pair<float,float> >& currentSet
+                                )
+  {
+    int           index = 0;
+    pair<int,int> symmetry = pair<int,int>();
+
+    vector< pair<float,float> >::iterator itpair  = nextSet.begin();
+
+    for (vector<SlicingNode*>::const_iterator it = _children.begin(); it != _children.end(); it++){
+          
+      if ( this->isSymmetry(index, symmetry) ){
+        itpair - (symmetry.second - symmetry.first);
+        
+        if ( !(*it)->isRouting() ) { currentHs.push_back((*itpair)); }
+        currentSet.push_back((*itpair));
+        currentW           += (*itpair).second;
+        nextSet[index] = nextSet[symmetry.first];
+        
+        itpair + (symmetry.second - symmetry.first);
+      }
+      
+      else {
+      // Collect the pair<float,float> in vector (size order) and list (sort height) of the combination in order sort them. Calculate the width of the combination.
+        if ( !(*it)->isRouting() ) { currentHs.push_back((*itpair)); }
+        currentSet.push_back((*itpair));
+        currentW += (*itpair).second;
+        
+      // Go through the different combinations
+        if ( ((counter-1)%modulos[index] == modulos[index]-1) && (!(*it)->isPreset()) ){
+          
+          if ( (*it)->getMapHW().upper_bound((*itpair).first) != (*it)->getMapHW().end() )
+            { nextSet[index] = (*(*it)->getMapHW().upper_bound((*itpair).first)); }
+          else
+            { nextSet[index] = (*(*it)->getMapHW().begin()); }
+        }
+      }
+      itpair++;
+      index++;
+    }
+  }
+
+
+  void VSlicingNode::recursiveSetGlobalSize( vector< pair<float,float> >& bestSet
+                                           , float&                       finalWidth
+                                           , float&                       finalHeight
+                                           , float&                       height
+                                           )
+  {
+    if (bestSet.empty() != true){
+
+      pair<float,float> pairreal                = pair<float,float> (0,0);
+      vector< pair<float,float> >::iterator it2 = bestSet.begin();
+
+      for (vector<SlicingNode*>::iterator it3 = _children.begin(); it3 != _children.end(); it3++){
+
+        if ( !(*it3)->isPreset() ){ pairreal = (*it3)->setGlobalSize(height,(*it2).second)               ; }
+        else                      { pairreal = pair<float,float> ((*it3)->getHeight(),(*it3)->getWidth()); }
+
+        finalWidth += pairreal.second;
+        if (finalHeight < pairreal.first) { finalHeight = pairreal.first; }
+        it2++;
+      }
+    }
+  }
+
+
+  VSlicingNode* VSlicingNode::create( unsigned int alignment
+                                    , float        toleranceH
+                                    , float        toleranceW
+                                    , float        w
+                                    , float        h
                                     )
   {
     return new VSlicingNode(Vertical, alignment, toleranceH, toleranceW, w, h); 
   }
  
 
-  void VSlicingNode::createChild( SlicingType type
-                                , Alignment   alignment
-                                , float       toleranceH
-                                , float       toleranceW
-                                , float       w         
-                                , float       h
+  void VSlicingNode::createChild( unsigned int type
+                                , unsigned int alignment
+                                , float        toleranceH
+                                , float        toleranceW
+                                , float        w         
+                                , float        h
                                 )
   {
     if (type == Horizontal)
       { this->pushBackNode(HSlicingNode::create(alignment, toleranceH, toleranceW, w, h)); }
 
-    else if (type == Vertical  )
+    else if (type == Vertical)
       { this->pushBackNode(VSlicingNode::create(alignment, toleranceH, toleranceW, w, h)); }
 
     else 
@@ -529,17 +711,17 @@ namespace SlicingTree{
   }
   
    
-  void VSlicingNode::createChild( MapHW     mapHW
-                                , Alignment alignment
-                                , float     w        
-                                , float     h
+  void VSlicingNode::createChild( MapHW        mapHW
+                                , unsigned int alignment
+                                , float        w        
+                                , float        h
                                 )
   {
     this->pushBackNode(DSlicingNode::create(mapHW, alignment, w, h)); 
   }
 
 
-  void VSlicingNode::createChild(float hw)
+  void VSlicingNode::createRouting(float hw)
   {
     this->pushBackNode(RVSlicingNode::create(hw)); 
   } 
@@ -549,10 +731,10 @@ namespace SlicingTree{
   {
     cout << "- Print from Slicing Node - " << endl;
     cout << "SlicingType: Vertical"  << endl; 
-    if      (_alignment == AlignBottom){ cout << "Alignment  : Bot"     << endl; }
-    else if (_alignment == AlignCenter){ cout << "Alignment  : Middle"  << endl; }
-    else if (_alignment == AlignTop   ){ cout << "Alignment  : Top"     << endl; }
-    else                               { cout << "Alignment  : Unknown" << endl; }
+    if      (this->isAlignBottom()){ cout << "Alignment  : Bot"     << endl; }
+    else if (this->isAlignCenter()){ cout << "Alignment  : Middle"  << endl; }
+    else if (this->isAlignTop   ()){ cout << "Alignment  : Top"     << endl; }
+    else                                         { cout << "Alignment  : Unknown" << endl; }
     HVSlicingNode::print();
   }
 
@@ -564,34 +746,32 @@ namespace SlicingTree{
 
     for (vector<SlicingNode*>::iterator it = _children.begin(); it != _children.end(); it++){
     // Set X,Y Node
-      if (((*it)->getType() == Horizontal)||((*it)->getType() == Vertical)){ 
-        if ((*it)->getAlignment() == AlignBottom){
+      if ( ( (*it)->isHorizontal()) || ((*it)->isVertical()) ){ 
+        if ( (*it)->isAlignBottom() ){
           (*it)->setX(xref);
           (*it)->setY(yref);
         }
         
-        else if ((*it)->getAlignment() == AlignCenter){
+        else if ( (*it)->isAlignCenter() ){
           (*it)->setX(xref);
           (*it)->setY(yref + (_h/2) - ((*it)->getHeight()/2));
         }
         
-        else if ((*it)->getAlignment() == AlignTop){
+        else if ( (*it)->isAlignTop() ){
           (*it)->setX(xref);
           (*it)->setY(yref + _h - (*it)->getHeight());
         }
       }
       
     // Place Node
-      if ((*it)->getAlignment() == AlignBottom)
+      if ( (*it)->isAlignBottom() )
         { (*it)->place(xref, yref); }
       
-      else if ((*it)->getAlignment() == AlignCenter) 
-        { (*it)->place(xref, yref + (_h/2) - ((*it)->getHeight()/2)); }
+      else if ( (*it)->isAlignCenter() ) { (*it)->place(xref, yref + (_h/2) - ((*it)->getHeight()/2)); }
       
-      else if ((*it)->getAlignment() == AlignTop)
-        { (*it)->place(xref, yref +  _h    -  (*it)->getHeight())   ; }
+      else if ( (*it)->isAlignTop()    ) { (*it)->place(xref, yref +  _h    -  (*it)->getHeight())   ; }
       
-      else if ((*it)->getType() == RoutingNode){ (*it)->place(xref, yref); }
+      else if ( (*it)->isRouting()     ) { (*it)->place(xref, yref)                                  ; }
       
       else { cerr << " Error(place(float x, float y)): Unknown Alignment in SlicingTree." << endl; }
     
@@ -729,13 +909,13 @@ namespace SlicingTree{
     _w = finalWidth;
     
     if ( (_h == 0)||(_w == 0) ){ cerr << "No solution found. Required height = " << height << " and width = " << width << endl; }
-    if ( (_h != 0)&&(_w != 0) ){ _preset = true; }
+    if ( (_h != 0)&&(_w != 0) ){ this->setPreset(Preset); }
 
     return pair<float,float>(_h,_w);
   }
 
 
-  VSlicingNode* VSlicingNode::clone(Transformation tr)
+  VSlicingNode* VSlicingNode::clone(Flags tr)
   {
     VSlicingNode* node = VSlicingNode::create( this->getAlignment()
                                              , this->getToleranceH()
@@ -744,7 +924,7 @@ namespace SlicingTree{
                                              , this->getHeight()
                                              );
     node->setMapHW(_mapHW.clone());
-    node->setPreset(_preset);
+    node->setPreset(this->getPreset());
     for (vector<SlicingNode*>::iterator it = _children.begin(); it != _children.end(); it++){
       if (tr == MX){ node->pushFrontNode((*it)->clone(tr)); }
       else         { node->pushBackNode ((*it)->clone(tr)); }
@@ -753,20 +933,25 @@ namespace SlicingTree{
   }
 
 
-  VSlicingNode::VSlicingNode( SlicingType type
-                            , Alignment   alignment
-                            , float       toleranceH
-                            , float       toleranceW
-                            , float       w
-                            , float       h
+// -----------------------------------------------------------------------------------------------//
+// Class : HSlicingNode
+// -----------------------------------------------------------------------------------------------//
+
+
+  HSlicingNode::HSlicingNode( unsigned int type
+                            , unsigned int alignment
+                            , float        toleranceH
+                            , float        toleranceW
+                            , float        w
+                            , float        h
                             ):HVSlicingNode(type, alignment, toleranceH, toleranceW, w, h){}
 
 
-  VSlicingNode::~VSlicingNode(){}
+  HSlicingNode::~HSlicingNode(){}
 
 
-  void VSlicingNode::setNextSet ( float&                       currentW
-                                , list  < pair<float,float> >& currentHs
+  void HSlicingNode::setNextSet ( list  < pair<float,float> >& currentWs
+                                , float&                       currentH
                                 , int&                         counter
                                 , vector<int>&                 modulos
                                 , vector< pair<float,float> >& nextSet
@@ -779,26 +964,24 @@ namespace SlicingTree{
     vector< pair<float,float> >::iterator itpair  = nextSet.begin();
 
     for (vector<SlicingNode*>::const_iterator it = _children.begin(); it != _children.end(); it++){
-          
+              
       if ( this->isSymmetry(index, symmetry) ){
         itpair - (symmetry.second - symmetry.first);
         
-        if ((*it)->getType() != RoutingNode ) { currentHs.push_back((*itpair)); }
         currentSet.push_back((*itpair));
-        currentW           += (*itpair).second;
+        if (!(*it)->isRouting() ){ currentWs.push_back(pair<float,float>((*itpair).second, (*itpair).first)); }
+        currentH += (*itpair).first;
         nextSet[index] = nextSet[symmetry.first];
         
         itpair + (symmetry.second - symmetry.first);
       }
       
       else {
-      // Collect the pair<float,float> in vector (size order) and list (sort height) of the combination in order sort them. Calculate the width of the combination.
-        if ((*it)->getType() != RoutingNode ) { currentHs.push_back((*itpair)); }
-        currentSet.push_back((*itpair));
-        currentW += (*itpair).second;
+        currentSet.push_back(pair<float,float>((*itpair).first,(*itpair).second));
+        if (!(*it)->isRouting() ){ currentWs.push_back(pair<float,float>((*itpair).second,(*itpair).first)); }
+        currentH += (*itpair).first;
         
-      // Go through the different combinations
-        if (( (counter-1)%modulos[index] == modulos[index]-1 ) && ((*it)->getPreset() != true)){
+        if ( ((counter-1)%modulos[index] == modulos[index]-1) && (!(*it)->isPreset()) ){
           
           if ( (*it)->getMapHW().upper_bound((*itpair).first) != (*it)->getMapHW().end() )
             { nextSet[index] = (*(*it)->getMapHW().upper_bound((*itpair).first)); }
@@ -806,58 +989,53 @@ namespace SlicingTree{
             { nextSet[index] = (*(*it)->getMapHW().begin()); }
         }
       }
-      itpair++;
       index++;
+      itpair++;
     }
   }
 
 
-  void VSlicingNode::recursiveSetGlobalSize( vector< pair<float,float> >& bestSet
+  void HSlicingNode::recursiveSetGlobalSize( vector< pair<float,float> >& bestSet
                                            , float&                       finalWidth
                                            , float&                       finalHeight
-                                           , float&                       height
+                                           , float&                       width
                                            )
   {
     if (bestSet.empty() != true){
-
-      pair<float,float> pairreal                = pair<float,float> (0,0);
+      
+      pair<float,float> pairreal = pair<float,float> (0,0);
       vector< pair<float,float> >::iterator it2 = bestSet.begin();
-
-      for (vector<SlicingNode*>::iterator it3 = _children.begin(); it3 != _children.end(); it3++){
-
-        if ((*it3)->getPreset() != true){ pairreal = (*it3)->setGlobalSize(height,(*it2).second)               ; }
-        else                            { pairreal = pair<float,float> ((*it3)->getHeight(),(*it3)->getWidth()); }
-
-        finalWidth += pairreal.second;
-        if (finalHeight < pairreal.first) { finalHeight = pairreal.first; }
+      
+      for(vector<SlicingNode*>::iterator it3 = _children.begin(); it3 != _children.end(); it3++){
+        
+        if ( !(*it3)->isPreset() ){ pairreal = (*it3)->setGlobalSize((*it2).first,width)                 ; }
+        else                      { pairreal = pair<float,float> ((*it3)->getHeight(),(*it3)->getWidth()); }
+        
+        finalHeight += pairreal.first;
+        if (finalWidth < pairreal.second){ finalWidth = pairreal.second; }
         it2++;
       }
     }
   }
 
 
-// -----------------------------------------------------------------------------------------------//
-// Class : HSlicingNode
-// -----------------------------------------------------------------------------------------------//
-
-
-  HSlicingNode* HSlicingNode::create( Alignment alignment
-                                    , float     toleranceH
-                                    , float     toleranceW
-                                    , float     w
-                                    , float     h
+  HSlicingNode* HSlicingNode::create( unsigned int alignment
+                                    , float        toleranceH
+                                    , float        toleranceW
+                                    , float        w
+                                    , float        h
                                     )
   {
     return new HSlicingNode(Horizontal, alignment, toleranceH, toleranceW, w, h);
   }
 
 
-  void HSlicingNode::createChild( SlicingType type
-                                , Alignment   alignment
-                                , float       toleranceH
-                                , float       toleranceW
-                                , float       w         
-                                , float       h
+  void HSlicingNode::createChild( unsigned int type
+                                , unsigned int alignment
+                                , float        toleranceH
+                                , float        toleranceW
+                                , float        w         
+                                , float        h
                                 ) 
   {
     if (type == Horizontal)
@@ -871,17 +1049,17 @@ namespace SlicingTree{
   }
 
 
-  void HSlicingNode::createChild( MapHW     mapHW
-                                , Alignment alignment
-                                , float     w
-                                , float     h
+  void HSlicingNode::createChild( MapHW        mapHW
+                                , unsigned int alignment
+                                , float        w
+                                , float        h
                                 )
   {
     this->pushBackNode(DSlicingNode::create(mapHW, alignment, w, h));
   }
 
 
-  void HSlicingNode::createChild(float hw)
+  void HSlicingNode::createRouting(float hw)
   {
     this->pushBackNode(RHSlicingNode::create(hw));
   } 
@@ -891,10 +1069,10 @@ namespace SlicingTree{
   {
     cout << "- Print from Slicing Node - " << endl;
     cout << "SlicingType: Horizontal" << endl; 
-    if      (_alignment == AlignLeft  ){ cout << "Alignment  : Left"    << endl; }
-    else if (_alignment == AlignCenter){ cout << "Alignment  : Middle"  << endl; }
-    else if (_alignment == AlignRight ){ cout << "Alignment  : Right"   << endl; }
-    else                               { cout << "Alignment  : Unknown" << endl; }
+    if      (this->isAlignLeft  ()){ cout << "Alignment  : Left"    << endl; }
+    else if (this->isAlignCenter()){ cout << "Alignment  : Middle"  << endl; }
+    else if (this->isAlignRight ()){ cout << "Alignment  : Right"   << endl; }
+    else                           { cout << "Alignment  : Unknown" << endl; }
     HVSlicingNode::print();
   }
 
@@ -907,34 +1085,31 @@ namespace SlicingTree{
     for (vector<SlicingNode*>::iterator it = _children.begin(); it != _children.end(); it++){ 
 
     // Set X,Y Node
-      if (((*it)->getType() == Horizontal)||((*it)->getType() == Vertical)){ 
-        if ((*it)->getAlignment() == AlignLeft){
+      if ( ((*it)->isHorizontal()) || ((*it)->isVertical()) ){ 
+        if ( (*it)->isAlignLeft() ){
           (*it)->setX(xref);
           (*it)->setY(yref);
         }
         
-        else if ((*it)->getAlignment() == AlignCenter){
+        else if ( (*it)->isAlignCenter() ){
           (*it)->setX(xref + (_w/2) - ((*it)->getWidth()/2));
           (*it)->setY(yref);
         }
         
-        else if ((*it)->getAlignment() == AlignRight){
+        else if ( (*it)->isAlignRight()  ){
           (*it)->setX(xref + _w - (*it)->getWidth());
           (*it)->setY(yref);
         }
       }
       
     // Place Node
-      if ((*it)->getAlignment() == AlignLeft)
-        { (*it)->place(xref                                 , yref); }
+      if ( (*it)->isAlignLeft()        ) { (*it)->place(xref                                 , yref); }
       
-      else if ((*it)->getAlignment() == AlignCenter) 
-        { (*it)->place(xref + (_w/2) - ((*it)->getWidth()/2), yref); }
+      else if ( (*it)->isAlignCenter() ) { (*it)->place(xref + (_w/2) - ((*it)->getWidth()/2), yref); }
       
-      else if ((*it)->getAlignment() == AlignRight)
-        { (*it)->place(xref + _w     -  (*it)->getWidth()   , yref); }
+      else if ( (*it)->isAlignRight()  ) { (*it)->place(xref + _w     -  (*it)->getWidth()   , yref); }
 
-      else if ((*it)->getType() == RoutingNode){ (*it)->place(xref, yref); }
+      else if ( (*it)->isRouting()     ) { (*it)->place(xref, yref)                                 ; }
       
       else { cerr << " Error(place(float x, float y)): Unknown Alignment in SlicingTree." << endl; }
       
@@ -1055,13 +1230,13 @@ namespace SlicingTree{
     _w = finalWidth;
     
     if ( (_h == 0)||(_w == 0) ){ cerr << "No solution found. Required height = " << height << " and width = " << width << endl; }
-    if ( (_h != 0)&&(_w != 0) ){ _preset = true; }
+    if ( (_h != 0)&&(_w != 0) ){ this->setPreset(Preset); }
   
     return pair<float,float>(_h,_w);
   }
 
 
-  HSlicingNode* HSlicingNode::clone(Transformation tr)
+  HSlicingNode* HSlicingNode::clone(Flags tr)
   {
     HSlicingNode* node = HSlicingNode::create( this->getAlignment()
                                              , this->getToleranceH()
@@ -1070,7 +1245,7 @@ namespace SlicingTree{
                                              , this->getHeight()
                                              );
     node->setMapHW(_mapHW.clone());
-    node->setPreset(_preset);
+    node->setPreset(this->getPreset());
     for (vector<SlicingNode*>::iterator it = _children.begin(); it != _children.end(); it++){
       if (tr == MY){ node->pushFrontNode((*it)->clone(tr)); }
       else         { node->pushBackNode ((*it)->clone(tr)); }
@@ -1079,108 +1254,19 @@ namespace SlicingTree{
   }
 
 
-  HSlicingNode::HSlicingNode( SlicingType type
-                            , Alignment   alignment
-                            , float       toleranceH
-                            , float       toleranceW
-                            , float       w
-                            , float       h
-                            ):HVSlicingNode(type, alignment, toleranceH, toleranceW, w, h){}
-
-
-  HSlicingNode::~HSlicingNode(){}
-
-
-  void HSlicingNode::setNextSet ( list  < pair<float,float> >& currentWs
-                                , float&                       currentH
-                                , int&                         counter
-                                , vector<int>&                 modulos
-                                , vector< pair<float,float> >& nextSet
-                                , vector< pair<float,float> >& currentSet
-                                )
-  {
-    int           index = 0;
-    pair<int,int> symmetry = pair<int,int>();
-
-    vector< pair<float,float> >::iterator itpair  = nextSet.begin();
-
-    for (vector<SlicingNode*>::const_iterator it = _children.begin(); it != _children.end(); it++){
-              
-      if ( this->isSymmetry(index, symmetry) ){
-        itpair - (symmetry.second - symmetry.first);
-        
-        currentSet.push_back((*itpair));
-        if ((*it)->getType() != RoutingNode ){ currentWs.push_back(pair<float,float>((*itpair).second, (*itpair).first)); }
-        currentH += (*itpair).first;
-        nextSet[index] = nextSet[symmetry.first];
-        
-        itpair + (symmetry.second - symmetry.first);
-      }
-      
-      else {
-        currentSet.push_back(pair<float,float>((*itpair).first,(*itpair).second));
-        if ((*it)->getType() != RoutingNode ){ currentWs.push_back(pair<float,float>((*itpair).second,(*itpair).first)); }
-        currentH += (*itpair).first;
-        
-        if (( (counter-1)%modulos[index] == modulos[index]-1 ) && ((*it)->getPreset() != true)){
-          
-          if ( (*it)->getMapHW().upper_bound((*itpair).first) != (*it)->getMapHW().end() )
-            { nextSet[index] = (*(*it)->getMapHW().upper_bound((*itpair).first)); }
-          else
-            { nextSet[index] = (*(*it)->getMapHW().begin()); }
-        }
-      }
-      index++;
-      itpair++;
-    }
-  }
-
-
-  void HSlicingNode::recursiveSetGlobalSize( vector< pair<float,float> >& bestSet
-                                           , float&                       finalWidth
-                                           , float&                       finalHeight
-                                           , float&                       width
-                                           )
-  {
-    if (bestSet.empty() != true){
-      
-      pair<float,float> pairreal = pair<float,float> (0,0);
-      vector< pair<float,float> >::iterator it2 = bestSet.begin();
-      
-      for(vector<SlicingNode*>::iterator it3 = _children.begin(); it3 != _children.end(); it3++){
-        
-        if ((*it3)->getPreset() != true){ pairreal = (*it3)->setGlobalSize((*it2).first,width)                 ; }
-        else                            { pairreal = pair<float,float> ((*it3)->getHeight(),(*it3)->getWidth()); }
-        
-        finalHeight += pairreal.first;
-        if (finalWidth < pairreal.second){ finalWidth = pairreal.second; }
-        it2++;
-      }
-    }
-  }
-
-
 // -----------------------------------------------------------------------------------------------//
 // Class : DSlicingNode
 // -----------------------------------------------------------------------------------------------//
 
 
-  DSlicingNode* DSlicingNode::create( MapHW     mapHW
-                                    , Alignment alignment
-                                    , float     w
-                                    , float     h
-                                    )
-  { return new DSlicingNode(DeviceNode, mapHW, alignment, w, h); }
-
-
-  DSlicingNode::DSlicingNode( SlicingType type
-                            , MapHW       mapHW
-                            , Alignment   alignment
-                            , float       w
-                            , float       h
+  DSlicingNode::DSlicingNode( unsigned int type
+                            , MapHW        mapHW
+                            , unsigned int alignment
+                            , float        w
+                            , float        h
                             ):SlicingNode(type, mapHW, alignment, w, h)
   {
-    if ( (w == 0)&&(h == 0) ){
+    if ( (w == 0) && (h == 0) ){
       _h = _mapHW.begin()->first;
       _w = _mapHW.begin()->second;
     }
@@ -1190,28 +1276,36 @@ namespace SlicingTree{
   DSlicingNode::~DSlicingNode(){}
   
 
+  DSlicingNode* DSlicingNode::create( MapHW        mapHW
+                                    , unsigned int alignment
+                                    , float        w
+                                    , float        h
+                                    )
+  { return new DSlicingNode(Device, mapHW, alignment, w, h); }
+
+
   void DSlicingNode::print() const
   {
     cout << "- Print from Slicing Node - " << endl;
     cout << "SlicingType: Device" << endl; 
-    if      (_alignment == AlignLeft  ){ cout << "Alignment  : Left"    << endl; }
-    else if (_alignment == AlignCenter){ cout << "Alignment  : Middle"  << endl; }
-    else if (_alignment == AlignRight ){ cout << "Alignment  : Right"   << endl; }
-    else if (_alignment == AlignTop   ){ cout << "Alignment  : Top"     << endl; }
-    else if (_alignment == AlignBottom){ cout << "Alignment  : Bottom"  << endl; }
-    else                               { cout << "Alignment  : Unknown" << endl; }
+    if      (this->isAlignLeft  ()){ cout << "Alignment  : Left"    << endl; }
+    else if (this->isAlignCenter()){ cout << "Alignment  : Middle"  << endl; }
+    else if (this->isAlignRight ()){ cout << "Alignment  : Right"   << endl; }
+    else if (this->isAlignTop   ()){ cout << "Alignment  : Top"     << endl; }
+    else if (this->isAlignBottom()){ cout << "Alignment  : Bottom"  << endl; }
+    else                           { cout << "Alignment  : Unknown" << endl; }
     SlicingNode::print();
   }
 
 
-  DSlicingNode* DSlicingNode::clone(Transformation tr)
+  DSlicingNode* DSlicingNode::clone(Flags tr)
   {
     DSlicingNode* node = DSlicingNode::create( _mapHW.clone() 
                                              , this->getAlignment()
                                              , this->getWidth()
                                              , this->getHeight()
                                              );
-    node->setPreset(_preset);
+    node->setPreset(this->getPreset());
     return node;
   }
 
@@ -1223,9 +1317,9 @@ namespace SlicingTree{
 
   RHVSlicingNode::RHVSlicingNode( float w
                                 , float h
-                                ):SlicingNode(RoutingNode, MapHW::create(), UnknownAlignment, w, h)
+                                ):SlicingNode(Routing, MapHW(), UnknownAlignment, w, h)
   {
-    _preset = true; 
+    this->setPreset(Preset);
   }
 
 
@@ -1241,43 +1335,37 @@ namespace SlicingTree{
 
 
   // Error Message Methods
-  Alignment RHVSlicingNode::getAlignment() const
+  unsigned int RHVSlicingNode::getAlignment() const
   {
-    cerr << " Error(getAlignment () const): RoutingNodes do not have centering type." << endl;
+    cerr << " Error(getAlignment () const): Routings do not have centering type." << endl;
     return UnknownAlignment;
   }
 
 
   MapHW RHVSlicingNode::getMapHW() const
   {
-    cerr << " Error(getMapHW () const): RoutingNodes do not have mapHW." << endl;
-    return MapHW::create();
-  }
-
-
-  void RHVSlicingNode::setPreset(bool preset)
-  {
-    cerr << " Error(setPreset(bool preset)): RoutingNodes preset is always true." << endl; 
+    cerr << " Error(getMapHW () const): Routings do not have mapHW." << endl;
+    return MapHW();
   }
 
 
   pair<float,float> RHVSlicingNode::getPairH(float h) const
   {
-    cerr << " Error(getPairH (float h) const): RoutingNodes do not have mapHW." << endl;
+    cerr << " Error(getPairH (float h) const): Routings do not have mapHW." << endl;
     return pair<float, float> (_h,_w);
   }
 
 
   pair<float,float> RHVSlicingNode::getPairW(float w) const
   {
-    cerr << " Error(getPairW (float w) const): RoutingNodes do not have mapHW." << endl;
+    cerr << " Error(getPairW (float w) const): Routings do not have mapHW." << endl;
     return pair<float, float> (_h,_w);
   }
 
 
   void RHVSlicingNode::setPairH (float h)
   {
-    cerr << " Error(setPairH (float h)): RoutingNodes do not have mapHW." << endl;
+    cerr << " Error(setPairH (float h)): Routings do not have mapHW." << endl;
   } 
 
 
@@ -1289,23 +1377,33 @@ namespace SlicingTree{
   RHSlicingNode::RHSlicingNode(float h):RHVSlicingNode(0,h){}
 
 
-  RHSlicingNode* RHSlicingNode::clone(Transformation tr)
+  RHSlicingNode::~RHSlicingNode(){};
+
+
+  RHSlicingNode* RHSlicingNode::create(float h)
+  { 
+    return new RHSlicingNode(h); 
+  }
+
+
+  RHSlicingNode* RHSlicingNode::clone(Flags tr)
   {
     RHSlicingNode* node = RHSlicingNode::create(this->getHeight());
     return node; 
   }
 
 
-  RHSlicingNode::~RHSlicingNode(){};
-
-
   // Error Methods
-  RHSlicingNode* RHSlicingNode::create(float h){ return new RHSlicingNode(h); }
+  float RHSlicingNode::getWidth() const
+  {
+    cerr << " Error(RHSlicingNode::getWidth() const): Routings do not have width." << endl; 
+    return 0;
+  }
 
 
   void RHSlicingNode::setWidth(float w)
   {
-    cerr << " Error(RHVSlicingNode::setHeight(float w)): RoutingNodes do not have width." << endl; 
+    cerr << " Error(RHSlicingNode::setWidth(float w)): Routings do not have width." << endl; 
   }
 
 
@@ -1317,126 +1415,32 @@ namespace SlicingTree{
   RVSlicingNode::RVSlicingNode(float w):RHVSlicingNode(w,0){}
 
 
-  RVSlicingNode* RVSlicingNode::clone(Transformation tr)
+  RVSlicingNode::~RVSlicingNode(){};
+
+
+  RVSlicingNode* RVSlicingNode::create(float w)
+  {
+    return new RVSlicingNode(w);
+  }
+
+  RVSlicingNode* RVSlicingNode::clone(Flags tr)
   {
     RVSlicingNode* node = RVSlicingNode::create(this->getWidth());
     return node; 
   }
 
 
-  RVSlicingNode::~RVSlicingNode(){};
-
-
   // Error Methods
-  RVSlicingNode* RVSlicingNode::create(float w)
+  float RVSlicingNode::getHeight() const
   {
-    return new RVSlicingNode(w);
+    cerr << " Error(RVSlicingNode::getHeight() const): Routings do not have height." << endl; 
+    return 0;
   }
 
 
   void RVSlicingNode::setHeight(float h)
   {
-    cerr << " Error(RHVSlicingNode::setHeight(float h)): RoutingNodes do not have height." << endl; 
+    cerr << " Error(RVSlicingNode::setHeight(float h)): Routings do not have height." << endl; 
   }
-
-
-// -----------------------------------------------------------------------------------------------//
-// Class : MapHW
-// -----------------------------------------------------------------------------------------------//
-
-
-  MapHW::MapHW( map <float,float>* map1 ):_mapHW(map1){}
-
-
-  MapHW::~ MapHW(){}
-
-
-  MapHW MapHW::create( map <float,float>* map1 )
-  { 
-    if (map1 == NULL) { return MapHW ( new std::map<float,float> () ); }
-    else              { return MapHW ( map1                         ); }
-  }
-
-
-  MapHW MapHW::clone ()
-  {
-    map <float,float>* mapHW = new map <float,float>();
-    for (map<float,float>::const_iterator it = _mapHW->begin(); it != _mapHW->end(); it++)
-      { mapHW->insert(pair<float,float>((*it).first, (*it).second)); }
-    return mapHW;
-  }
-
-
-  bool MapHW::compare ( MapHW map2 )
-  {
-    bool comp = true;
-    map <float,float>::const_iterator it2 = map2.begin();
-    if (_mapHW->size() != map2.size()) { comp = false; }
-
-    if (comp == true) {
-      for (map<float,float>::const_iterator it1 = _mapHW->begin(); it1 != _mapHW->end(); it1++){
-
-        if ( ((*it1).first != (*it2).first)||((*it1).second != (*it2).second) ){ comp = false; }
-        if (it2 != map2.end()){ it2++; }
-      }
-    }
-    return comp;
-  }
-
-  
-  void MapHW::print()
-  {
-    cout << "PrintMap - MapHW:" << endl;
-    for (map <float,float>::iterator itPrint = _mapHW->begin(); itPrint != _mapHW->end(); itPrint++)
-      { cout << "H = " << itPrint->first << ", W = " << itPrint->second << endl; } 
-    cout << endl;
-  }
-
-
-  pair<float,float> MapHW::getPairH(float h) const 
-  {
-    float w        = 0;
-    float hclosest = 0;
-
-    for (map <float,float>::const_iterator itHW = _mapHW->begin(); itHW != _mapHW->end(); itHW++){ 
-      if ( (itHW->first > hclosest) && (h >= itHW->first) ){
-        hclosest = itHW->first;
-        w        = itHW->second;
-      }
-    }
-
-    if ( (w == 0) && (hclosest == 0) ){ cerr << "No solution for h = " << h << " has been found." << endl; }
-    return pair<float,float>(hclosest,w);
-  }
-
-
-  pair<float,float> MapHW::getPairW(float w) const 
-  {
-    float wclosest = 0;
-    float h        = 0;
-
-    for (map <float,float>::const_iterator itHW = _mapHW->begin(); itHW != _mapHW->end(); itHW++){ 
-      if ( (itHW->second > wclosest) && (w >= itHW->second) ){
-        h        = itHW->first;
-        wclosest = itHW->second;
-      }
-    }
-
-    if ( (h == 0) && (wclosest == 0) ){ cerr << "No solution for w = " << w << " has been found." << endl; }
-    return pair<float,float>(h,wclosest);
-  }
-
-
-  void MapHW::insertWorst(float h, float w)
-  {
-    if ( _mapHW->find(h) != _mapHW->end() ){
-      if ( (*_mapHW->find(h)).second < w ) 
-        {( *_mapHW->find(h)).second = w; }
-    }
-    else 
-      { _mapHW->insert(pair<float,float> ( h, w ) ); }
-  }
-
 
 }
-
