@@ -100,7 +100,300 @@ namespace SlicingTree{
   }
 
 
+// -----------------------------------------------------------------------------------------------//
+// Class : VSetState
+// -----------------------------------------------------------------------------------------------//
+  
 
+  HVSetState::HVSetState( HVSlicingNode* node, float height, float width ):_height(height)
+                                                                          ,_width(width)
+                                                                          ,_children(node->getChildren())
+                                                                          ,_symmetries(node->getSymmetries())
+                                                                          ,_toleranceH(node->getToleranceH())
+                                                                          ,_toleranceW(node->getToleranceW())
+  {
+    initSet();
+    initModulos();
+    _counter = 1;
+    
+  }
+
+
+  HVSetState::~HVSetState(){}
+
+
+  void HVSetState::initSet()
+  {
+    _nextSet.clear();
+    for (vector<SlicingNode*>::iterator it = _children.begin(); it != _children.end(); it++){ 
+        
+      if ( !(*it)->isRouting() ) 
+        { _nextSet.push_back((*(*it)->getMapHW().begin())); }
+      else 
+        { _nextSet.push_back(pair<float,float>((*it)->getHeight(),(*it)->getWidth())); }
+    }
+  }
+
+
+  void HVSetState::initModulos()
+  {
+    int  modulo        = 1;
+    int  index         = 0;
+    int  endCounter    = 1;
+    
+    _modulos.clear();
+    _modulos.push_back(1);
+    for (vector<SlicingNode*>::iterator it = _children.begin(); it != _children.end(); it++){
+        
+      if ( it != _children.begin() ){ _modulos.push_back(modulo); }
+      if ( !(*it)->isRouting() ){
+      // Check if the current child is a symmetry or not
+        if ( (!this->isSymmetry(index)) && (!(*it)->isPreset()) ){
+          modulo     *= (*it)->getMapHW().size();
+          endCounter *= (*it)->getMapHW().size();
+        }
+      }
+      index++;
+    }
+    _modulos.push_back(endCounter);
+  }
+
+  
+  bool HVSetState::isSymmetry( int index, pair<int,int>& symmetry )
+  {
+    bool symmetryFound = false;
+    
+    if (_symmetries.empty() != true){
+      for (list<pair<int,int> >::const_iterator it2 = _symmetries.begin(); it2 != _symmetries.end(); it2++){
+        
+        if ((*it2).second == index){ 
+          symmetry = pair<int,int>((*it2).first,(*it2).second); 
+          symmetryFound = true;
+        }
+      }
+    }
+    return symmetryFound;
+  }
+
+
+  bool HVSetState::isSymmetry( int index )
+  {
+    bool symmetryFound = false;
+    
+    if (_symmetries.empty() != true){
+      for (list<pair<int,int> >::const_iterator it2 = _symmetries.begin(); it2 != _symmetries.end(); it2++){
+        
+        if ((*it2).second == index){ 
+          symmetryFound = true;
+        }
+      }
+    }
+    return symmetryFound;
+  }
+
+
+  float HVSetState::getHBest()
+  {
+    float hBest = 0;
+    for (vector<pair<float, float> >::const_iterator it = _bestSet.begin(); it != _bestSet.end(); it++){
+      if (hBest < (*it).first){ hBest = (*it).first; }
+    }
+    return hBest;
+  }
+
+  float HVSetState::getWBest()
+  {
+    float wBest = 0;
+    for (vector<pair<float, float> >::const_iterator it = _bestSet.begin(); it != _bestSet.end(); it++){
+      wBest += (*it).second;
+    }
+    return wBest;
+  }
+
+
+// -----------------------------------------------------------------------------------------------//
+// Class : VSetState
+// -----------------------------------------------------------------------------------------------//
+  
+  VSetState::VSetState( VSlicingNode* node, float height, float width):HVSetState(node, height, width)
+  {}
+
+
+  VSetState::~VSetState(){}
+
+
+  void VSetState::next()
+  {
+    int           index    = 0;
+    pair<int,int> symmetry = pair<int,int>();
+
+    vector< pair<float,float> >::iterator itpair  = _nextSet.begin();
+
+    for (vector<SlicingNode*>::const_iterator it = _children.begin(); it != _children.end(); it++){
+          
+      if ( this->isSymmetry(index, symmetry) ){
+        itpair - (symmetry.second - symmetry.first);
+        
+        if ( !(*it)->isRouting() ) { _currentHs.push_back((*itpair)); }
+        _currentSet.push_back((*itpair));
+        _currentW           += (*itpair).second;
+        _nextSet[index] = _nextSet[symmetry.first];
+        
+        itpair + (symmetry.second - symmetry.first);
+      }
+      
+      else {
+      // Collect the pair<float,float> in vector (size order) and list (sort height) of the combination in order sort them. Calculate the width of the combination.
+        if ( !(*it)->isRouting() ) { _currentHs.push_back((*itpair)); }
+        _currentSet.push_back((*itpair));
+        _currentW += (*itpair).second;
+        
+      // Go through the different combinations
+        if ( ((_counter-1)%_modulos[index] == _modulos[index]-1) && (!(*it)->isPreset()) ){
+          
+          if ( (*it)->getMapHW().upper_bound((*itpair).first) != (*it)->getMapHW().end() )
+            { _nextSet[index] = (*(*it)->getMapHW().upper_bound((*itpair).first)); }
+          else
+            { _nextSet[index] = (*(*it)->getMapHW().begin()); }
+        }
+      }
+      itpair++;
+      index++;
+    }
+    
+    updateBestSet();
+    _counter += 1;
+  }
+
+
+  float VSetState::getHMin ()
+  {
+    _currentHs.sort();
+    return _currentHs.front().first;
+  }
+
+
+  float VSetState::getHMax ()
+  {
+    _currentHs.sort();
+    return _currentHs.back().first;
+  }
+
+
+  void VSetState::updateBestSet ()
+  {
+    float currentH   = getHMax();
+    if (currentH - getHMin() <= _toleranceH){
+      float bestHeight = getHBest();
+      float bestWidth  = getWBest();
+      
+      if (currentH <= _height){
+        if (( bestHeight == 0 )||( bestWidth == 0 )){ _bestSet  = _currentSet; }
+        else { 
+          if ( (_height-currentH) <= _toleranceH ){
+            if ( _height-bestHeight <= _toleranceH ){
+              if      ( (_currentW > bestWidth)&&(_currentW <= _width) ){ _bestSet = _currentSet; }
+              else if ( (_currentW < bestWidth)&&( bestWidth > _width) ){ _bestSet = _currentSet; }
+            }
+            else {  _bestSet = _currentSet;  }
+          }
+          else if (currentH > bestHeight){  _bestSet = _currentSet; }
+        }
+      }
+    }
+  }
+
+
+// -----------------------------------------------------------------------------------------------//
+// Class : HSetState
+// -----------------------------------------------------------------------------------------------//
+  
+
+  HSetState::HSetState( HSlicingNode* node, float height, float width):HVSetState(node, height, width)
+  {}
+
+
+  HSetState::~HSetState(){}
+
+  
+  
+  void HSetState::next()
+  {
+    int           index = 0;
+    pair<int,int> symmetry = pair<int,int>();
+
+    vector< pair<float,float> >::iterator itpair  = _nextSet.begin();
+
+    for (vector<SlicingNode*>::const_iterator it = _children.begin(); it != _children.end(); it++){
+              
+      if ( this->isSymmetry(index, symmetry) ){
+        itpair - (symmetry.second - symmetry.first);
+        
+        _currentSet.push_back((*itpair));
+        if (!(*it)->isRouting() ){ _currentWs.push_back(pair<float,float>((*itpair).second, (*itpair).first)); }
+        _currentH += (*itpair).first;
+        _nextSet[index] = _nextSet[symmetry.first];
+        
+        itpair + (symmetry.second - symmetry.first);
+      }
+      
+      else {
+        _currentSet.push_back(pair<float,float>((*itpair).first,(*itpair).second));
+        if (!(*it)->isRouting() ){ _currentWs.push_back(pair<float,float>((*itpair).second,(*itpair).first)); }
+        _currentH += (*itpair).first;
+        
+        if ( ((_counter-1)%_modulos[index] == _modulos[index]-1) && (!(*it)->isPreset()) ){
+          
+          if ( (*it)->getMapHW().upper_bound((*itpair).first) != (*it)->getMapHW().end() )
+            { _nextSet[index] = (*(*it)->getMapHW().upper_bound((*itpair).first)); }
+          else
+            { _nextSet[index] = (*(*it)->getMapHW().begin()); }
+        }
+      }
+      index++;
+      itpair++;
+    }
+    updateBestSet();
+    _counter += 1;
+  }
+
+
+  float HSetState::getWMin()
+  {
+    _currentWs.sort();
+    return _currentWs.front().first;
+  }
+
+
+  float HSetState::getWMax()
+  {
+    _currentWs.sort();
+    return _currentWs.back().first;
+  }
+
+
+  void HSetState::updateBestSet()
+  {
+    float currentW   = getWMax();
+    if ( getWMax() - getWMin() <= _toleranceW){
+      float bestHeight = getHBest();
+      float bestWidth  = getWBest();
+      
+      if (_currentH <= _height){
+        if (( bestHeight == 0 )||( bestWidth == 0 )){ _bestSet  = _currentSet; }
+        else { 
+          if ( (_height-_currentH) <= _toleranceH ){
+            if ( _height-bestHeight <= _toleranceH ){
+              if      ( (currentW > bestWidth)&&( currentW <= _width) ){ _bestSet = _currentSet; }
+              else if ( (currentW < bestWidth)&&( bestWidth > _width) ){ _bestSet = _currentSet; }
+            }
+            else {  _bestSet = _currentSet;  }
+          }
+          else if (_currentH > bestHeight){  _bestSet = _currentSet; }
+        }
+      }
+    }
+  }
 
 
 // -----------------------------------------------------------------------------------------------//
@@ -405,6 +698,22 @@ namespace SlicingTree{
   }
 
 
+  bool HVSlicingNode::isSymmetry( int index )
+  {
+    bool symmetryFound = false;
+    
+    if (_symmetries.empty() != true){
+      for (list<pair<int,int> >::const_iterator it2 = _symmetries.begin(); it2 != _symmetries.end(); it2++){
+        
+        if ((*it2).second == index){ 
+          symmetryFound = true;
+        }
+      }
+    }
+    return symmetryFound;
+  }
+
+  
   void HVSlicingNode::updateBestSet( float& currentW
                                    , float& currentH
                                    , float& width

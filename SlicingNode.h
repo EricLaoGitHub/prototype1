@@ -247,7 +247,8 @@ namespace SlicingTree{
 
       std::vector< std::pair<float,float> > initSet    ();
       std::vector<int>                      setModulos ();
-      bool                                  isSymmetry ( int index, std::pair<int,int>& symmetry);
+      bool                                  isSymmetry ( int index, std::pair<int,int>& symmetry );
+      bool                                  isSymmetry ( int index );
 
       void updateBestSet( float& currentW
                         , float& currentH
@@ -533,6 +534,76 @@ namespace SlicingTree{
       ~RVSlicingNode ();
   };
 
+
+// -----------------------------------------------------------------------------------------------//
+// Class : VSetState
+// -----------------------------------------------------------------------------------------------//
+
+  class HVSetState
+  {
+    public:
+      inline bool endCounter ();
+      void  initSet             ();
+      void  initModulos         ();
+      bool  isSymmetry          ( int index, std::pair<int,int>& symmetry );
+      bool  isSymmetry          ( int index );
+      float getHBest            ();
+      float getWBest            ();
+      
+    protected:
+      HVSetState  ( HVSlicingNode* node, float height = 0, float width = 0 );
+      ~HVSetState ();
+
+    protected:
+      float                                 _height    ;
+      float                                 _width     ;
+      std::vector<SlicingNode*>             _children  ;
+      std::list<std::pair <int,int> >       _symmetries;
+      float                                 _toleranceH;
+      float                                 _toleranceW;
+      
+      std::vector<int>                      _modulos   ;
+      int                                   _counter   ;
+
+      std::vector<std::pair<float,float> >  _bestSet   ;
+      std::vector<std::pair<float,float> >  _currentSet;
+      std::vector<std::pair<float,float> >  _nextSet   ;
+  };
+  bool HVSetState::endCounter(){ return (_counter != _modulos.back()+1); }
+
+
+  class VSetState: public HVSetState
+  {
+    public:
+      VSetState  ( VSlicingNode* node, float height = 0, float width = 0 );
+      ~VSetState ();
+
+      void  next          ();
+      float getHMin       ();
+      float getHMax       ();
+      void  updateBestSet (); 
+
+    private:
+      std::list<std::pair<float,float> > _currentHs ;
+      float                              _currentW  ;
+  };
+  
+
+  class HSetState: public HVSetState
+  {
+    public:
+      HSetState  ( HSlicingNode* node, float height = 0, float width = 0 );
+      ~HSetState ();
+
+      void  next          ();
+      float getWMin       ();
+      float getWMax       ();
+      void  updateBestSet (); 
+
+    private:
+      float                              _currentH  ;
+      std::list<std::pair<float,float> > _currentWs ;
+      };
 
 }
 
