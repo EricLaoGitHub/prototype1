@@ -133,10 +133,10 @@ namespace SlicingTree{
       virtual inline void updateGlobalSize ();
 
       // Common Virtual
-      virtual void                   print         () const;
-      virtual void                   place         ( float x = 0, float y = 0 ); 
-              void                   setPairH      ( float h );       
-      virtual std::pair<float,float> setGlobalSize ( float height = 0, float width = 0 );  
+      virtual void                   print          () const;
+      virtual void                   place          ( float x = 0, float y = 0 ); 
+              void                   setPairH       ( float h );       
+      virtual std::pair<float,float> _setGlobalSize ( float height = 0, float width = 0 );   
 
       // HVSlicingNode Virtual (see HVSlicingNode) or Errors Methods
       virtual void createChild ( unsigned int type     
@@ -172,14 +172,16 @@ namespace SlicingTree{
       virtual void                             recursiveSetToleranceH ( float tolerance );
       virtual void                             recursiveSetToleranceW ( float tolerance );
 
-      virtual bool                             hasEmptyChildrenMap    () const                             ;
+      virtual bool                             hasEmptyChildrenMap    () const;
 
-      virtual SlicingNode*                     clone                  ( Flags tr = None )  = 0         ;
+      virtual SlicingNode*                     clone                  ( Flags tr = None ) = 0;
       virtual void                             setSymmetry            ( int childIndex, int copyIndex );
-      virtual int                              getLeafNumber          () const                      = 0;
-      virtual void                             normalizeSymmetries    ()                               ;
-      virtual std::list<std::pair< int,int> >  getSymmetries          () const                         ;
-
+      virtual int                              getLeafNumber          () const = 0;
+      virtual void                             normalizeSymmetries    ();
+      virtual std::list<std::pair< int,int> >  getSymmetries          () const;
+      virtual bool                             recursiveCheckPreset   () const = 0;
+      virtual float                            getDevicesArea         () const = 0;
+      virtual float                            getOccupationArea      () const;
     protected:
       unsigned int _flags;
       MapHW        _mapHW;     
@@ -272,21 +274,26 @@ namespace SlicingTree{
       inline float                            getToleranceH  () const;
       inline float                            getToleranceW  () const;
       inline std::list<std::pair< int,int> >  getSymmetries  () const;
+      inline void                             cpSymmetries   (std::list<std::pair< int,int> > sym);
 
-      void createChild            ( int childIndex, int copyIndex, Flags tr = None); 
-      void printChildren          ();
-      void insertNode             ( SlicingNode* node, int index ); 
-      void removeNode             ( SlicingNode* node ); 
+      void  createChild            ( int childIndex, int copyIndex, Flags tr = None); 
+      void  printChildren          ();
+      void  insertNode             ( SlicingNode* node, int index ); 
+      void  removeNode             ( SlicingNode* node ); 
       
-      void recursiveSetToleranceH ( float tolerance );
-      void recursiveSetToleranceW ( float tolerance );
+      void  recursiveSetToleranceH ( float tolerance );
+      void  recursiveSetToleranceW ( float tolerance );
       
-      bool hasEmptyChildrenMap    () const;
+      bool  hasEmptyChildrenMap    () const;
       
-      void setSymmetry            ( int childIndex, int copyIndex );
-      int  getLeafNumber          () const;
-      void print                  () const;
-      void normalizeSymmetries    ();
+      void  setSymmetry            ( int childIndex, int copyIndex );
+      int   getLeafNumber          () const;
+      void  print                  () const;
+      void  normalizeSymmetries    ();
+
+      bool  recursiveCheckPreset () const;
+      float getDevicesArea       () const;
+      float getOccupationArea    () const;
 
 
     protected:
@@ -310,6 +317,7 @@ namespace SlicingTree{
   inline float HVSlicingNode::getToleranceW ()                const { return _toleranceW;      }
 
   inline std::list<std::pair<int,int> > HVSlicingNode::getSymmetries() const { return _symmetries; }
+  inline void HVSlicingNode::cpSymmetries(std::list<std::pair<int,int> > sym) { _symmetries = sym; }
 
 
 // -----------------------------------------------------------------------------------------------//
@@ -329,14 +337,14 @@ namespace SlicingTree{
                    );
       ~VSlicingNode ();    public:
 
-      void setNextSet ( float&                                 currentW
+    /*void setNextSet ( float&                                 currentW
                       , std::list  < std::pair<float,float> >& currentHs
                       , int&                                   counter
                       , std::vector<int>&                      modulos
                       , std::vector<std:: pair<float,float> >& nextSet
                       , std::vector< std::pair<float,float> >& currentSet
-                      );
-      void recursiveSetGlobalSize( std::vector<std::pair<float,float> >& bestSet
+                      );*/
+      void recursiveSetGlobalSize( std::vector<std::pair<float,float> >  bestSet
                                  , float&                                finalWidth
                                  , float&                                finalHeight
                                  , float&                                height
@@ -370,6 +378,7 @@ namespace SlicingTree{
 
       void                   updateGlobalSize ();
       std::pair<float,float> setGlobalSize    ( float height = 0, float width = 0 );
+      std::pair<float,float> _setGlobalSize   ( float height = 0, float width = 0 );
 
       VSlicingNode*          clone            ( Flags tr = None );
   };
@@ -392,14 +401,14 @@ namespace SlicingTree{
                    );
       ~HSlicingNode ();
 
-      void setNextSet ( std::list   <std::pair<float,float> >& currentWs
+    /*void setNextSet ( std::list   <std::pair<float,float> >& currentWs
                       , float&                                 currentH
                       , int&                                   counter
                       , std::vector<int>&                      modulos
                       , std::vector<std:: pair<float,float> >& nextSet
                       , std::vector< std::pair<float,float> >& currentSet
-                      );
-      void recursiveSetGlobalSize( std::vector<std::pair<float,float> >& bestSet
+                      );*/
+      void recursiveSetGlobalSize( std::vector<std::pair<float,float> >  bestSet
                                  , float&                                finalWidth
                                  , float&                                finalHeight
                                  , float&                                width
@@ -432,6 +441,7 @@ namespace SlicingTree{
 
       void                   updateGlobalSize ();
       std::pair<float,float> setGlobalSize    ( float height = 0, float width = 0 );
+      std::pair<float,float> _setGlobalSize   ( float height = 0, float width = 0 );
 
       HSlicingNode*          clone            ( Flags tr = None );
   };
@@ -454,18 +464,22 @@ namespace SlicingTree{
       ~DSlicingNode ();
 
     public:
-      inline int           getLeafNumber () const;
+      inline int           getLeafNumber        () const;
+      inline float         getDevicesArea       () const;
+      inline bool          recursiveCheckPreset () const;
+       
       static DSlicingNode* create ( MapHW        mapHW     
                                   , unsigned int alignment = UnknownAlignment
                                   , float        w         = 0
                                   , float        h         = 0
                                   );
-      void                 print         () const;
-      DSlicingNode*        clone         ( Flags tr = None );
+      void                 print  () const;
+      DSlicingNode*        clone  ( Flags tr = None );
   };
 
-  inline int   DSlicingNode::getLeafNumber () const { return 1 ; }
-
+  inline int   DSlicingNode::getLeafNumber        () const { return 1  ; }
+  inline float DSlicingNode::getDevicesArea       () const { return _h*_w; }
+  inline bool  DSlicingNode::recursiveCheckPreset () const { return isPreset(); }
 
 // -----------------------------------------------------------------------------------------------//
 // Class : RHVSlicingNode
@@ -479,8 +493,10 @@ namespace SlicingTree{
       ~RHVSlicingNode ();
 
     public:
-      inline int             getLeafNumber () const;
-      void                   print         () const;
+      inline int             getLeafNumber        () const;
+      inline float           getDevicesArea       () const;
+      inline bool            recursiveCheckPreset () const;
+      void                   print                () const;
 
       // Error Message Methods
       unsigned int           getAlignment ()          const      ;
@@ -490,7 +506,9 @@ namespace SlicingTree{
       void                   setPairH     ( float h )            ;      
   };
 
-  inline int  RHVSlicingNode::getLeafNumber () const { return 1; }
+  inline int   RHVSlicingNode::getLeafNumber        () const { return 1; }
+  inline float RHVSlicingNode::getDevicesArea       () const { return 0; }
+  inline bool  RHVSlicingNode::recursiveCheckPreset () const { return isPreset(); }
 
 
 // -----------------------------------------------------------------------------------------------//
@@ -509,7 +527,6 @@ namespace SlicingTree{
              RHSlicingNode* clone  ( Flags tr = None );
 
       // Error Message Methods
-      float getWidth () const;
       void  setWidth ( float w );
   };
 
@@ -526,7 +543,6 @@ namespace SlicingTree{
              RVSlicingNode* clone  ( Flags tr = None );
 
       // Error Message Methods
-      float getHeight () const;
       void  setHeight ( float h );
 
     private:
@@ -536,31 +552,39 @@ namespace SlicingTree{
 
 
 // -----------------------------------------------------------------------------------------------//
-// Class : VSetState
+// Class : HVSetState
 // -----------------------------------------------------------------------------------------------//
 
   class HVSetState
   {
     public:
-      inline bool endCounter ();
-      void  initSet             ();
-      void  initModulos         ();
-      bool  isSymmetry          ( int index, std::pair<int,int>& symmetry );
-      bool  isSymmetry          ( int index );
-      float getHBest            ();
-      float getWBest            ();
+      inline std::vector<std::pair<float,float> > getBestSet  ();
+      inline bool   end         ();
+      inline MapHW  getMapHW    ();
+             void   initSet     ();
+             void   initModulos ();
+             bool   isSymmetry  ( int index, std::pair<int,int>& symmetry );
+             bool   isSymmetry  ( int index );
+      virtual void  print       ();
+      virtual void  next ();
+      virtual float getBestH    () = 0;
+      virtual float getBestW    () = 0;
+      virtual float getCurrentH () = 0;
+      virtual float getCurrentW () = 0;
       
     protected:
-      HVSetState  ( HVSlicingNode* node, float height = 0, float width = 0 );
+      HVSetState  ( HVSlicingNode* node, float height = 0, float width = 0, bool isTop = true );
       ~HVSetState ();
 
     protected:
       float                                 _height    ;
       float                                 _width     ;
+      bool                                  _isTop     ;
       std::vector<SlicingNode*>             _children  ;
       std::list<std::pair <int,int> >       _symmetries;
       float                                 _toleranceH;
       float                                 _toleranceW;
+      MapHW                                 _mapHW     ;
       
       std::vector<int>                      _modulos   ;
       int                                   _counter   ;
@@ -569,42 +593,70 @@ namespace SlicingTree{
       std::vector<std::pair<float,float> >  _currentSet;
       std::vector<std::pair<float,float> >  _nextSet   ;
   };
-  bool HVSetState::endCounter(){ return (_counter != _modulos.back()+1); }
+  inline std::vector<std::pair<float,float> > HVSetState::getBestSet (){ return _bestSet; }
+  inline bool  HVSetState::end     (){ return (_counter == _modulos.back()+1); }
+  inline MapHW HVSetState::getMapHW(){ return _mapHW; }
+
+
+// -----------------------------------------------------------------------------------------------//
+// Class : VSetState
+// -----------------------------------------------------------------------------------------------//
 
 
   class VSetState: public HVSetState
   {
     public:
-      VSetState  ( VSlicingNode* node, float height = 0, float width = 0 );
+      VSetState  ( VSlicingNode* node, float height = 0, float width = 0, bool isTop = false );
       ~VSetState ();
 
-      void  next          ();
-      float getHMin       ();
-      float getHMax       ();
-      void  updateBestSet (); 
-
-    private:
-      std::list<std::pair<float,float> > _currentHs ;
-      float                              _currentW  ;
+      inline void insertWorst ();
+      inline bool checkToleranceH ();
+      void  next             ();
+      float getMinH          ();
+      float getBestH         ();
+      float getBestW         ();
+      float getCurrentH      ();
+      float getCurrentW      ();
+      void  updateBestSetTop (); 
+      void  updateBestSet    (); 
+      void  print            ();
   };
   
+  inline void VSetState::insertWorst()
+  { if ( checkToleranceH() ) { _mapHW.insertWorst( getCurrentH(), getCurrentW() ); } }
+  inline bool VSetState::checkToleranceH()
+  { return (getCurrentH() - getMinH() <= _toleranceH); }
+
+
+// -----------------------------------------------------------------------------------------------//
+// Class : HSetState
+// -----------------------------------------------------------------------------------------------//
+
 
   class HSetState: public HVSetState
   {
     public:
-      HSetState  ( HSlicingNode* node, float height = 0, float width = 0 );
+      HSetState  ( HSlicingNode* node, float height = 0, float width = 0, bool isTop = false);
       ~HSetState ();
 
-      void  next          ();
-      float getWMin       ();
-      float getWMax       ();
-      void  updateBestSet (); 
+      inline void insertWorst ();
+      inline bool checkToleranceW ();
+      void  next             ();
+      float getMinW          ();
+      float getBestH         ();
+      float getBestW         ();
+      float getCurrentH      ();
+      float getCurrentW      ();
+      void  updateBestSetTop (); 
+      void  updateBestSet    (); 
+      void  print            ();
+  };
 
-    private:
-      float                              _currentH  ;
-      std::list<std::pair<float,float> > _currentWs ;
-      };
+  inline void HSetState::insertWorst()
+  { if ( checkToleranceW() ) { _mapHW.insertWorst( getCurrentH(), getCurrentW() ); } }
 
+  inline bool HSetState::checkToleranceW()
+  { return (getCurrentW() - getMinW() <= _toleranceW); }
 }
 
 #endif

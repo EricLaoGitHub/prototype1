@@ -74,13 +74,17 @@ int main(int argc, char* argv[])
   cout << endl;
   cout << " -------------- Build Slicing Tree -------------- " << endl;
   HSlicingNode* slicingTree = HSlicingNode::create(); 
+
+  slicingTree->recursiveSetToleranceH(1); // toleranceH = 1 - test Vertical
+  slicingTree->recursiveSetToleranceW(1000); // toleranceW = 1 - test Horizontal
+
   slicingTree->createChild(Vertical,AlignCenter);     // VSlicingNode
   slicingTree->createChild(mapHWDP12,AlignCenter);    // DeviceNode
   slicingTree->createChild(Vertical,AlignCenter);     // VSlicingNode
   slicingTree->createRouting(1);                        // RoutingNode H
   slicingTree->createChild(mapHWDP12,AlignCenter);    // DeviceNode
 
-  cout << "-------------- 1st Hierarchy -------------- " << endl;
+  cout << " -------------- 1st Hierarchy -------------- " << endl;
   slicingTree->getChild(0)->createChild(mapHWM8,AlignCenter); // DeviceNode
   slicingTree->getChild(0)->createChild(mapHWM5,AlignCenter); // DeviceNode
   slicingTree->getChild(0)->createRouting(1);                   // RoutingNode V
@@ -89,19 +93,13 @@ int main(int argc, char* argv[])
   slicingTree->getChild(0)->createChild(mapHWM8,AlignCenter); // DeviceNode
   slicingTree->getChild(0)->setSymmetry(5,0);                 // Symmetry, <5,0>
 
-  cout << "-------------- 2nd Hierarchy -------------- " << endl;
+  cout << " -------------- 2nd Hierarchy -------------- " << endl;
   slicingTree->getChild(2)->createChild(mapHWM9  ,AlignCenter); // DeviceNode
   slicingTree->getChild(2)->createChild(mapHWCM34,AlignCenter); // DeviceNode
   slicingTree->getChild(2)->createChild(mapHWM6  ,AlignCenter); // DeviceNode
 
 //slicingTree->pushBackNode(slicingTree->clone());
 
-  slicingTree->recursiveSetToleranceH(100); // toleranceH = 1 - test Vertical
-  slicingTree->recursiveSetToleranceW(100); // toleranceW = 1 - test Horizontal
-
-//slicingTree->createChild(0,5);
-//slicingTree->updateGlobalSize();
-//slicingTree->pushBackNode(slicingTree->clone());
   slicingTree->updateGlobalSize();
  
   /* cout << "-------------- Test updateGlobalsize: Vertical/Horizontal -------------- " << endl;
@@ -200,14 +198,14 @@ int main(int argc, char* argv[])
 1) Test symmetries with child(0) composition, change the symmetries
 2) Do it for both Vertical and Horizontal type 
  */
-//slicingTree->updateGlobalSize();
-  cout << " -------------- Print Children -------------- " << endl;
+/*cout << " -------------- Print Children -------------- " << endl;
   slicingTree->printChildren();
   cout << " -------------- Print Root -------------- " << endl;
+  slicingTree->print();*/
+  cout << "Occupation Area is : " << slicingTree->getOccupationArea() << "%." << endl;
+  slicingTree->setGlobalSize(30,0); 
+  cout << " -------------- Print Root -------------- " << endl;
   slicingTree->print();
-  slicingTree->setGlobalSize(1000,1000); 
-//cout << " -------------- Print Root -------------- " << endl;
-//slicingTree->print();
   cout << "Number of leaf: " <<  slicingTree->getLeafNumber() << endl;
   
 
@@ -215,6 +213,10 @@ int main(int argc, char* argv[])
   slicingTree->place();
   cout << " -------------- Print Children -------------- " << endl;
   slicingTree->printChildren();
+  cout << " -------------- Print Root -------------- " << endl;
+  slicingTree->print();
+  
+  cout << "Occupation Area is : " << slicingTree->getOccupationArea() << "%." << endl;
 
   ofstream myfile;
   myfile.open (SlicingTreeData);
