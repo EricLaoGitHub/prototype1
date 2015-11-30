@@ -1,9 +1,9 @@
-/*#define wMinDP12 3.1  // Minimum width
+#define wMinDP12 3.1  // Minimum width
 #define wMaxDP12 25.1 // Maximum width 30.1
 #define hMinDP12 1.7  // Minimum height
 #define hMaxDP12 7.7  // Minimum height
 #define NDP12   10   // NMAX
-*/
+
 /*
 #define wMinM5 1.5
 #define wMaxM5 14.7
@@ -25,8 +25,8 @@
 */
 
 
-/*
-#define wMinCM34 2.4
+
+/*#define wMinCM34 2.4
 #define wMaxCM34 35.8
 #define hMinCM34 1.8
 #define hMaxCM34 7
@@ -42,10 +42,10 @@
 #define wMaxM9 13.3
 #define hMinM9 1.6
 #define hMaxM9 8
-#define NM9   10
-*/
+#define NM9   10*/
 
-/*#define wMinM9 1
+
+#define wMinM9 1
 #define wMaxM9 6
 #define hMinM9 1
 #define hMaxM9 6
@@ -80,14 +80,14 @@
 #define wMaxM8 8
 #define hMinM8 3
 #define hMaxM8 8
-#define NM8    5*/
+#define NM8    5
 
 
 /////////////////////////////////////////////////////////////////////////
 ////////////////////////// TEST /////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////
 
-#define wMinDP12 3.1  // Minimum width
+/*#define wMinDP12 3.1  // Minimum width
 #define wMaxDP12 25.1 // Maximum width 30.1
 #define hMinDP12 1.7  // Minimum height
 #define hMaxDP12 7.7  // Minimum height
@@ -127,6 +127,6 @@
 #define wMaxM8 8
 #define hMinM8 3
 #define hMaxM8 8
-#define NM8    3
+#define NM8    3*/
 
 #define SlicingTreeData "SlicingTreeData.txt"

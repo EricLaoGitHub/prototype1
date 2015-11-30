@@ -112,10 +112,7 @@ namespace SlicingTree{
 // -----------------------------------------------------------------------------------------------//
   
 
-  HVSetState::HVSetState( HVSlicingNode* node
-                        , float height
-                        , float width 
-                        , bool  isTop
+  HVSetState::HVSetState( HVSlicingNode* node, float height, float width, bool  isTop
                         ):_height(height)
                          ,_width(width)
                          ,_isTop(isTop)
@@ -123,6 +120,14 @@ namespace SlicingTree{
                          ,_symmetries(node->getSymmetries())
                          ,_toleranceH(node->getToleranceH())
                          ,_toleranceW(node->getToleranceW())
+                         ,_hminWmin(pair<float,float>(0,0))
+                         ,_hminWmax(pair<float,float>(0,0))
+                         ,_hmaxWmin(pair<float,float>(0,0))
+                         ,_hmaxWmax(pair<float,float>(0,0))
+                         ,_wminHmin(pair<float,float>(0,0))
+                         ,_wminHmax(pair<float,float>(0,0))
+                         ,_wmaxHmin(pair<float,float>(0,0))
+                         ,_wmaxHmax(pair<float,float>(0,0))
   {
     _bestSet    = vector<pair<float,float> > ();
     _currentSet = vector<pair<float,float> > ();
@@ -228,6 +233,76 @@ namespace SlicingTree{
         }
      
     _mapHW.print();
+    cout << "hminwmin: H: " << _hminWmin.first << ", W: " << _hminWmin.second << endl;
+    cout << "hminwmax: H: " << _hminWmax.first << ", W: " << _hminWmax.second << endl;
+    cout << "hmaxwmin: H: " << _hmaxWmin.first << ", W: " << _hmaxWmin.second << endl;
+    cout << "hmaxwmax: H: " << _hmaxWmax.first << ", W: " << _hmaxWmax.second << endl;
+
+    cout << endl;
+
+    cout << "wminhmin: H: " << _wminHmin.first << ", W: " << _wminHmin.second << endl;
+    cout << "wminhmax: H: " << _wminHmax.first << ", W: " << _wminHmax.second << endl;
+    cout << "wmaxhmin: H: " << _wmaxHmin.first << ", W: " << _wmaxHmin.second << endl;
+    cout << "wmaxhmax: H: " << _wmaxHmax.first << ", W: " << _wmaxHmax.second << endl;
+  }
+
+
+  void HVSetState::updateLimits()
+  {
+    pair<float,float> currentPair = pair<float,float>(getCurrentH(),getCurrentW());
+    if (  (_hminWmin == pair<float,float>(0,0)) 
+       && (_hminWmax == pair<float,float>(0,0)) 
+       && (_hmaxWmin == pair<float,float>(0,0)) 
+       && (_hmaxWmax == pair<float,float>(0,0)) 
+       && (_wminHmin == pair<float,float>(0,0))
+       && (_wminHmax == pair<float,float>(0,0))
+       && (_wmaxHmin == pair<float,float>(0,0))
+       && (_wmaxHmax == pair<float,float>(0,0))
+       ){
+      _hminWmin = currentPair;
+      _hminWmax = currentPair;
+      _hmaxWmin = currentPair;
+      _hmaxWmax = currentPair;
+      _wminHmin = currentPair;
+      _wminHmax = currentPair;
+      _wmaxHmin = currentPair;
+      _wmaxHmax = currentPair;
+    } 
+    else {
+      if ( getCurrentH() < _hminWmin.first ) { 
+        _hminWmin = currentPair;
+        _hminWmax = currentPair;
+      }
+      else if (getCurrentH() == _hminWmin.first ) {
+        if      (getCurrentW() < _hminWmin.second) { _hminWmin = currentPair; }
+        else if (getCurrentW() > _hminWmax.second) { _hminWmax = currentPair; }
+      }
+      else if ( getCurrentH() > _hmaxWmin.first ){
+        _hmaxWmin = currentPair;
+        _hmaxWmax = currentPair;
+      }
+      else if (getCurrentH() == _hmaxWmin.first ) {
+        if      (getCurrentW() < _hmaxWmin.second) { _hmaxWmin = currentPair; }
+        else if (getCurrentW() > _hmaxWmax.second) { _hmaxWmax = currentPair; }
+      }
+
+      if ( getCurrentW() < _wminHmin.second ) { 
+        _wminHmin = currentPair;
+        _wminHmax = currentPair;
+      }
+      else if (getCurrentW() == _wminHmin.second ) {
+        if      (getCurrentH() < _wminHmin.first) { _wminHmin = currentPair; }
+        else if (getCurrentH() > _wminHmax.first) { _wminHmax = currentPair; }
+      }
+      else if ( getCurrentW() > _wmaxHmin.second ){
+        _wmaxHmin = currentPair;
+        _wmaxHmax = currentPair;
+      }
+      else if (getCurrentW() == _wmaxHmin.second ) {
+        if      (getCurrentH() < _wmaxHmin.first) { _hmaxWmin = currentPair; }
+        else if (getCurrentH() > _wmaxHmax.first) { _hmaxWmax = currentPair; }
+      }
+    }
   }
 
 
@@ -396,9 +471,12 @@ HSetState::HSetState( HSlicingNode* node, float height, float width, bool isTop)
   
   void HSetState::next()
   {
-    if      ( (_height == 0)&&(_width == 0) ) { insertWorst()      ; }
-    else if (_isTop)                          { updateBestSetTop() ; }
-    else                                      { updateBestSet()    ; }
+    if ( (_height == 0)&&(_width == 0) ) { 
+      insertWorst(); 
+      updateLimits();      
+    }
+    else if (_isTop) { updateBestSetTop() ; }
+    else             { updateBestSet()    ; }
     HVSetState::next();
   }
 
@@ -1443,6 +1521,7 @@ HSetState::HSetState( HSlicingNode* node, float height, float width, bool isTop)
       
       HSetState state = HSetState(this);
       while( !state.end() ){ state.next(); }
+    //state.print();
 
       _mapHW = state.getMapHW();
     }

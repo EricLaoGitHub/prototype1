@@ -558,40 +558,53 @@ namespace SlicingTree{
   class HVSetState
   {
     public:
-      inline std::vector<std::pair<float,float> > getBestSet  ();
-      inline bool   end         ();
-      inline MapHW  getMapHW    ();
-             void   initSet     ();
-             void   initModulos ();
-             bool   isSymmetry  ( int index, std::pair<int,int>& symmetry );
-             bool   isSymmetry  ( int index );
+      inline  std::vector<std::pair<float,float> > getBestSet  ();
+      inline  bool   end         ();
+      inline  MapHW  getMapHW    ();
+              void   initSet     ();
+              void   initModulos ();
+              bool   isSymmetry  ( int index, std::pair<int,int>& symmetry );
+              bool   isSymmetry  ( int index );
+              void   updateLimits();
       virtual void  print       ();
       virtual void  next ();
       virtual float getBestH    () = 0;
       virtual float getBestW    () = 0;
       virtual float getCurrentH () = 0;
       virtual float getCurrentW () = 0;
+       
       
     protected:
       HVSetState  ( HVSlicingNode* node, float height = 0, float width = 0, bool isTop = true );
       ~HVSetState ();
 
     protected:
-      float                                 _height    ;
-      float                                 _width     ;
-      bool                                  _isTop     ;
-      std::vector<SlicingNode*>             _children  ;
+      float                                 _height;
+      float                                 _width;
+      bool                                  _isTop;
+      std::vector<SlicingNode*>             _children;
       std::list<std::pair <int,int> >       _symmetries;
       float                                 _toleranceH;
       float                                 _toleranceW;
-      MapHW                                 _mapHW     ;
+      MapHW                                 _mapHW;
       
-      std::vector<int>                      _modulos   ;
-      int                                   _counter   ;
+      std::vector<int>                      _modulos;
+      int                                   _counter;
 
       std::vector<std::pair<float,float> >  _bestSet   ;
       std::vector<std::pair<float,float> >  _currentSet;
       std::vector<std::pair<float,float> >  _nextSet   ;
+
+      std::pair<float,float>                _hminWmin;
+      std::pair<float,float>                _hminWmax;
+      std::pair<float,float>                _hmaxWmin;
+      std::pair<float,float>                _hmaxWmax;
+
+      std::pair<float,float>                _wminHmin;
+      std::pair<float,float>                _wminHmax;
+      std::pair<float,float>                _wmaxHmin;
+      std::pair<float,float>                _wmaxHmax;
+      
   };
   inline std::vector<std::pair<float,float> > HVSetState::getBestSet (){ return _bestSet; }
   inline bool  HVSetState::end     (){ return (_counter == _modulos.back()+1); }

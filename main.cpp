@@ -75,8 +75,8 @@ int main(int argc, char* argv[])
   cout << " -------------- Build Slicing Tree -------------- " << endl;
   HSlicingNode* slicingTree = HSlicingNode::create(); 
 
-  slicingTree->recursiveSetToleranceH(1); // toleranceH = 1 - test Vertical
-  slicingTree->recursiveSetToleranceW(1000); // toleranceW = 1 - test Horizontal
+  slicingTree->recursiveSetToleranceH(10); // toleranceH = 1 - test Vertical
+  slicingTree->recursiveSetToleranceW(100); // toleranceW = 1 - test Horizontal
 
   slicingTree->createChild(Vertical,AlignCenter);     // VSlicingNode
   slicingTree->createChild(mapHWDP12,AlignCenter);    // DeviceNode
@@ -202,17 +202,17 @@ int main(int argc, char* argv[])
   slicingTree->printChildren();
   cout << " -------------- Print Root -------------- " << endl;
   slicingTree->print();*/
-  cout << "Occupation Area is : " << slicingTree->getOccupationArea() << "%." << endl;
-  slicingTree->setGlobalSize(30,0); 
+//cout << "Occupation Area is : " << slicingTree->getOccupationArea() << "%." << endl;
+  slicingTree->setGlobalSize(70.40,0); 
   cout << " -------------- Print Root -------------- " << endl;
-  slicingTree->print();
+//slicingTree->print();
   cout << "Number of leaf: " <<  slicingTree->getLeafNumber() << endl;
   
 
   // Writing Datas in a file to be plotted in matlab 
   slicingTree->place();
   cout << " -------------- Print Children -------------- " << endl;
-  slicingTree->printChildren();
+//slicingTree->printChildren();
   cout << " -------------- Print Root -------------- " << endl;
   slicingTree->print();
   
