@@ -74,3 +74,49 @@ title ('Global Placement View')
 xlabel('X axis') 
 ylabel('Y axis') 
 grid on;
+
+figure(2);
+hold on;
+dataFileName = 'SlicingTreeData2.txt';
+
+dataFile = fopen(dataFileName);
+data = textscan(dataFile,'%f %f');
+fclose(dataFile);
+
+
+sizeinter = size(data{1}(:));
+sizeData  = sizeinter(1,1);
+
+xmin = data{1}(1)
+ymin = data{2}(1)
+xmax = data{1}(1)
+ymax = data{2}(1)
+
+for i=1:sizeData
+    plot(data{1}(i), data{2}(i), '+', 'MarkerSize', 10);
+    if xmin > data{1}(i)
+        xmin = data{1}(i);
+    end;
+    if xmax < data{1}(i)
+        xmax = data{1}(i);
+    end;
+    if ymin > data{2}(i)
+        ymin = data{2}(i);
+    end;
+    if ymax < data{2}(i)
+        ymax = data{2}(i);
+    end;
+end
+
+% Window view 
+percent = 5;
+xminus  = (xmin-xmax)*percent/100 + xmin
+yminus  = (ymin-ymax)*percent/100 + ymin
+xplus   = (xmax-xmin)*percent/100 + xmax
+yplus   = (ymax-ymin)*percent/100 + ymax
+
+axis([xminus xplus yminus yplus])
+title ('Global Ratio')
+xlabel('Width axis') 
+ylabel('Height axis') 
+grid on;

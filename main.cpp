@@ -16,6 +16,19 @@ map <float,float>* createMapH(float widthmin, float widthmax, float heightmin, f
   for (int i = 0; i < nmax; i++){ mapL->insert(pair<float,float>(heightmin+hdelta*i, widthmax-ldelta*i)); }
   return mapL;
 }
+
+
+NodeSets createNodeSets(float widthmin, float widthmax, float heightmin, float heightmax, float nmax)
+{
+  float ldelta = (widthmax-widthmin)/nmax;
+  float hdelta = (heightmax-heightmin)/nmax;
+  
+  NodeSets nodeset = NodeSets();
+  for (int i = 0; i < nmax; i++){ nodeset.push_back(DSingleNodeSet::create(heightmin+hdelta*i, widthmax-ldelta*i)); }
+  return nodeset;
+}
+
+  
 void createSlicingTreeData(SlicingNode* data, float tab[][5], int& i)
 {
   for (vector<SlicingNode*>::const_iterator it = data->getChildren().begin(); it != data->getChildren().end(); it++)
@@ -51,171 +64,80 @@ int main(int argc, char* argv[])
 
 
   cout << " -------------- DP12 -------------- " << endl;
-  map <float,float>* mapHWDP12 = createMapH(wMinDP12,wMaxDP12,hMinDP12,hMaxDP12,NDP12);
+  NodeSets nodeSetsDP12 = createNodeSets(wMinDP12,wMaxDP12,hMinDP12,hMaxDP12,NDP12);
   
   cout << " -------------- CM34 -------------- " << endl;
-  map <float,float>* mapHWCM34 = createMapH(wMinCM34,wMaxCM34,hMinCM34,hMaxCM34,NCM34);
+  NodeSets nodeSetsCM34 = createNodeSets(wMinCM34,wMaxCM34,hMinCM34,hMaxCM34,NCM34);
 
   cout << " -------------- M5 -------------- " << endl;
-  map <float,float>* mapHWM5 = createMapH(wMinM5,wMaxM5,hMinM5,hMaxM5,NM5);
+  NodeSets nodeSetsM5 = createNodeSets(wMinM5,wMaxM5,hMinM5,hMaxM5,NM5);
 
   cout << " -------------- M6 -------------- " << endl;
-  map <float,float>* mapHWM6 = createMapH(wMinM6,wMaxM6,hMinM6,hMaxM6,NM6);
+  NodeSets nodeSetsM6 = createNodeSets(wMinM6,wMaxM6,hMinM6,hMaxM6,NM6);
   
   cout << " -------------- M7 -------------- " << endl;
-//map <float,float>* mapHWM7 = createMapH(wMinM7,wMaxM7,hMinM7,hMaxM7,NM7);
+//NodeSets nodeSetsM7 = createNodeSets(wMinM7,wMaxM7,hMinM7,hMaxM7,NM7);
   
   cout << " -------------- M8 -------------- " << endl;
-  map <float,float>* mapHWM8 = createMapH(wMinM8,wMaxM8,hMinM8,hMaxM8,NM8);
+  NodeSets nodeSetsM8 = createNodeSets(wMinM8,wMaxM8,hMinM8,hMaxM8,NM8);
 
   cout << " -------------- M9 -------------- " << endl;
-  map <float,float>* mapHWM9 = createMapH(wMinM9,wMaxM9,hMinM9,hMaxM9,NM9);
+  NodeSets nodeSetsM9 = createNodeSets(wMinM9,wMaxM9,hMinM9,hMaxM9,NM9);
 
   cout << endl;
   cout << " -------------- Build Slicing Tree -------------- " << endl;
   HSlicingNode* slicingTree = HSlicingNode::create(); 
-
-  slicingTree->recursiveSetToleranceH(10); // toleranceH = 1 - test Vertical
-  slicingTree->recursiveSetToleranceW(100); // toleranceW = 1 - test Horizontal
+  slicingTree->setToleranceRatioH(1); // toleranceH = 1 - test Vertical
+  slicingTree->setToleranceRatioW(0); // toleranceW = 1 - test Horizontal
+  slicingTree->setToleranceBandH(1); // toleranceH = 1 - test Vertical
+  slicingTree->setToleranceBandW(5); // toleranceW = 1 - test Horizontal
 
   slicingTree->createChild(Vertical,AlignCenter);     // VSlicingNode
-  slicingTree->createChild(mapHWDP12,AlignCenter);    // DeviceNode
+  slicingTree->createChild(nodeSetsDP12,AlignCenter); // DeviceNode
   slicingTree->createChild(Vertical,AlignCenter);     // VSlicingNode
-  slicingTree->createRouting(1);                        // RoutingNode H
-  slicingTree->createChild(mapHWDP12,AlignCenter);    // DeviceNode
+  slicingTree->createRouting(1);                      // RoutingNode H
+  slicingTree->createChild(nodeSetsDP12,AlignCenter); // DeviceNode
 
   cout << " -------------- 1st Hierarchy -------------- " << endl;
-  slicingTree->getChild(0)->createChild(mapHWM8,AlignCenter); // DeviceNode
-  slicingTree->getChild(0)->createChild(mapHWM5,AlignCenter); // DeviceNode
-  slicingTree->getChild(0)->createRouting(1);                   // RoutingNode V
-  slicingTree->getChild(0)->createChild(1,3);                 // Symmetry, <1,3>
-  slicingTree->getChild(0)->createChild(3,4);                 // Symmetry, <3,4>
-  slicingTree->getChild(0)->createChild(mapHWM8,AlignCenter); // DeviceNode
-  slicingTree->getChild(0)->setSymmetry(5,0);                 // Symmetry, <5,0>
+  slicingTree->getChild(0)->createChild(nodeSetsM8,AlignCenter); // DeviceNode
+  slicingTree->getChild(0)->createChild(nodeSetsM5,AlignCenter); // DeviceNode
+  slicingTree->getChild(0)->createRouting(1);                    // RoutingNode V
+  slicingTree->getChild(0)->createChild(1,3);                    // Symmetry, <1,3>
+  slicingTree->getChild(0)->createChild(3,4);                    // Symmetry, <3,4>
+  slicingTree->getChild(0)->createChild(nodeSetsM8,AlignCenter); // DeviceNode
+  slicingTree->getChild(0)->setSymmetry(5,0);                    // Symmetry, <5,0>
 
   cout << " -------------- 2nd Hierarchy -------------- " << endl;
-  slicingTree->getChild(2)->createChild(mapHWM9  ,AlignCenter); // DeviceNode
-  slicingTree->getChild(2)->createChild(mapHWCM34,AlignCenter); // DeviceNode
-  slicingTree->getChild(2)->createChild(mapHWM6  ,AlignCenter); // DeviceNode
+  slicingTree->getChild(2)->createChild(nodeSetsM9  ,AlignCenter); // DeviceNode
+  slicingTree->getChild(2)->createChild(nodeSetsCM34,AlignCenter); // DeviceNode
+  slicingTree->getChild(2)->createChild(nodeSetsM6  ,AlignCenter); // DeviceNode
 
 //slicingTree->pushBackNode(slicingTree->clone());
 
-  slicingTree->updateGlobalSize();
- 
-  /* cout << "-------------- Test updateGlobalsize: Vertical/Horizontal -------------- " << endl;
-
-     0)Check Routing Space 
-     1)Child(0) Vertical or Horizontal
-     2)Test on Child n°0 with these parameters
-    #define wMinM5 1
-    #define wMaxM5 6
-    #define hMinM5 1
-    #define hMaxM5 6
-    #define NM5    5
-    
-    #define wMinM7 1
-    #define wMaxM7 6
-    #define hMinM7 1
-    #define hMaxM7 6
-    #define NM7    5
-    
-    #define wMinM8 1
-    #define wMaxM8 6
-    #define hMinM8 1
-    #define hMaxM8 6
-    #define NM8    5
-    3) Verify by hand the values of the map
-  */
-
- /* cout << "-------------- Test updateGlobalsize: Vertical/Horizontal -------------- " << endl; 
-     0) Use updateGlobalSize results to choose values for H/W
-     1) Test on root with these parameters
-     #define wMinM9 1
-     #define wMaxM9 6
-     #define hMinM9 1
-     #define hMaxM9 6
-     #define NM9    5
-     
-     #define wMinM6 1
-     #define wMaxM6 6
-     #define hMinM6 1
-     #define hMaxM6 6
-     #define NM6    5
-     
-     #define wMinCM34 1
-     #define wMaxCM34 6
-     #define hMinCM34 1
-     #define hMaxCM34 6
-     #define NCM34    5
-    2) Verify the evolution of the values of HW with toleranceH, different achivable width
-    3) Test preset status
-  */
-
-  cout << " -------------- Test Symmetries -------------- " << endl;
-/*
-#define wMinDP12 3.1  
-#define wMaxDP12 25.1 
-#define hMinDP12 1.7  
-#define hMaxDP12 7.7  
-#define NDP12   10   
-
-#define wMaxM9 6
-#define hMinM9 1
-#define hMaxM9 6
-#define NM9    5
-
-#define wMinM6 1
-#define wMaxM6 7
-#define hMinM6 2
-#define hMaxM6 7
-#define NM6    5
-
-#define wMinCM34 1
-#define wMaxCM34 8
-#define hMinCM34 3
-#define hMaxCM34 8
-#define NCM34    5
-
-//
-#define wMinM5 1
-#define wMaxM5 6
-#define hMinM5 1
-#define hMaxM5 6
-#define NM5    5
-
-#define wMinM7 1
-#define wMaxM7 7
-#define hMinM7 2
-#define hMaxM7 7
-#define NM7    5
-
-#define wMinM8 1
-#define wMaxM8 8
-#define hMinM8 3
-#define hMaxM8 8
-#define NM8    5
-
-1) Test symmetries with child(0) composition, change the symmetries
-2) Do it for both Vertical and Horizontal type 
- */
-/*cout << " -------------- Print Children -------------- " << endl;
-  slicingTree->printChildren();
-  cout << " -------------- Print Root -------------- " << endl;
-  slicingTree->print();*/
-//cout << "Occupation Area is : " << slicingTree->getOccupationArea() << "%." << endl;
-  slicingTree->setGlobalSize(70.40,0); 
-  cout << " -------------- Print Root -------------- " << endl;
-//slicingTree->print();
-  cout << "Number of leaf: " <<  slicingTree->getLeafNumber() << endl;
   
+  cout << " -------------- UpdateGlobalSize -------------- " << endl;
+  slicingTree->updateGlobalSize();
 
-  // Writing Datas in a file to be plotted in matlab 
-  slicingTree->place();
   cout << " -------------- Print Children -------------- " << endl;
 //slicingTree->printChildren();
   cout << " -------------- Print Root -------------- " << endl;
-  slicingTree->print();
+//slicingTree->print();
+//cout << "Occupation Area is : " << slicingTree->getOccupationArea() << "%." << endl;
+  cout << " -------------- SetGlobalSize -------------- " << endl;
+  slicingTree->setGlobalSize2(15, 20); 
+//cout << " -------------- Print Root -------------- " << endl;
+//slicingTree->print();
+//cout << "Number of leaf: " <<  slicingTree->getLeafNumber() << endl;
   
+
+// Writing Datas in a file to be plotted in matlab 
+  cout << " -------------- Placement -------------- " << endl;
+  slicingTree->place();
+  cout << " -------------- Print Children -------------- " << endl;
+  slicingTree->printChildren();
+  cout << " -------------- Print Root -------------- " << endl;
+  slicingTree->print();
+  cout << " -------------- end Root -------------- " << endl;  
   cout << "Occupation Area is : " << slicingTree->getOccupationArea() << "%." << endl;
 
   ofstream myfile;
@@ -228,7 +150,25 @@ int main(int argc, char* argv[])
     {
       myfile << tab[j][0] << " " << tab[j][1] << " " << tab[j][2] << " " << tab[j][3] << " " << tab[j][4] << endl;
     }
-    myfile.close();
+  myfile.close();
+  cout << "Placement matlab file saved" << endl;
+
+  myfile.open (SlicingTreeData2);
+  
+  NodeSets test = slicingTree->getNodeSets();
+  for (vector <SingleNodeSet*>::const_iterator itPrint = test.begin(); itPrint != test.end(); itPrint++)
+    {
+    //myfile << (*itPrint)->getWidth() << " " << (*itPrint)->getHeight() << " " << (*itPrint)->getCount() << endl;
+      myfile << (*itPrint)->getWidth() << " " << (*itPrint)->getHeight() << endl;
+    }
+  
+  myfile.close();
+  cout << "Ratio     matlab file saved" << endl;
+
+//SingleNodeSet* test1 = slicingTree->getNodeSets().getNodeSetsHW(20.8, 22.2, 0); 
+//pair<float,float> paire = slicingTree->getChild(0)->getPairHW(20.9, 22.1);
+//cout << "H; " << paire.first;
+//cout << ", W: "  << paire.second << endl;
 
   return 0;
 }

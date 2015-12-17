@@ -130,3 +130,4 @@
 #define NM8    3*/
 
 #define SlicingTreeData "SlicingTreeData.txt"
+#define SlicingTreeData2 "SlicingTreeData2.txt"
