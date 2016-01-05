@@ -19,6 +19,561 @@ namespace SlicingTree{
     cout << "end printV" << endl;
   }
 
+// -----------------------------------------------------------------------------------------------//
+// Class : BoxSet
+// -----------------------------------------------------------------------------------------------//
+
+
+  BoxSet::BoxSet( float height, float width ): _height( height )
+                                             , _width ( width  )
+                                             , _cpt   ( 1      ){}
+
+
+  BoxSet::BoxSet( BoxSet* boxSet ): _height( boxSet->getHeight() )
+                                  , _width ( boxSet->getWidth()  )
+                                  ,_cpt    ( boxSet->getCpt()  ){}
+
+
+  BoxSet::~BoxSet(){}
+
+
+  void BoxSet::print() const 
+  {
+    cout << "Print - BoxSet" << endl;
+    cout << "cpt: " << _cpt << ", H: " << _height << ", W: " << _width << endl;
+  }
+
+
+  const vector<BoxSet*>& BoxSet::getSet() const
+  {
+    cerr << "Error(vector< BoxSet*> getSet () const): DBoxSet and RHVBoxSet do not have vector of BoxSets." << endl;
+    static const vector<BoxSet*> boxSet = vector<BoxSet*> ();
+    return boxSet;
+  }
+
+
+  void BoxSet::destroy()
+  {
+    delete(this);
+  }
+
+
+// -----------------------------------------------------------------------------------------------//
+// Class : HVBoxSet
+// -----------------------------------------------------------------------------------------------//
+                                       
+
+  HVBoxSet::HVBoxSet( vector<BoxSet*> dimensionSet, float height, float width ): BoxSet       ( height, width )
+                                                                               ,_dimensionSet ( dimensionSet  ){}
+                                       
+
+  HVBoxSet::HVBoxSet( HVBoxSet* boxSet ): BoxSet        ( boxSet           )
+                                        , _dimensionSet ( boxSet->getSet() ){}
+
+
+  HVBoxSet::~HVBoxSet(){}
+
+
+  void HVBoxSet::print() const 
+  {
+    int index = 0;
+    cout << "Print - HVBoxSet, ";
+    cout << "Total Height: " << getHeight() << " and Total Width: " << getWidth() << endl;
+
+    for (vector<BoxSet*>::const_iterator it = _dimensionSet.begin(); it != _dimensionSet.end(); it++){ 
+      cout << index << ": H: " << (*it)->getHeight() << ", W: " << (*it)->getWidth() << endl;
+      index++;
+    }
+  }
+
+
+  float HVBoxSet::getDevicesArea() const
+  {
+    float area = 0;
+    for (vector<BoxSet*>::const_iterator it = _dimensionSet.begin(); it != _dimensionSet.end(); it++){ 
+      area += (*it)->getDevicesArea();
+    }
+    return area;
+  }
+
+  
+// -----------------------------------------------------------------------------------------------//
+// Class : VBoxSet
+// -----------------------------------------------------------------------------------------------//
+
+  int VBoxSet::_count    = 0;
+  int VBoxSet::_countAll = 0;
+
+
+  VBoxSet::VBoxSet( vector<BoxSet*> dimensionSet, float height, float width ): HVBoxSet( dimensionSet, height, width )
+  {
+    if ( (_height == 0) && (_width == 0) ){
+      calculateHeight();
+      calculateWidth ();
+    }
+  }
+
+
+  VBoxSet::VBoxSet( VBoxSet* boxSet ): HVBoxSet( boxSet ){}
+
+
+  VBoxSet::~VBoxSet(){}
+
+
+  VBoxSet* VBoxSet::create( vector<BoxSet*> dimensionSet, float height, float width  )
+  {
+    _count++;
+    _countAll++;
+    return new VBoxSet( dimensionSet, height, width ); 
+  }
+
+
+  VBoxSet* VBoxSet::clone()
+  {
+    return VBoxSet::create( getSet(), getHeight(), getWidth() );
+  }
+
+
+  void VBoxSet::calculateHeight()
+  {
+    float currentH = 0;
+    for (vector<BoxSet*>::const_iterator it = _dimensionSet.begin(); it != _dimensionSet.end(); it++){
+      if (currentH < (*it)->getHeight()){ currentH = (*it)->getHeight(); }
+    }
+    _height = currentH;
+  }
+
+
+  void VBoxSet::calculateWidth()
+  {
+    float currentW = 0;
+    for (vector<BoxSet*>::const_iterator it = _dimensionSet.begin(); it != _dimensionSet.end(); it++){
+      currentW += (*it)->getWidth();
+    }
+    _width = currentW;
+  }
+
+
+  void VBoxSet::destroy()
+  {
+    _count--;
+    BoxSet::destroy();
+  }
+
+
+// -----------------------------------------------------------------------------------------------//
+// Class : HBoxSet
+// -----------------------------------------------------------------------------------------------//
+
+
+  int HBoxSet::_count    = 0;
+  int HBoxSet::_countAll = 0;
+
+
+  HBoxSet::HBoxSet( vector< BoxSet*> dimensionSet, float height, float width  ): HVBoxSet( dimensionSet, height, width )
+  {
+    if ( (_height == 0) && (_width == 0) ){
+      calculateHeight();
+      calculateWidth();
+    }
+  }
+
+
+  HBoxSet::HBoxSet( HBoxSet* boxSet ): HVBoxSet( boxSet ){}
+  
+
+  HBoxSet::~HBoxSet(){}
+
+
+  HBoxSet* HBoxSet::create( vector< BoxSet*> dimensionSet, float height, float width  )
+  {
+    _count++;
+    _countAll++;
+    return new HBoxSet( dimensionSet, height, width ); 
+  }
+
+
+  HBoxSet* HBoxSet::clone()
+  {
+    return HBoxSet::create( getSet(), getHeight(), getWidth() );
+  }
+
+
+  void HBoxSet::calculateHeight() 
+  {
+    float currentH = 0;
+    for (vector<BoxSet*>::const_iterator it = _dimensionSet.begin(); it != _dimensionSet.end(); it++){
+      currentH += (*it)->getHeight();
+    }
+    _height = currentH;
+  }
+
+
+  void HBoxSet::calculateWidth()
+  {
+    float currentW = 0;
+    for (vector<BoxSet*>::const_iterator it = _dimensionSet.begin(); it != _dimensionSet.end(); it++){
+      if (currentW < (*it)->getWidth()){ currentW = (*it)->getWidth(); }
+    }
+    _width = currentW;
+  }
+
+
+  void HBoxSet::destroy()
+  {
+    _count--;
+    BoxSet::destroy();
+  }
+
+
+// -----------------------------------------------------------------------------------------------//
+// Class : DBoxSet
+// -----------------------------------------------------------------------------------------------//
+
+
+  int DBoxSet::_count    = 0;
+  int DBoxSet::_countAll = 0;
+
+
+  DBoxSet::DBoxSet( float height, float width ): BoxSet( height, width ){}
+
+
+  DBoxSet::DBoxSet( DBoxSet* boxSet ): BoxSet( boxSet ){}
+
+
+  DBoxSet::~DBoxSet(){}
+
+
+  DBoxSet* DBoxSet::create( float height, float width )
+  {
+    _count++;
+    _countAll++;
+    return new DBoxSet( height, width ); 
+  }
+
+
+  DBoxSet* DBoxSet::clone()
+  {
+    return DBoxSet::create( getHeight(), getWidth() ); 
+  }
+
+
+  void DBoxSet::destroy()
+  {
+    _count--;
+    BoxSet::destroy();
+  }
+  
+
+// -----------------------------------------------------------------------------------------------//
+// Class : RHVBoxSet
+// -----------------------------------------------------------------------------------------------//
+
+
+  int RHVBoxSet::_count    = 0;
+  int RHVBoxSet::_countAll = 0;
+
+
+  RHVBoxSet::RHVBoxSet( float height, float width ): BoxSet( height, width ){}
+
+
+  RHVBoxSet::RHVBoxSet( RHVBoxSet* boxSet ): BoxSet( boxSet ){}
+
+
+  RHVBoxSet::~RHVBoxSet(){}
+
+
+  void RHVBoxSet::destroy()
+  {
+    _count--;
+    delete(this);
+  }
+
+
+// -----------------------------------------------------------------------------------------------//
+// Class : RVBoxSet
+// -----------------------------------------------------------------------------------------------//
+  
+  
+  RVBoxSet::RVBoxSet( float width ): RHVBoxSet( 0, width ){}
+
+
+  RVBoxSet::RVBoxSet( RVBoxSet* boxSet ): RHVBoxSet( boxSet ){}
+
+  
+  RVBoxSet::~RVBoxSet(){}
+
+
+  RVBoxSet* RVBoxSet::create( float width )
+  {
+    _count++;
+    _countAll++;
+    return new RVBoxSet( width );
+  }
+
+
+  RVBoxSet* RVBoxSet::clone()
+  {
+    return RVBoxSet::create( getWidth() ); 
+  }
+
+
+// -----------------------------------------------------------------------------------------------//
+// Class : RHBoxSet
+// -----------------------------------------------------------------------------------------------//
+  
+  
+  RHBoxSet::RHBoxSet( float height ): RHVBoxSet( height, 0 ){}
+
+
+  RHBoxSet::RHBoxSet( RHBoxSet* boxSet ): RHVBoxSet( boxSet ){}
+
+  
+  RHBoxSet::~RHBoxSet(){}
+
+
+  RHBoxSet* RHBoxSet::create( float height )
+  {
+    _count++;
+    _countAll++;
+    return new RHBoxSet ( height );
+  }
+
+
+  RHBoxSet* RHBoxSet::clone()
+  {
+    return RHBoxSet::create( getHeight() ); 
+  }
+
+
+// -----------------------------------------------------------------------------------------------//
+// Class : NodeSets
+// -----------------------------------------------------------------------------------------------//
+
+
+  NodeSets::NodeSets()
+  {
+    _nodeSets.clear();
+  }
+  
+
+  NodeSets::NodeSets( const NodeSets& other )
+  {
+    _nodeSets = other.getNodeSets();
+  }
+
+
+  NodeSets::~NodeSets(){}
+
+
+  BoxSet* NodeSets::operator[]( size_t i ) 
+  {
+    vector<BoxSet*>::iterator it = _nodeSets.begin();
+    it += i;
+    return (*it); 
+  }
+
+
+  void NodeSets::clear() 
+  {
+    if ( _nodeSets.empty() != true ){
+      for (vector<BoxSet*>::iterator it = _nodeSets.begin(); it != _nodeSets.end(); it++){
+        (*it)->destroy();
+      }
+      _nodeSets.clear();
+    }
+  }
+
+
+  pair<float,float> NodeSets::getPairH( float height ) const 
+  {
+    float w        = 0;
+    float hclosest = 0;
+
+    for (vector<BoxSet*>::const_iterator itHW = _nodeSets.begin(); itHW != _nodeSets.end(); itHW++){ 
+
+      if ( ((*itHW)->getHeight() > hclosest) && (height >= (*itHW)->getHeight()) ){
+        hclosest = (*itHW)->getHeight();
+        w        = (*itHW)->getWidth();
+      }
+    }
+    
+    if ( (w == 0) && (hclosest == 0) )
+      { cerr << "Error(pair<float,float> NodeSets::getPairH(float height) const): No solution for h = " << height << " has been found." << endl; }
+
+    return pair<float,float>(hclosest, w);
+  }
+ 
+
+  pair<float,float> NodeSets::getPairHW( float height, float width ) const 
+  {
+    vector<BoxSet*>::const_iterator it = _nodeSets.begin();
+    float bestH    = (*it)->getHeight();
+    float bestW    = (*it)->getWidth();
+    float currentH = 0;
+    float currentW = 0;
+
+    while (it != _nodeSets.end()){
+      currentH = (*it)->getHeight();
+      currentW = (*it)->getWidth();
+
+      if (currentH <= height){
+        if ( currentH > bestH ){
+          bestH = currentH;
+          bestW = currentW;
+        } else if (currentH == bestH){
+          if ( (currentW > bestW) && (currentW <= width) ){ 
+            bestH = currentH;
+            bestW = currentW;
+          }
+          else if ( (currentW < bestW) && (bestW > width) ){ 
+            bestH = currentH;
+            bestW = currentW;
+          }
+        }
+        it++;
+      } else {
+        it = _nodeSets.end();
+      }
+    }
+
+    return pair<float,float>(bestH, bestW);
+  }
+
+
+  int NodeSets::findIndex( float height, float width ) const
+  {
+    bool end     = false;
+    int indextbd = 0;
+    int index    = 0;
+    vector<BoxSet*>::const_iterator it = _nodeSets.begin();
+
+    while(end == false){
+      if ( ((*it)->getHeight() == height) && ((*it)->getWidth() == width) ){
+        indextbd = index;
+        end      = true;
+      }
+      index++;
+      it++;
+      if (it == _nodeSets.end()){ end = true; }
+    }
+
+    return indextbd;
+  }
+
+
+  vector<BoxSet* >::iterator NodeSets::find( float height, float width )
+  {
+    vector<BoxSet* >::iterator it     = _nodeSets.begin();
+    vector<BoxSet* >::iterator itFind = _nodeSets.end();
+    
+    if (_nodeSets.empty() != true){
+
+      while(it != _nodeSets.end()){
+        if ( ((*it)->getHeight() == height) && ((*it)->getWidth() == width) ){ 
+          itFind = it;
+          it     = _nodeSets.end(); 
+        }
+        else { it++; }
+        if ( it == _nodeSets.end() ){ it = _nodeSets.end(); }
+      }
+    } else { it = _nodeSets.end(); }
+
+    return itFind;
+  }
+
+
+  vector<BoxSet* >::iterator NodeSets::find( BoxSet* boxSet )
+  {
+    vector<BoxSet* >::iterator it     = _nodeSets.begin();
+    vector<BoxSet* >::iterator itFind = _nodeSets.end();
+
+    if ( (_nodeSets.empty() != true) && (boxSet != NULL) ){
+
+      while(it != _nodeSets.end()){
+        if ( ((*it)->getHeight() == boxSet->getHeight()) && ((*it)->getWidth() == boxSet->getWidth()) ){ 
+          itFind = it;
+          it     = _nodeSets.end(); 
+        }
+        else { it++; }
+      }
+    } else { it = _nodeSets.end(); }
+
+    return itFind;
+  }
+
+
+  void NodeSets::print() const 
+  {
+    cout << "Print - NodeSets:" << endl;
+    int index = 0;
+    if (_nodeSets.size() == 0){ cout << "--- EMPTY ---" << endl; }
+    else {
+      for (vector <BoxSet*>::const_iterator itPrint = _nodeSets.begin(); itPrint != _nodeSets.end(); itPrint++){ 
+        cout << index << ": cpt: " << (*itPrint)->getCpt() << ", H: " << (*itPrint)->getHeight() << ", W: " << (*itPrint)->getWidth() << endl; 
+        index++;
+      } 
+      cout << endl;
+    }
+  }
+
+
+  bool NodeSets::compare( NodeSets nodeSets2 ) const
+  {
+    bool comp = true;
+    if (_nodeSets.size() != nodeSets2.size()) { comp = false; }
+
+    if (comp == true) {
+      vector<BoxSet*>::const_iterator it2 = nodeSets2.begin();
+      for (vector<BoxSet*>::const_iterator it1 = _nodeSets.begin(); it1 != _nodeSets.end(); it1++){
+
+        if ( ((*it1)->getHeight() != (*it2)->getHeight()) || ((*it1)->getWidth() != (*it2)->getWidth()) )
+          { comp = false; }
+        if (it2 != nodeSets2.end())                          
+          { it2++; }
+      }
+    }
+
+    return comp;
+  }
+
+
+  void NodeSets::push_back( BoxSet* boxSet )
+  {
+    if( this->find(boxSet) == _nodeSets.end() ){ _nodeSets.push_back(boxSet);       }
+    else { 
+      (*find(boxSet))->incrementCpt(); 
+      boxSet->destroy();
+    }
+  }
+
+
+  void NodeSets::push_back( vector<BoxSet*> vect, float height, float width, unsigned int type )
+  {
+    if( this->find(height, width) == _nodeSets.end() ){ 
+      if (type == Horizontal){
+        _nodeSets.push_back(HBoxSet::create(vect, height, width));     
+      } 
+      else if (type == Vertical){
+        _nodeSets.push_back(VBoxSet::create(vect, height, width));   
+      }    
+    }
+    else { 
+      (*find(height, width))->incrementCpt(); 
+    }
+  }
+
+
+  NodeSets NodeSets::clone() 
+  {
+    NodeSets nodesets = NodeSets();
+    for (vector<BoxSet*>::iterator it = _nodeSets.begin(); it != _nodeSets.end(); it++)
+      { 
+        nodesets.push_back((*it)->clone()); 
+      }
+    return nodesets;
+  }
+
 
 // -----------------------------------------------------------------------------------------------//
 // Class : SlicingNode
@@ -27,262 +582,406 @@ namespace SlicingTree{
 
   SlicingNode::SlicingNode( unsigned int type
                           , NodeSets     nodeSets
-                          , unsigned int alignment 
-                          , float        w        
-                          , float        h
+                          , unsigned int alignment    
+                          , float        height
+                          , float        width   
                           ):_nodeSets(nodeSets)
-                           ,_x(0),_y(0)
-                           ,_w(w),_h(h)
+                           ,_x(0)          , _y(0)
+                           ,_height(height), _width(width)
   {
     _flags = 0;
+    _parent = NULL;
     this->setType(type);
     this->setAlignment(alignment);
 
-    if ( (w != 0)&&(h != 0) ){ this->setPreset(Preset); }
+    if ( (_width != 0) && (_height != 0) ){ 
+      this->setPreset(Preset); 
+      this->setSet(Set);
+    }
   } 
 
 
   SlicingNode::~SlicingNode(){}
+  
+
+  SlicingNode* SlicingNode::getRoot() 
+  { 
+    SlicingNode* parent = this;
+    if (_parent != NULL){ parent = _parent->getRoot(); }
+    return parent; 
+  }
+
+
+  void SlicingNode::setPairH( float height )
+  {
+    pair<float,float> hw = this->getPairH(height);
+    _height              = hw.first;
+    _width               = hw.second;
+  }
+
+  
+  void SlicingNode::clearParentsNodeSets()
+  {
+    if ( _parent != NULL ){ _parent->clearParentsNodeSets(); }
+    _nodeSets.clear();
+  }
+
+
+  void SlicingNode::resetSlicingTree()
+  {
+    getRoot()->_resetSlicingTree();
+  }
+
+
+  void SlicingNode::_resetSlicingTree()
+  {
+    setPlaced(false);
+    if (isPreset() == false){
+      _x      = 0;
+      _y      = 0;
+      _height = 0;
+      _width  = 0;
+      setSet(false);
+    }
+  }
 
 
   void SlicingNode::print() const
   {
-    if   ( this->isPreset() ){ cout << "preset = True"   << endl; }
-    else                     { cout << "preset = False " << endl; }
-    cout << "Height = " << _h << endl;
-    cout << "Width  = " << _w << endl;
-    cout << "X      = " << _x << endl;
-    cout << "Y      = " << _y << endl;
-    cout << endl;
+    printParent();
+    if   ( this->isPreset() ){ cout << "Preset     : True"   << endl; }
+    else                     { cout << "Preset     : False " << endl; }
+    if   ( this->isSet() )   { cout << "Set        : True"   << endl; }
+    else                     { cout << "Set        : False " << endl; }
+    if   ( this->isPlaced() ){ cout << "Placed     : True"   << endl; }
+    else                     { cout << "Placed     : False " << endl; }
+    cout << "Height     : " << _height << endl;
+    cout << "Width      : " << _width << endl;
+    cout << "X          : " << _x << endl;
+    cout << "Y          : " << _y << endl;
 
     cout << "Print - NodeSets:" << endl;
     int index = 0;
     NodeSets node = _nodeSets;
     if ( node.size() == 0){cout << "--- EMPTY ---" << endl;}
     else {
-      for (vector <SingleNodeSet*>::const_iterator itPrint = node.begin(); itPrint != node.end(); itPrint++)
+      for (vector<BoxSet*>::const_iterator itPrint = node.begin(); itPrint != node.end(); itPrint++)
         { 
-          cout << index << ": \t area: " << (*itPrint)->getOccupationArea() << setprecision(4) <<"%, \t" << " cpt: " << (*itPrint)->getCount() << ", \t H: " << (*itPrint)->getHeight() << ", W: " << (*itPrint)->getWidth() << endl; 
+          cout << index << ": \t area: " << setprecision(4) << (*itPrint)->getOccupationArea() <<"%, \t" << " cpt: " << (*itPrint)->getCpt() << ", \t H: " << (*itPrint)->getHeight() << ", W: " << (*itPrint)->getWidth() << endl; 
           index++;
         } 
       cout << endl;
     }
   }
 
+  void SlicingNode::printParent() const 
+  {
+    if (_parent != NULL){
+      unsigned int type = _parent->getType();
+      if      ( type == Horizontal ){ cout << "Parent     : Type: Horizontal" ; }
+      else if ( type == Vertical   ){ cout << "Parent     : Type: Vertical"   ; }
+      else                          { cout << "Parent     : Type: UnknownType"; }
+      cout << ", H: " << _parent->getHeight();
+      cout << ", W: " << _parent->getWidth();
+      cout << ", X: " << _parent->getX();
+      cout << ", Y: " << _parent->getY() <<  endl;
+    } else {
+      cout << "Parent     : None " << endl;
+    }
+  }
 
-  void SlicingNode::place(float x, float y)
+
+  void SlicingNode::place( float x, float y )
   {
     _x = x;
     _y = y;
-  }  
+    setPlaced(Placed);
+  }
 
 
-  void SlicingNode::setPairH(float h)
+  void SlicingNode::_place( float x, float y )
   {
-    pair<float,float> hw = this->getPairH(h);
-    _h                   = hw.first;
-    _w                   = hw.second;
+    SlicingNode::place(x,y);
+  }
+
+
+  void SlicingNode::setGlobalSize( float height, float width )
+  {
+    if ( !this->isPreset() ) {
+      _height = height;
+      _width  = width;
+    }
+    if ( (_height != 0) && (_width != 0) ) { this->setSet(Set) ; }
+  }
+
+
+  void SlicingNode::_setGlobalSize( float height, float width )
+  {
+    SlicingNode::setGlobalSize(height, width);
+  }
+
+
+  void SlicingNode::preDestroy()
+  {
+    if ( _parent != NULL ){
+      _parent->removeNode(this);
+    }
+    _nodeSets.clear();
+  }
+
+
+  void SlicingNode::destroy()
+  {
+    SlicingNode::preDestroy();
+    delete(this);
+  }
+
+
+  void SlicingNode::preRecursiveDestroy()
+  {
+    SlicingNode::preDestroy();
+  }
+
+
+  void SlicingNode::recursiveDestroy()
+  {
+    SlicingNode::preRecursiveDestroy();
+    delete(this);
   }
 
 
 // Error Methods
-  void SlicingNode::createChild( unsigned int type, unsigned int alignment )
-  {
-    cerr << "Error(createChild( SlicingType type, Alignment alignment = UnknownAlignment)): Device and Routing do not have child." << endl; 
-  }
-
-
-  void SlicingNode::createChild( NodeSets     nodeSets
-                               , unsigned int alignment
-                               , float        w
-                               , float        h 
-                               )
-  {
-    cerr << "Error(createChild(NodeSets nodeSets, Alignment alignment, float w, float h)): Device and Routing do not have child." << endl; 
-  }
-
-
-  void SlicingNode::createChild( int childIndex, int copyIndex, Flags tr)
-  {
-    std::cerr << "Error(createChild( int childIndex, int copyIndex, Flags tr)): Device and Routing do not have child." << endl; 
-  }
-
-
-  void SlicingNode::createRouting(float hw)
-  {
-    std::cerr << "Error(createChild(float hw): Device and Routing do not have child." << endl; 
-  }
-
-  int SlicingNode::getNbChild() const
-  {
-    cerr << "Error(int SlicingNode::getNbChild()): Devices do not have child." << endl;
-    return 0;
-  }
-
-
-  SlicingNode* SlicingNode::getChild(int index) const
-  {
-    cerr << "Error(SlicingNode* SlicingNode::getChild(int index)): Devices do not have child." << endl;
-    return NULL;
-  }
-
-
-  const vector<SlicingNode*>& SlicingNode::getChildren() const
-  {
-    cerr << "Error(vector<SlicingNode*> SlicingNode::getChildren()): Devices do not have child." << endl;
-    static vector<SlicingNode*> dummyVectorSlicingNode;
-    return dummyVectorSlicingNode;
-  }
-
-
-  void SlicingNode::printChildren()
-  {
-    cerr << "Error(void DSlicingNode::printChildren()): Devices do not have child." << endl; 
-  }
-
-
-  void SlicingNode::pushBackNode(SlicingNode* node)
-  {
-    cerr << "Error(void SlicingNode::pushBackNode(SlicingNode* node)): Devices do not have child." << endl; 
-  }
-
-
-  void SlicingNode::pushFrontNode(SlicingNode* node)
-  {
-    cerr << "Error(void SlicingNode::pushFrontNode(SlicingNode* node)): Devices do not have child." << endl; 
-  }
-
-
-  void SlicingNode::removeAllNodes()
-  {
-    cerr << "Error(void SlicingNode::removeAllNodes()): Devices do not have child." << endl; 
-  }
-
-
-  void SlicingNode::insertNode(SlicingNode* node, int index)
-  {
-    cerr << "Error(void SlicingNode::insertNode(SlicingNode* node, int index)): Devices do not have child." << endl; 
-  }
-
-
-  void SlicingNode::removeNode(SlicingNode* node)
-  {
-    cerr << "Error(void SlicingNode::removeNode(SlicingNode* node)): Devices do not have child." << endl; 
-  }
-
-
-  void SlicingNode::setToleranceRatioH(float tolerance)
-  {
-    cerr << "Error(void SlicingNode::setToleranceH(float tolerance)): Devices do not have tolerance parameter." << endl; 
-  }
-
-
-  void SlicingNode::setToleranceRatioW(float tolerance)
-  {
-    cerr << "Error(void SlicingNode::setToleranceW(float tolerance)): Devices do not have tolerance parameter." << endl; 
-  }
-
-
   float SlicingNode::getToleranceRatioH() const
   {
-    cerr << "Error(SlicingNode::getToleranceH()): Devices do not have tolerance parameter." << endl;
+    cerr << "Error(SlicingNode::getToleranceH()): Device and Routing do not have tolerance parameters." << endl;
     return 0;
   }
 
 
   float SlicingNode::getToleranceRatioW() const
   {
-    cerr << "Error(SlicingNode::getToleranceW()): Devices do not have tolerance parameter." << endl;
+    cerr << "Error(SlicingNode::getToleranceW()): Device and Routing do not have tolerance parameters." << endl;
     return 0;
   }
 
 
-  void SlicingNode::recursiveSetToleranceRatioH(float tolerance)
+  void SlicingNode::setToleranceRatioH( float tolerance )
   {
-    cerr << "Error(void SlicingNode::setToleranceH(float tolerance)): Devices do not have tolerance parameter." << endl; 
+    cerr << "Error(void SlicingNode::setToleranceH( float tolerance )): Device and Routing do not have tolerance parameters." << endl; 
   }
 
 
-  void SlicingNode::recursiveSetToleranceRatioW(float tolerance)
+  void SlicingNode::setToleranceRatioW( float tolerance )
   {
-    cerr << "Error(void SlicingNode::setToleranceRatioW(float tolerance)): Devices do not have tolerance parameter." << endl; 
-  }
-
-
-  bool SlicingNode::hasEmptyChildrenNodeSets() const
-  {
-    cerr << "Error(SlicingNode::hasEmptyChildrenNodeSets()): Devices do not have child." << endl;
-    return true;
-  } 
-
-
-  void SlicingNode::setSymmetry(int childIndex, int copyIndex)
-  {
-    cerr << "Error(SlicingNode::setSymmetry(int childIndex, int copyIndex)) : Routings do not have symmetries." << endl; 
-  }
-
-
-  void SlicingNode::normalizeSymmetries() 
-  {
-    cerr << "Error(SlicingNode::normalizeSymmetries() const) : Routings do not have symmetries." << endl; 
-  }
-
-
-  list<pair<int,int> > SlicingNode::getSymmetries() const
-  {
-    cerr << "Error(SlicingNode::getSymmetries() const) : Routings do not have symmetries." << endl; 
-    return list<pair<int,int> >();
-  }
-
-
-  float SlicingNode::getOccupationArea() const
-  {
-    cerr << "Error(SlicingNode::getOccupationArea() const) : Occupied Area not possible for Routing and Devices." << endl; 
-    return 100;
-  }
-
-
-  void SlicingNode::setToleranceBandH(float tolerance)
-  {
-    cerr << "Error(void SlicingNode::setToleranceBandH(float tolerance)): Devices do not have tolerance parameter." << endl; 
-  }
-
-
-  void SlicingNode::setToleranceBandW(float tolerance)
-  {
-    cerr << "Error(void SlicingNode::setToleranceBandW(float tolerance)): Devices do not have tolerance parameter." << endl; 
+    cerr << "Error(void SlicingNode::setToleranceW( float tolerance )): Device and Routing do not have tolerance parameters." << endl; 
   }
 
 
   float SlicingNode::getToleranceBandH() const
   {
-    cerr << "Error(SlicingNode::getToleranceBandH()): Devices do not have tolerance parameter." << endl;
+    cerr << "Error(SlicingNode::getToleranceBandH()): Device and Routing do not have tolerance parameters." << endl;
     return 0;
   }
 
 
   float SlicingNode::getToleranceBandW() const
   {
-    cerr << "Error(SlicingNode::getToleranceBandW()): Devices do not have tolerance parameter." << endl;
+    cerr << "Error(SlicingNode::getToleranceBandW()): Device and Routing do not have tolerance parameters." << endl;
     return 0;
   }
 
 
-  void SlicingNode::setTolerances(float trh, float trw, float tbh, float tbw)
+  void SlicingNode::setToleranceBandH( float tolerance )
   {
-    cerr << "Error(void SlicingNode::setTolerances(float trh, float trw, float tbh, float tbw)): Devices do not have tolerance parameter." << endl; 
+    cerr << "Error(void SlicingNode::setToleranceBandH( float tolerance )): Device and Routing do not have tolerance parameters." << endl; 
   }
 
 
-  void SlicingNode::recursiveSetToleranceBandH(float tolerance)
+  void SlicingNode::setToleranceBandW( float tolerance )
   {
-    cerr << "Error(void SlicingNode::setToleranceBandH(float tolerance)): Devices do not have tolerance parameter." << endl; 
+    cerr << "Error(void SlicingNode::setToleranceBandW(float tolerance)): Device and Routing do not have tolerance parameters." << endl; 
   }
 
 
-  void SlicingNode::recursiveSetToleranceBandW(float tolerance)
+  void SlicingNode::recursiveSetToleranceRatioH( float tolerance )
   {
-    cerr << "Error(void SlicingNode::setToleranceBandW(float tolerance)): Devices do not have tolerance parameter." << endl; 
+    cerr << "Error(void SlicingNode::setToleranceH( float tolerance )): Device and Routing do not have tolerance parameters." << endl; 
+  }
+
+
+  void SlicingNode::recursiveSetToleranceRatioW( float tolerance )
+  {
+    cerr << "Error(void SlicingNode::setToleranceRatioW( float tolerance )): Device and Routing do not have tolerance parameters." << endl; 
+  }
+
+
+  void SlicingNode::recursiveSetToleranceBandH( float tolerance )
+  {
+    cerr << "Error(void SlicingNode::setToleranceBandH( float tolerance )): Device and Routing do not have tolerance parameters." << endl; 
+  }
+
+
+  void SlicingNode::recursiveSetToleranceBandW( float tolerance )
+  {
+    cerr << "Error(void SlicingNode::setToleranceBandW( float tolerance )): Device and Routing do not have tolerance parameters." << endl; 
+  }
+
+
+  void SlicingNode::setTolerances( float trh, float trw, float tbh, float tbw )
+  {
+    cerr << "Error(void SlicingNode::setTolerances( float trh, float trw, float tbh, float tbw )): Device and Routing do not have tolerance parameters." << endl; 
+  }
+
+
+  bool SlicingNode::hasEmptyChildrenNodeSets() const
+  {
+    cerr << "Error(bool SlicingNode::hasEmptyChildrenNodeSets()): Device and routing do not have child." << endl;
+    return true;
+  } 
+
+
+  const vector<SlicingNode*>& SlicingNode::getChildren() const
+  {
+    cerr << "Error(vector<SlicingNode*> SlicingNode::getChildren()): Device and Routing do not have child." << endl;
+    static vector<SlicingNode*> dummyVectorSlicingNode;
+    return dummyVectorSlicingNode;
+  }
+
+
+  SlicingNode* SlicingNode::getChild( int index ) const
+  {
+    cerr << "Error(SlicingNode* SlicingNode::getChild(int index)): Device and Routing do not have child." << endl;
+    return NULL;
+  }
+
+
+  int SlicingNode::getChildIndex( SlicingNode* node ) const
+  {
+    cerr << "Error(int SlicingNode::getChildIndex( SlicingNode* node )): Device and Routing do not have child." << endl;
+    return 0;
+  }
+
+
+  int SlicingNode::getNbChild() const
+  {
+    cerr << "Error(int SlicingNode::getNbChild()): Device and Routing do not have child." << endl;
+    return 0;
+  }
+
+
+  void SlicingNode::createChild( unsigned int type, unsigned int alignment )
+  {
+    cerr << "Error(void createChild( SlicingType type, Alignment alignment = UnknownAlignment)): Device and Routing do not have child." << endl; 
+  }
+
+
+  void SlicingNode::createChild( NodeSets     nodeSets
+                               , unsigned int alignment
+                               , float        height 
+                               , float        width
+                               )
+  {
+    cerr << "Error(void createChild( NodeSets nodeSets, Alignment alignment, float height, float width )): Device and Routing do not have child." << endl; 
+  }
+
+
+  void SlicingNode::createChild( int childIndex, int copyIndex, unsigned int tr )
+  {
+    std::cerr << "Error(createChild( int childIndex, int copyIndex, unsigned int tr )): Device and Routing do not have child." << endl; 
+  }
+
+
+  void SlicingNode::createRouting( float space )
+  {
+    std::cerr << "Error(void createChild( float space )): Device and Routing do not have child." << endl; 
+  }
+
+
+  void SlicingNode::insertNode( SlicingNode* node, int index )
+  {
+    cerr << "Error(void SlicingNode::insertNode( SlicingNode* node, int index )): Device and Routing do not have child." << endl; 
+  }
+
+
+  void SlicingNode::push_back( SlicingNode* node )
+  {
+    cerr << "Error(void SlicingNode::push_back( SlicingNode* node )): Device and Routing do not have child." << endl; 
+  }
+
+
+  void SlicingNode::push_front( SlicingNode* node )
+  {
+    cerr << "Error(void SlicingNode::push_front( SlicingNode* node )): Device and Routing do not have child." << endl; 
+  }
+
+
+  void SlicingNode::removeNode( SlicingNode* node )
+  {
+    cerr << "Error(void SlicingNode::removeNode( SlicingNode* node )): Device and Routing do not have child." << endl; 
+  }
+
+
+  void SlicingNode::removeAllNodes()
+  {
+    cerr << "Error(void SlicingNode::removeAllNodes()): Device and Routing do not have child." << endl; 
+  }
+
+
+  list<pair<int,int> > SlicingNode::getSymmetries() const
+  {
+    cerr << "Error(list<pair<int,int> > SlicingNode::getSymmetries() const) : Device and Routing do not have symmetries." << endl; 
+    return list<pair<int,int> >();
+  }
+
+
+  void SlicingNode::setSymmetries( list<pair<int,int> > sym )
+  {
+    cerr << "Error(void SlicingNode::setSymmetries( list<pair<int,int> > sym )) : Device and Routing do not have symmetries." << endl; 
+  }
+
+
+  bool SlicingNode::isSymmetry( int index, std::pair<int,int>& symmetry )
+  {
+    cerr << "Error(bool SlicingNode::isSymmetry( int index, std::pair<int,int>& symmetry )) : Device and Routing do not have symmetries." << endl; 
+    return false;
+  }
+
+
+  bool SlicingNode::isSymmetry( int index )
+  {
+    cerr << "Error(bool SlicingNode::isSymmetry( int index )) : Device and Routing do not have symmetries." << endl; 
+    return false;
+  }
+
+
+  void SlicingNode::addSymmetry( int childIndex, int copyIndex )
+  {
+    cerr << "Error(void SlicingNode::addSymmetry( int childIndex, int copyIndex )) : Device and Routing do not have symmetries." << endl; 
+  }
+
+
+  void SlicingNode::removeSymmetry( int index )
+  {
+    cerr << "Error(void SlicingNode::removeSymmetry( int index )) : Device and Routing do not have symmetries." << endl; 
+  }
+
+
+  void SlicingNode::normalizeSymmetries() 
+  {
+    cerr << "Error(void SlicingNode::normalizeSymmetries() const) : Device and Routing do not have symmetries." << endl; 
+  }
+
+
+  void SlicingNode::printChildren() const
+  {
+    cerr << "Error(void SlicingNode::printChildren() const): Device and Routing do not have child." << endl; 
+  }
+
+
+  float SlicingNode::getOccupationArea() const
+  {
+    cerr << "Error(float SlicingNode::getOccupationArea() const) : Occupied Area is not relevant for Routing and Devices." << endl; 
+    return 100;
   }
 
 
@@ -291,16 +990,200 @@ namespace SlicingTree{
 // -----------------------------------------------------------------------------------------------//
 
 
-  HVSlicingNode::HVSlicingNode( unsigned int type, unsigned int alignment ):SlicingNode(type, NodeSets(), alignment, 0, 0)
+  HVSlicingNode::HVSlicingNode( unsigned int type, unsigned int alignment ): SlicingNode( type, NodeSets(), alignment, 0, 0 )
   {
     _toleranceRatioH = 0;
     _toleranceRatioW = 0;
-    _toleranceBandH = 0;
-    _toleranceBandW = 0;
+    _toleranceBandH  = 0;
+    _toleranceBandW  = 0;
   }
 
 
   HVSlicingNode::~HVSlicingNode(){}
+
+
+  void  HVSlicingNode::recursiveSetToleranceRatioH( float tolerance )
+  {
+    for (vector<SlicingNode*>::iterator it = _children.begin(); it != _children.end(); it++){
+
+      if ( (!(*it)->isDevice()) && (!(*it)->isRouting()) )
+        { (*it)->recursiveSetToleranceRatioH(tolerance); }
+    }
+    _toleranceRatioH = tolerance; 
+  }
+
+
+  void  HVSlicingNode::recursiveSetToleranceRatioW( float tolerance )
+  {
+    for (vector<SlicingNode*>::iterator it = _children.begin(); it != _children.end(); it++){
+
+      if ( (!(*it)->isDevice()) && (!(*it)->isRouting()) )
+        { (*it)->recursiveSetToleranceRatioW(tolerance); }
+    }
+    _toleranceRatioW = tolerance; 
+  }
+
+
+  void  HVSlicingNode::recursiveSetToleranceBandH( float tolerance )
+  {
+    for (vector<SlicingNode*>::iterator it = _children.begin(); it != _children.end(); it++){
+
+      if ( (!(*it)->isDevice()) && (!(*it)->isRouting()) )
+        { (*it)->recursiveSetToleranceBandH(tolerance); }
+    }
+    _toleranceBandH = tolerance; 
+  }
+
+
+  void  HVSlicingNode::recursiveSetToleranceBandW( float tolerance )
+  {
+    for (vector<SlicingNode*>::iterator it = _children.begin(); it != _children.end(); it++){
+
+      if ( (!(*it)->isDevice()) && (!(*it)->isRouting()) )
+        { (*it)->recursiveSetToleranceBandW(tolerance); }
+    }
+    _toleranceBandW = tolerance; 
+  }
+
+
+  void HVSlicingNode::setTolerances( float trh, float trw, float tbh, float tbw )
+  {
+    _toleranceRatioH = trh;
+    _toleranceRatioW = trw;
+    _toleranceBandH  = tbh;
+    _toleranceBandW  = tbw;
+  }
+
+
+  bool HVSlicingNode::hasEmptyChildrenNodeSets() const
+  {
+    bool flag = false;
+    for (vector<SlicingNode*>::const_iterator it = _children.begin(); it != _children.end(); it++){
+      NodeSets node = (*it)->getNodeSets();
+      if ( (node.empty() != true) && (!(*it)->isRouting()) )
+        { if (node.empty() == true) {flag = true;} }
+    }
+    return flag;
+  }
+
+
+  int HVSlicingNode::getChildIndex( SlicingNode* node ) const
+  {
+    int i = 0;
+    vector<SlicingNode*>::const_iterator it = _children.begin();
+    while (it != _children.end()){
+      if (  ((*it)->getType()   == node->getType()  )
+         && ((*it)->getHeight() == node->getHeight()) 
+         && ((*it)->getWidth () == node->getWidth ()) 
+         && ((*it)->getX()      == node->getX()     ) 
+         && ((*it)->getY()      == node->getY()     ) 
+         )
+        { it = _children.end(); }
+      else { 
+        i++;
+        it++;
+      }
+    }
+    return i;
+  }
+
+  void HVSlicingNode::createChild( unsigned int type, unsigned int alignment )
+  {
+    if (type == Horizontal) {
+      HSlicingNode* hsn = HSlicingNode::create(alignment);
+      hsn->setTolerances( getToleranceRatioH()
+                        , getToleranceRatioW()
+                        , getToleranceBandH()
+                        , getToleranceBandW()
+                        );
+      push_back(hsn);
+    }
+
+    else if (type == Vertical) { 
+      VSlicingNode* vsn = VSlicingNode::create(alignment);
+      vsn->setTolerances( getToleranceRatioH()
+                        , getToleranceRatioW()
+                        , getToleranceBandH()
+                        , getToleranceBandW()
+                        );
+      push_back(vsn); 
+    }
+    else 
+      { cerr << " Error(void HVSlicingNode::createChild(SlicingType type, Alignment alignment)): Unknown type." << endl; }
+  }   
+
+
+  void HVSlicingNode::createChild( NodeSets     nodeSets
+                                 , unsigned int alignment
+                                 , float        height
+                                 , float        width      
+                                 )
+  {
+    DSlicingNode* node = DSlicingNode::create( nodeSets, alignment, height, width );
+    node->setParent(this);
+    this->push_back(node); 
+  }
+  
+
+  void HVSlicingNode::createChild( int childIndex, int copyIndex, unsigned int tr )
+  {
+    if (childIndex != copyIndex){
+      
+      SlicingNode* node = this->getChild(childIndex)->clone(tr);
+      this->insertNode( node, copyIndex ); 
+      _symmetries.push_back( pair<int,int>(min(childIndex, copyIndex), max(childIndex, copyIndex)) );
+    }
+    else { cerr << "Error(void HVSlicingNode::createChild( int childIndex, int copyIndex, unsigned int tr )): Indexes cannot be the same." << endl; }
+  }  
+
+
+  void HVSlicingNode::insertNode( SlicingNode* node, int index )
+  {
+    vector<SlicingNode*>::iterator it = _children.begin();
+    for (int i = 0; i < index; i++){ if (it != _children.end()){ it++; } }
+    _children.insert(it,node);
+    node->setParent(this);
+  }
+
+
+  void HVSlicingNode::push_back( SlicingNode* node ) 
+  {
+    node->setParent(this);
+    _children.push_back(node); 
+  }
+
+
+  void HVSlicingNode::push_front( SlicingNode* node ) 
+  {
+    node->setParent(this);
+    _children.insert(_children.begin(), node); 
+  }
+
+
+  void HVSlicingNode::removeNode( SlicingNode* node ) 
+  {
+    int index = 0;
+    bool found = false;
+    for (vector<SlicingNode*>::iterator it = _children.begin(); it != _children.end(); it++){ 
+      if (  ((*it)->getType()   == node->getType()  )
+         && ((*it)->getHeight() == node->getHeight()) 
+         && ((*it)->getWidth () == node->getWidth ()) 
+         && ((*it)->getX()      == node->getX()     ) 
+         && ((*it)->getY()      == node->getY()     ) 
+         )
+        {  
+          _children.erase(it); 
+          found = true;
+        } 
+      else { index++; }
+    }
+    if (found == true){
+      clearParentsNodeSets();
+      removeSymmetry(index);
+      getRoot()->resetSlicingTree();
+      node->removeParent();
+    }
+  }
 
 
   bool HVSlicingNode::isSymmetry( int index, pair<int,int>& symmetry )
@@ -334,119 +1217,37 @@ namespace SlicingTree{
     }
     return symmetryFound;
   }
-  
-
-  void HVSlicingNode::createChild(int childIndex, int copyIndex, Flags tr)
-  {
-    if (childIndex != copyIndex){
-      
-      this->insertNode(this->getChild(childIndex)->clone(tr), copyIndex); 
-      _symmetries.push_back(pair<int,int>(min(childIndex, copyIndex),max(childIndex, copyIndex)));
-    }
-    else { cerr << "Error(HVSlicingNode::createChild(int childIndex, int copyIndex, Flags tr)): Indexes cannot be the same." << endl; }
-  }
 
 
-  void HVSlicingNode::printChildren()
-  {
-    int count = 0;
-    for (vector<SlicingNode*>::iterator it = _children.begin(); it != _children.end(); it++){
-      if ( ((*it)->isDevice()) || ((*it)->isRouting()) ){
-        cout << "-- Children: " << count << "/" << _children.size()-1 << " --" << endl;
-        (*it)->print(); 
-      }
-      else {
-        cout << "-- Children: " << count << "/" << _children.size()-1 << " --" << endl;
-        (*it)->print();
-        (*it)->printChildren();
-      }
-      count++;
-    }
-  }
-
-
-  void HVSlicingNode::insertNode(SlicingNode* node, int index)
-  {
-    vector<SlicingNode*>::iterator it = _children.begin();
-    for (int i = 0; i < index; i++){ if (it != _children.end()){ it++; } }
-    _children.insert(it,node);
-  }
-
-
-  void HVSlicingNode::removeNode(SlicingNode* node) 
-  {
-    for (vector<SlicingNode*>::iterator it = _children.begin(); it != _children.end(); it++)
-      { if (*it == node){  _children.erase(it); } }
-  }
-
-
-  void  HVSlicingNode::recursiveSetToleranceRatioH(float tolerance)
-  {
-    for (vector<SlicingNode*>::iterator it = _children.begin(); it != _children.end(); it++){
-
-      if ( (!(*it)->isDevice()) && (!(*it)->isRouting()) )
-        { (*it)->recursiveSetToleranceRatioH(tolerance); }
-    }
-    _toleranceRatioH = tolerance; 
-  }
-
-
-  void  HVSlicingNode::recursiveSetToleranceRatioW(float tolerance)
-  {
-    for (vector<SlicingNode*>::iterator it = _children.begin(); it != _children.end(); it++){
-
-      if ( (!(*it)->isDevice()) && (!(*it)->isRouting()) )
-        { (*it)->recursiveSetToleranceRatioW(tolerance); }
-    }
-    _toleranceRatioW = tolerance; 
-  }
-
-
-  bool HVSlicingNode::hasEmptyChildrenNodeSets() const
-  {
-    bool flag = false;
-    for (vector<SlicingNode*>::const_iterator it = _children.begin(); it != _children.end(); it++){
-      NodeSets node = (*it)->getNodeSets();
-      if ( (node.empty() != true) && (!(*it)->isRouting()) )
-        { if (node.empty() == true) {flag = true;} }
-    }
-    return flag;
-  }
-
-
-  void HVSlicingNode::setSymmetry(int childIndex, int copyIndex)
+  void HVSlicingNode::addSymmetry( int childIndex, int copyIndex )
   {
     if (childIndex != copyIndex){
       NodeSets node = this->getChild(childIndex)->getNodeSets();
-      if (node.compare( this->getChild(copyIndex)->getNodeSets() ) == true)
-        { _symmetries.push_back(pair<int,int>(min(childIndex, copyIndex), max(childIndex, copyIndex))); }
+      if (node.compare( this->getChild(copyIndex)->getNodeSets() ) == true )
+        { _symmetries.push_back( pair<int,int>(min(childIndex, copyIndex), max(childIndex, copyIndex)) ); }
       else
-        { cerr << "Error(HVSlicingNode::setSymmetry(int childIndex, int copyIndex)): Child are not the same, symmetry cannot be set." << endl; }
+        { cerr << "Error(void HVSlicingNode::addSymmetry( int childIndex, int copyIndex )): Child are not the same, symmetry cannot be set." << endl; }
     }
-    else { cerr << "Error(HVSlicingNode::setSymmetry(int childIndex, int copyIndex)): Indexes cannot be the same." << endl; }
+    else { cerr << "Error(void HVSlicingNode::addSymmetry( int childIndex, int copyIndex )): Indexes cannot be the same." << endl; }
   }
 
-
-  int HVSlicingNode::getLeafNumber() const
+  
+  void HVSlicingNode::removeSymmetry( int index )
   {
-    int cpt = 0;
-    for (vector<SlicingNode*>::const_iterator it = _children.begin(); it != _children.end(); it++)
-      { cpt += (*it)->getLeafNumber(); }
-    return cpt;  
-  }
+    list<pair<int,int> >::iterator it = _symmetries.begin();
 
-
-  void HVSlicingNode::print() const
-  {
-    SlicingNode::print();
-    if (_symmetries.empty() == false){
-      cout << "Symmetries: " << endl;
-      for (list<pair<int,int> >::const_iterator it = _symmetries.begin(); it != _symmetries.end(); it++)
-        { cout << "Children: " << (*it).first << " and " << (*it).second << endl;  }
-      cout << endl;
+    while( it != _symmetries.end() ){
+      if (((*it).first == index) || ((*it).second == index) ){
+        list<pair<int,int> >::iterator itToerase = it;
+        it++;
+        _symmetries.erase(itToerase);
+      } 
+      else { 
+        if   ((*it).first > index) { it = _symmetries.end(); }
+        else                       { it++;                   }
+      }
     }
   }
-
 
   void HVSlicingNode::normalizeSymmetries()
   {
@@ -478,6 +1279,53 @@ namespace SlicingTree{
   }
 
 
+  void HVSlicingNode::_resetSlicingTree()
+  {
+    setPlaced(false);
+    if (isPreset() == false){
+      _x      = 0;
+      _y      = 0;
+      _height = 0;
+      _width  = 0;
+      setSet(false);
+      
+      for (vector<SlicingNode*>::const_iterator it = _children.begin(); it != _children.end(); it++){
+        (*it)->_resetSlicingTree();
+      }
+    }
+  }
+
+
+  void HVSlicingNode::print() const
+  {
+    SlicingNode::print();
+    if (_symmetries.empty() == false){
+      cout << "Symmetries: " << endl;
+      for (list<pair<int,int> >::const_iterator it = _symmetries.begin(); it != _symmetries.end(); it++)
+        { cout << "Children: " << (*it).first << " and " << (*it).second << endl;  }
+      cout << endl;
+    }
+  }
+
+
+  void HVSlicingNode::printChildren() const
+  {
+    int count = 0;
+    for (vector<SlicingNode*>::const_iterator it = _children.begin(); it != _children.end(); it++){
+      if ( ((*it)->isDevice()) || ((*it)->isRouting()) ){
+        cout << "-- Children: " << count << "/" << _children.size()-1 << " --" << endl;
+        (*it)->print(); 
+      }
+      else {
+        cout << "-- Children: " << count << "/" << _children.size()-1 << " --" << endl;
+        (*it)->print();
+        (*it)->printChildren();
+      }
+      count++;
+    }
+  }
+
+
   bool HVSlicingNode::recursiveCheckPreset() const
   {
     bool isPreset = this->isPreset();
@@ -487,6 +1335,39 @@ namespace SlicingTree{
       }
     }
     return isPreset;
+  }
+
+
+  bool HVSlicingNode::recursiveCheckSet() const
+  {
+    bool isSet = this->isSet();   
+    if (isSet){
+      for (vector<SlicingNode*>::const_iterator it = _children.begin(); it != _children.end(); it++){ 
+        isSet = (*it)->recursiveCheckSet(); 
+      }
+    }
+    return isSet;
+  }
+
+
+  bool HVSlicingNode::recursiveCheckPlaced() const
+  {
+    bool isPlaced = this->isPlaced();
+    if (isPlaced){
+      for (vector<SlicingNode*>::const_iterator it = _children.begin(); it != _children.end(); it++){ 
+        isPlaced = (*it)->recursiveCheckPlaced(); 
+      }
+    }
+    return isPlaced;
+  }
+
+
+  int HVSlicingNode::getLeafNumber() const
+  {
+    int cpt = 0;
+    for (vector<SlicingNode*>::const_iterator it = _children.begin(); it != _children.end(); it++)
+      { cpt += (*it)->getLeafNumber(); }
+    return cpt;  
   }
 
 
@@ -503,93 +1384,22 @@ namespace SlicingTree{
   float HVSlicingNode::getOccupationArea() const
   {
     float estimation = 0;
-    if( recursiveCheckPreset() )
+    if(recursiveCheckPlaced())
       {
         estimation = getDevicesArea()/(getHeight() * getWidth())*100;
       }
-    else { cerr << "Error(HVSlicingNode::getSpaceEstimation()): SlicingNodes dimensions need to be set first before being estimated." << endl; }
+    else { cerr << "Error(float HVSlicingNode::getSpaceEstimation()): SlicingNodes dimensions need to be set first before being estimated." << endl; }
     return estimation;
   }
 
 
-  void HVSlicingNode::setTolerances(float trh, float trw, float tbh, float tbw)
-  {
-    _toleranceRatioH = trh;
-    _toleranceRatioW = trw;
-    _toleranceBandH = tbh;
-    _toleranceBandW = tbw;
-  }
-
-
-
-  void  HVSlicingNode::recursiveSetToleranceBandH(float tolerance)
-  {
-    for (vector<SlicingNode*>::iterator it = _children.begin(); it != _children.end(); it++){
-
-      if ( (!(*it)->isDevice()) && (!(*it)->isRouting()) )
-        { (*it)->recursiveSetToleranceBandH(tolerance); }
-    }
-    _toleranceBandH = tolerance; 
-  }
-
-
-  void  HVSlicingNode::recursiveSetToleranceBandW(float tolerance)
-  {
-    for (vector<SlicingNode*>::iterator it = _children.begin(); it != _children.end(); it++){
-
-      if ( (!(*it)->isDevice()) && (!(*it)->isRouting()) )
-        { (*it)->recursiveSetToleranceBandW(tolerance); }
-    }
-    _toleranceBandW = tolerance; 
-  }
-
-
-  void SlicingNode::setGlobalSize2 ( float height, float width )
-  {
-    if ( !this->isPreset() ) { 
-      _h = height;
-      _w = width;
-    }
-    if ( (_h != 0) && (_w != 0) ) { this->setPreset(Preset) ; }
-  }
-
-
-  void SlicingNode::_setGlobalSize2 ( float height, float width )
-  {
-    if ( !this->isPreset() ) { 
-      _h = height;
-      _w = width;
-    }
-    if ( (_h != 0) && (_w != 0) ) { this->setPreset(Preset) ; }
-  }
-
-
-  void HVSlicingNode::_setGlobalSize2 ( float height, float width )
-  {
-    _h = height;
-    _w = width;
-    if ( (_h != 0) && (_w != 0) ) { this->setPreset(Preset) ; }
-    
-    int index = 0;
-    print();
-    vector<SingleNodeSet*>::const_iterator itSet1  = _nodeSets.find(height, width);
-    vector<SingleNodeSet*>                 vecSet1 =  (*itSet1)->getSet();
-    vector<SingleNodeSet*>::const_iterator itSet   = vecSet1.begin();
-
-    for (vector<SlicingNode*>::const_iterator it = _children.begin(); it != _children.end(); it++){
-      (*it)->_setGlobalSize2((*itSet)->getHeight(), (*itSet)->getWidth());
-      itSet++;
-    }
-  }
-
-
-  void HVSlicingNode::setGlobalSize2 ( float height, float width )
+  void HVSlicingNode::setGlobalSize ( float height, float width )
   {
     if ( _nodeSets.empty() != true ){
-      vector<SingleNodeSet*>::const_iterator it     = _nodeSets.begin();
-      vector<SingleNodeSet*>::const_iterator itBest = _nodeSets.begin();
-      float bestH = (*it)->getHeight();
-      float bestW = (*it)->getWidth();
+      vector<BoxSet*>::const_iterator it     = _nodeSets.begin();
+      vector<BoxSet*>::const_iterator itBest = _nodeSets.begin();
+      float bestH    = (*it)->getHeight();
+      float bestW    = (*it)->getWidth();
       float currentH = 0;
       float currentW = 0;
 
@@ -597,7 +1407,7 @@ namespace SlicingTree{
         currentH = (*it)->getHeight();
         currentW = (*it)->getWidth();
       
-        if ((currentH <= height)&&(currentW <= width)){
+        if ( (currentH <= height) && (currentW <= width) ){
           if ( ((height-currentH) <= _toleranceRatioH) && ((height-bestH) <= _toleranceRatioH) ) {
             if (currentW > bestW){ 
               itBest = it;
@@ -614,33 +1424,86 @@ namespace SlicingTree{
       } 
 
       int index = 0;
-      cout << "START: On fait des TESTS " << endl;
-      (*itBest)->print();
-      cout << "END: On fait des TESTS " << endl;
-      index = 0;
-
-
-      vector<SingleNodeSet*>::const_iterator itSet = (*itBest)->getSet().begin();
+      vector<BoxSet*>::const_iterator itSet = (*itBest)->getSet().begin();
       for (vector<SlicingNode*>::const_iterator it = _children.begin(); it != _children.end(); it++){
-        (*it)->_setGlobalSize2((*itSet)->getHeight(), (*itSet)->getWidth());
+        (*it)->_setGlobalSize( (*itSet)->getHeight(), (*itSet)->getWidth() );
         itSet++;
         index++;
       }
-
-      _h = bestH;
-      _w = bestW;
-      if ( (_h == 0)||(_w == 0) ){ cerr << "No solution found. Required height = " << height << " and width = " << width << endl; }
-      if ( (_h != 0)&&(_w != 0) ){ this->setPreset(Preset); }
+      _height = bestH;
+      _width  = bestW;
+      this->setSet(Set); 
 
     } else  { cerr << "NodeSets empty. UpdateGlobalSize needs to be used first or with higher tolerances." << endl; }
   }
+
+
+  void HVSlicingNode::_setGlobalSize ( float height, float width )
+  {
+    _height = height;
+    _width  = width;
+    if ( (_height != 0) && (_width != 0) ) { this->setSet(Set) ; }
+    
+    vector<BoxSet*>::const_iterator itSet1  = _nodeSets.find(height, width);
+    vector<BoxSet*>                 vecSet1 =  (*itSet1)->getSet();
+    vector<BoxSet*>::const_iterator itSet   = vecSet1.begin();
+
+    for (vector<SlicingNode*>::const_iterator it = _children.begin(); it != _children.end(); it++){
+      (*it)->_setGlobalSize((*itSet)->getHeight(), (*itSet)->getWidth());
+      itSet++;
+    }
+  }
+
+
+  void HVSlicingNode::preDestroy()
+  {
+    SlicingNode::preDestroy();
+    for (vector<SlicingNode*>::iterator it = _children.begin(); it != _children.end(); it++){
+      (*it)->removeParent();
+    }
+  }
+
+
+  void HVSlicingNode::destroy()
+  {
+    HVSlicingNode::preDestroy();
+    delete(this);
+  }
+
+
+  void HVSlicingNode::preRecursiveDestroy()
+  {
+    SlicingNode::preRecursiveDestroy();
+    for (vector<SlicingNode*>::iterator it = _children.begin(); it != _children.end(); it++){
+      if ( ((*it)->getType() == Horizontal) || ((*it)->getType() == Vertical) ){
+        (*it)->removeParent();
+        (*it)->recursiveDestroy();
+      } else {
+        (*it)->removeParent();
+        (*it)->destroy();
+      }
+    }
+  }
+
+
+  void HVSlicingNode::recursiveDestroy()
+  {
+    HVSlicingNode::preRecursiveDestroy();
+    delete(this);
+  }
+
+
 
 // -----------------------------------------------------------------------------------------------//
 // Class : VSlicingNode
 // -----------------------------------------------------------------------------------------------//
 
+
+  int VSlicingNode::_count    = 0;
+  int VSlicingNode::_countAll = 0;
+
   
-  VSlicingNode::VSlicingNode( unsigned int type, unsigned int alignment ):HVSlicingNode(type, alignment){}
+  VSlicingNode::VSlicingNode( unsigned int type, unsigned int alignment ): HVSlicingNode( type, alignment ){}
 
 
   VSlicingNode::~VSlicingNode(){}
@@ -648,50 +1511,15 @@ namespace SlicingTree{
 
   VSlicingNode* VSlicingNode::create( unsigned int alignment )
   {
-    return new VSlicingNode(Vertical, alignment); 
-  }
- 
-
-  void VSlicingNode::createChild( unsigned int type, unsigned int alignment )
-  {
-    if (type == Horizontal) {
-      HSlicingNode* hsn = HSlicingNode::create(alignment);
-      hsn->setTolerances( getToleranceRatioH()
-                        , getToleranceRatioW()
-                        , getToleranceBandH()
-                        , getToleranceBandW()
-                        );
-      this->pushBackNode(hsn);
-    }
-
-    else if (type == Vertical) { 
-      VSlicingNode* vsn = VSlicingNode::create(alignment);
-      vsn->setTolerances( getToleranceRatioH()
-                        , getToleranceRatioW()
-                        , getToleranceBandH()
-                        , getToleranceBandW()
-                        );
-      this->pushBackNode(vsn); 
-    }
-
-    else 
-      { cerr << " Error(void HVSlicingNode::createChild(SlicingType type, Alignment alignment, float w, float h)): Unknown type." << endl; }
-  }
-
-   
-  void VSlicingNode::createChild( NodeSets     nodeSets
-                                , unsigned int alignment
-                                , float        w        
-                                , float        h
-                                )
-  {
-    this->pushBackNode(DSlicingNode::create(nodeSets, alignment, w, h)); 
+    _count++;
+    _countAll++;
+    return new VSlicingNode( Vertical, alignment ); 
   }
 
 
-  void VSlicingNode::createRouting(float hw)
+  void VSlicingNode::createRouting( float space )
   {
-    this->pushBackNode(RVSlicingNode::create(hw)); 
+    this->push_back(RVSlicingNode::create( space )); 
   } 
 
 
@@ -706,46 +1534,68 @@ namespace SlicingTree{
     HVSlicingNode::print();
   }
 
+
+  VSlicingNode* VSlicingNode::clone( unsigned int tr )
+  {
+    VSlicingNode* node = VSlicingNode::create( this->getAlignment() );
+    node->setTolerances( getToleranceRatioH()
+                       , getToleranceRatioW()
+                       , getToleranceBandH()
+                       , getToleranceBandW()
+                       );
+    node->setHeight    ( getHeight()           );
+    node->setWidth     ( getWidth()            );
+    node->setNodeSets  ( _nodeSets.clone()     );
+    node->setPreset    ( this->getPreset()     );
+    node->setSet       ( this->getSet()        );
+    node->setPlaced    ( this->getPlaced()     );
+    node->setSymmetries( this->getSymmetries() );
+
+    for (vector<SlicingNode*>::iterator it = _children.begin(); it != _children.end(); it++){
+      if (tr == MX){ node->push_front((*it)->clone(tr)); }
+      else         { node->push_back ((*it)->clone(tr)); }
+    }
+    return node;
+  }
+
   
-  void VSlicingNode::place(float x, float y)
+  void VSlicingNode::place( float x, float y )
+  {
+    if (recursiveCheckSet()){ this->_place(x,y); }
+  }
+
+  
+  void VSlicingNode::_place( float x, float y )
   {
     float xref = x;
     float yref = y;
 
     for (vector<SlicingNode*>::iterator it = _children.begin(); it != _children.end(); it++){
-    // Set X,Y Node
       if ( ( (*it)->isHorizontal()) || ((*it)->isVertical()) ){ 
         if ( (*it)->isAlignBottom() ){
           (*it)->setX(xref);
           (*it)->setY(yref);
         }
-        
         else if ( (*it)->isAlignCenter() ){
           (*it)->setX(xref);
-          (*it)->setY(yref + (_h/2) - ((*it)->getHeight()/2));
+          (*it)->setY(yref + (_height/2) - ((*it)->getHeight()/2));
         }
-        
         else if ( (*it)->isAlignTop() ){
           (*it)->setX(xref);
-          (*it)->setY(yref + _h - (*it)->getHeight());
+          (*it)->setY(yref + _height - (*it)->getHeight());
         }
       }
       
-    // Place Node
-      if ( (*it)->isAlignBottom() )
-        { (*it)->place(xref, yref); }
-      
-      else if ( (*it)->isAlignCenter() ) { (*it)->place(xref, yref + (_h/2) - ((*it)->getHeight()/2)); }
-      
-      else if ( (*it)->isAlignTop()    ) { (*it)->place(xref, yref +  _h    -  (*it)->getHeight())   ; }
-      
-      else if ( (*it)->isRouting()     ) { (*it)->place(xref, yref)                                  ; }
-      
-      else { cerr << " Error(place(float x, float y)): Unknown Alignment in SlicingTree." << endl; }
+      if      ( (*it)->isAlignBottom() ) { (*it)->_place(xref, yref); }
+      else if ( (*it)->isAlignCenter() ) { (*it)->_place(xref, yref + (_height/2) - ((*it)->getHeight()/2))  ; }
+      else if ( (*it)->isAlignTop()    ) { (*it)->_place(xref, yref +  _height    -  (*it)->getHeight())     ; }
+      else if ( (*it)->isRouting()     ) { (*it)->_place(xref, yref)                                         ; }
+      else    { cerr << " Error(void place( float x, float y )): Unknown Alignment in SlicingTree." << endl ; }
     
       xref += (*it)->getWidth();
       yref = y;
     }
+    setPlaced(Placed);
   }
 
 
@@ -758,7 +1608,7 @@ namespace SlicingTree{
       _nodeSets = (*_children.begin())->getNodeSets();
       cerr << "Error(void HVSlicingNode::updateGlobalSize()): You have a HVSlicingNode with only 1 child. This is an incorrect way to use HVSlicingNodes." << endl; 
     }
-    else if (this->hasEmptyChildrenNodeSets() != true){  
+    else if (this->hasEmptyChildrenNodeSets() != true){
       _nodeSets.clear();
       this->normalizeSymmetries();
       
@@ -771,24 +1621,31 @@ namespace SlicingTree{
   }
 
 
-  VSlicingNode* VSlicingNode::clone(Flags tr)
+  void VSlicingNode::preDestroy()
   {
-    VSlicingNode* node = VSlicingNode::create( this->getAlignment() );
-    node->setTolerances( getToleranceRatioH()
-                       , getToleranceRatioW()
-                       , getToleranceBandH()
-                       , getToleranceBandW()
-                       );
-    node->setWidth(getWidth());
-    node->setHeight(getHeight());
-    node->setNodeSets(_nodeSets.clone());
-    node->setPreset(this->getPreset());
-    node->cpSymmetries(this->getSymmetries());
-    for (vector<SlicingNode*>::iterator it = _children.begin(); it != _children.end(); it++){
-      if (tr == MX){ node->pushFrontNode((*it)->clone(tr)); }
-      else         { node->pushBackNode ((*it)->clone(tr)); }
-    }
-    return node;
+    _count--;
+    HVSlicingNode::preDestroy();
+  }
+
+
+  void VSlicingNode::destroy()
+  {
+    VSlicingNode::preDestroy();
+    delete(this);
+  }
+
+
+  void VSlicingNode::preRecursiveDestroy()
+  {
+    _count--;
+    HVSlicingNode::preRecursiveDestroy();
+  }
+
+
+  void VSlicingNode::recursiveDestroy()
+  {
+    VSlicingNode::preRecursiveDestroy();
+    delete(this);
   }
 
 
@@ -797,7 +1654,11 @@ namespace SlicingTree{
 // -----------------------------------------------------------------------------------------------//
 
 
-  HSlicingNode::HSlicingNode( unsigned int type, unsigned int alignment ):HVSlicingNode(type, alignment){}
+  int HSlicingNode::_count    = 0;
+  int HSlicingNode::_countAll = 0;
+
+
+  HSlicingNode::HSlicingNode( unsigned int type, unsigned int alignment ): HVSlicingNode( type, alignment ){}
 
 
   HSlicingNode::~HSlicingNode(){}
@@ -805,49 +1666,15 @@ namespace SlicingTree{
 
   HSlicingNode* HSlicingNode::create( unsigned int alignment )
   {
-    return new HSlicingNode(Horizontal, alignment);
+    _count++;
+    _countAll++;
+    return new HSlicingNode( Horizontal, alignment );
   }
 
 
-  void HSlicingNode::createChild( unsigned int type, unsigned int alignment )
+  void HSlicingNode::createRouting( float space )
   {
-    if (type == Horizontal) {
-      HSlicingNode* hsn = HSlicingNode::create(alignment);
-      hsn->setTolerances( getToleranceRatioH()
-                        , getToleranceRatioW()
-                        , getToleranceBandH()
-                        , getToleranceBandW()
-                        );
-      this->pushBackNode(hsn);
-    }
-
-    else if (type == Vertical) { 
-      VSlicingNode* vsn = VSlicingNode::create(alignment);
-      vsn->setTolerances( getToleranceRatioH()
-                        , getToleranceRatioW()
-                        , getToleranceBandH()
-                        , getToleranceBandW()
-                        );
-      this->pushBackNode(vsn); 
-    }
-
-    else 
-      { cerr << " Error(void HVSlicingNode::createChild(SlicingType type, Alignment alignment, float w, float h)): Unknown type." << endl; }
-  }
-
-  void HSlicingNode::createChild( NodeSets     nodeSets
-                                , unsigned int alignment
-                                , float        w
-                                , float        h
-                                )
-  {
-    this->pushBackNode(DSlicingNode::create(nodeSets, alignment, w, h));
-  }
-
-
-  void HSlicingNode::createRouting(float hw)
-  {
-    this->pushBackNode(RHSlicingNode::create(hw));
+    this->push_back(RHSlicingNode::create( space )); 
   } 
 
 
@@ -863,46 +1690,67 @@ namespace SlicingTree{
   }
 
 
-  void HSlicingNode::place(float x, float y)
+  HSlicingNode* HSlicingNode::clone( unsigned int tr )
+  {
+    HSlicingNode* node = HSlicingNode::create( this->getAlignment() );
+    node->setTolerances( getToleranceRatioH()
+                       , getToleranceRatioW()
+                       , getToleranceBandH()
+                       , getToleranceBandW()
+                       );
+    node->setHeight    ( getHeight()           );
+    node->setWidth     ( getWidth()            );
+    node->setNodeSets  ( _nodeSets.clone()     );
+    node->setPreset    ( this->getPreset()     );
+    node->setSet       ( this->getSet()        );
+    node->setPlaced    ( this->getPlaced()     );
+    node->setSymmetries( this->getSymmetries() );
+
+    for (vector<SlicingNode*>::iterator it = _children.begin(); it != _children.end(); it++){
+      if (tr == MY){ node->push_front((*it)->clone(tr)); }
+      else         { node->push_back ((*it)->clone(tr)); }
+    }
+    return node;
+  }
+
+
+  void HSlicingNode::place( float x, float y )
+  {
+    if( recursiveCheckSet() ){ this->_place(x,y); } 
+  }
+
+
+  void HSlicingNode::_place( float x, float y )
   {
     float xref = x;
     float yref = y;
-    
-    if (x == 0) { }
-    for (vector<SlicingNode*>::iterator it = _children.begin(); it != _children.end(); it++){ 
 
-    // Set X,Y Node
+    for (vector<SlicingNode*>::iterator it = _children.begin(); it != _children.end(); it++){ 
       if ( ((*it)->isHorizontal()) || ((*it)->isVertical()) ){ 
         if ( (*it)->isAlignLeft() ){
           (*it)->setX(xref);
           (*it)->setY(yref);
         }
-        
         else if ( (*it)->isAlignCenter() ){
-          (*it)->setX(xref + (_w/2) - ((*it)->getWidth()/2));
+          (*it)->setX(xref + (_width/2) - ((*it)->getWidth()/2));
           (*it)->setY(yref);
         }
-        
         else if ( (*it)->isAlignRight()  ){
-          (*it)->setX(xref + _w - (*it)->getWidth());
+          (*it)->setX(xref + _width - (*it)->getWidth());
           (*it)->setY(yref);
         }
       }
-      
-    // Place Node
-      if ( (*it)->isAlignLeft()        ) { (*it)->place(xref                                 , yref); }
-      
-      else if ( (*it)->isAlignCenter() ) { (*it)->place(xref + (_w/2) - ((*it)->getWidth()/2), yref); }
-      
-      else if ( (*it)->isAlignRight()  ) { (*it)->place(xref + _w     -  (*it)->getWidth()   , yref); }
 
-      else if ( (*it)->isRouting()     ) { (*it)->place(xref, yref)                                 ; }
-      
-      else { cerr << "Error(place(float x, float y)): Unknown Alignment in SlicingTree." << endl; }
+      if      ( (*it)->isAlignLeft()   ) { (*it)->_place(xref                                     , yref); }
+      else if ( (*it)->isAlignCenter() ) { (*it)->_place(xref + (_width/2) - ((*it)->getWidth()/2), yref); }
+      else if ( (*it)->isAlignRight()  ) { (*it)->_place(xref + _width     -  (*it)->getWidth()   , yref); }
+      else if ( (*it)->isRouting()     ) { (*it)->_place(xref                                     , yref); }
+      else    { cerr << "Error(_place( float x, float y )): Unknown Alignment in SlicingTree." << endl   ; }
       
       xref = x;
       yref += (*it)->getHeight();
     }
+    setPlaced(Placed);
   }
 
 
@@ -915,9 +1763,7 @@ namespace SlicingTree{
       _nodeSets = (*_children.begin())->getNodeSets();
       cerr << "Error(void HVSlicingNode::updateGlobalSize()): You have a HVSlicingNode with only 1 child. This is an incorrect way to use HVSlicingNodes." << endl; 
     }
-
     else if (this->hasEmptyChildrenNodeSets() != true){     
-    // Similar to Vertical type but instead, we pay attention to the width instead of the height
       _nodeSets.clear();
       this->normalizeSymmetries();
       
@@ -926,30 +1772,35 @@ namespace SlicingTree{
 
       _nodeSets = state.getNodeSets();
     }
-
     if (_nodeSets.empty()){ cerr << "Error(void HVSlicingNode::updateGlobalSize()): No solution has been found. Try to set larger tolerances." << endl; }
-
   }
 
 
-  HSlicingNode* HSlicingNode::clone(Flags tr)
+  void HSlicingNode::preDestroy()
   {
-    HSlicingNode* node = HSlicingNode::create( this->getAlignment() );
-    node->setTolerances( getToleranceRatioH()
-                       , getToleranceRatioW()
-                       , getToleranceBandH()
-                       , getToleranceBandW()
-                       );
-    node->setWidth(getWidth());
-    node->setHeight(getHeight());
-    node->setNodeSets(_nodeSets.clone());
-    node->setPreset(this->getPreset());
-    node->cpSymmetries(this->getSymmetries());
-    for (vector<SlicingNode*>::iterator it = _children.begin(); it != _children.end(); it++){
-      if (tr == MY){ node->pushFrontNode((*it)->clone(tr)); }
-      else         { node->pushBackNode ((*it)->clone(tr)); }
-    }
-    return node;
+    _count--;
+    HVSlicingNode::preDestroy();
+  }
+
+
+  void HSlicingNode::destroy()
+  {
+    HSlicingNode::preDestroy();
+    delete(this);
+  }
+
+
+  void HSlicingNode::preRecursiveDestroy()
+  {
+    _count--;
+    HVSlicingNode::preRecursiveDestroy();
+  }
+
+
+  void HSlicingNode::recursiveDestroy()
+  {
+    HSlicingNode::preRecursiveDestroy();
+    delete(this);
   }
 
 
@@ -958,13 +1809,16 @@ namespace SlicingTree{
 // -----------------------------------------------------------------------------------------------//
 
 
+  int DSlicingNode::_count    = 0;
+  int DSlicingNode::_countAll = 0;
+
+
   DSlicingNode::DSlicingNode( unsigned int type
                             , NodeSets     nodeSets
                             , unsigned int alignment
-                            , float        w
-                            , float        h
-                            ):SlicingNode(type, nodeSets, alignment, w, h)
-  {}
+                            , float        height
+                            , float        width
+                            ): SlicingNode( type, nodeSets, alignment, height, width ){}
 
 
   DSlicingNode::~DSlicingNode(){}
@@ -972,10 +1826,14 @@ namespace SlicingTree{
 
   DSlicingNode* DSlicingNode::create( NodeSets     nodeSets
                                     , unsigned int alignment
-                                    , float        w
-                                    , float        h
+                                    , float        height
+                                    , float        width
                                     )
-  { return new DSlicingNode(Device, nodeSets, alignment, w, h); }
+  {
+    _count++;
+    _countAll++;
+    return new DSlicingNode( Device, nodeSets, alignment, height, width ); 
+  }
 
 
   void DSlicingNode::print() const
@@ -992,15 +1850,45 @@ namespace SlicingTree{
   }
 
 
-  DSlicingNode* DSlicingNode::clone(Flags tr)
+  DSlicingNode* DSlicingNode::clone( unsigned int tr )
   {
     DSlicingNode* node = DSlicingNode::create( _nodeSets.clone() 
                                              , this->getAlignment()
-                                             , this->getWidth()
                                              , this->getHeight()
+                                             , this->getWidth()
                                              );
     node->setPreset(this->getPreset());
+    node->setSet   (this->getSet()   );
+    node->setPlaced(this->getPlaced());
     return node;
+  }
+
+
+  void DSlicingNode::preDestroy()
+  {
+    _count--;
+    SlicingNode::preDestroy();
+  }
+
+
+  void DSlicingNode::destroy()
+  {
+    DSlicingNode::preDestroy();
+    delete(this);
+  }
+
+
+  void DSlicingNode::preRecursiveDestroy()
+  {
+    _count--;
+    SlicingNode::preRecursiveDestroy();
+  }
+
+
+  void DSlicingNode::recursiveDestroy()
+  {
+    DSlicingNode::preRecursiveDestroy();
+    delete(this);
   }
 
 
@@ -1009,11 +1897,14 @@ namespace SlicingTree{
 // -----------------------------------------------------------------------------------------------//
 
 
-  RHVSlicingNode::RHVSlicingNode( float h
-                                , float w
-                                ):SlicingNode(Routing, NodeSets(), UnknownAlignment, w, h)
+  int RHVSlicingNode::_count    = 0;
+  int RHVSlicingNode::_countAll = 0;
+
+
+  RHVSlicingNode::RHVSlicingNode( float height, float width ): SlicingNode( Routing, NodeSets(), UnknownAlignment, height, width )
   {
     this->setPreset(Preset); 
+    this->setSet   (Set   ); 
   }
 
 
@@ -1028,77 +1919,70 @@ namespace SlicingTree{
   }
 
 
-  void RHVSlicingNode::_setGlobalSize2 ( float height, float width ){}
+  void RHVSlicingNode::_setGlobalSize ( float height, float width ){}
+
+
+  void RHVSlicingNode::preDestroy()
+  {
+    _count--;
+    SlicingNode::preDestroy();
+  }
+
+
+  void RHVSlicingNode::destroy()
+  {
+    RHVSlicingNode::preDestroy();
+    delete(this);
+  }
+
+
+  void RHVSlicingNode::preRecursiveDestroy()
+  {
+    _count--;
+    SlicingNode::preRecursiveDestroy();
+  }
+
+
+  void RHVSlicingNode::recursiveDestroy()
+  {
+    RHVSlicingNode::preRecursiveDestroy();
+    delete(this);
+  }
 
 
 // Error Message Methods
   unsigned int RHVSlicingNode::getAlignment() const
   {
-    cerr << " Error(getAlignment () const): Routings do not have centering type." << endl;
+    cerr << " Error(unsigned int getAlignment () const): Routings do not have centering type." << endl;
     return UnknownAlignment;
   }
 
 
   NodeSets RHVSlicingNode::getNodeSets() const
   {
-    cerr << " Error(getNodeSets() const): Routings do not have different dimensions." << endl;
+    cerr << " Error(NodeSets getNodeSets() const): Routings do not have different dimensions." << endl;
     return NodeSets();
   }
 
 
-  pair<float,float> RHVSlicingNode::getPairH(float h) const
+  pair<float,float> RHVSlicingNode::getPairH( float height ) const
   {
-    cerr << " Error(getPairH (float h) const): Routings do not have different dimensions." << endl;
-    return pair<float, float> (_h,_w);
+    cerr << " Error(pair<float,float> getPairH ( float height ) const): Routings do not have different dimensions." << endl;
+    return pair<float, float> (_height, _width);
   }
 
 
-  pair<float,float> RHVSlicingNode::getPairW(float w) const
+  pair<float,float> RHVSlicingNode::getPairW( float width ) const
   {
-    cerr << " Error(getPairW (float w) const): Routings do not have different dimensions." << endl;
-    return pair<float, float> (_h,_w);
+    cerr << " Error(pair<float,float> getPairW ( float width ) const): Routings do not have different dimensions." << endl;
+    return pair<float, float> (_height, _width);
   }
 
 
-  void RHVSlicingNode::setPairH(float h)
+  void RHVSlicingNode::setPairH( float height )
   {
-    cerr << " Error(setPairH (float h)): Routings do not have different dimensions." << endl;
+    cerr << " Error(void setPairH ( float height )): Routings do not have different dimensions." << endl;
   } 
-
-
-// -----------------------------------------------------------------------------------------------//
-// Class : RHSlicingNode
-// -----------------------------------------------------------------------------------------------//
-
-
-  RHSlicingNode::RHSlicingNode(float h):RHVSlicingNode(h,0)
-  {
-    _nodeSets.push_back(RHSingleNodeSet::create(h));
-  }
-
-
-  RHSlicingNode::~RHSlicingNode(){};
-
-
-  RHSlicingNode* RHSlicingNode::create(float h)
-  { 
-    return new RHSlicingNode(h); 
-  }
-
-
-  RHSlicingNode* RHSlicingNode::clone(Flags tr)
-  {
-    RHSlicingNode* node = RHSlicingNode::create(this->getHeight());
-    
-    return node; 
-  }
-
-
-// Error Methods
-  void RHSlicingNode::setWidth(float w)
-  {
-    cerr << " Error(RHSlicingNode::setWidth(float w)): Routings do not have width." << endl; 
-  }
 
 
 // -----------------------------------------------------------------------------------------------//
@@ -1106,21 +1990,23 @@ namespace SlicingTree{
 // -----------------------------------------------------------------------------------------------//
 
 
-  RVSlicingNode::RVSlicingNode(float w):RHVSlicingNode(0,w)
+  RVSlicingNode::RVSlicingNode( float width ): RHVSlicingNode( 0, width )
   {
-    _nodeSets.push_back(RVSingleNodeSet::create(w));
+    _nodeSets.push_back(RVBoxSet::create(width));
   }
 
 
   RVSlicingNode::~RVSlicingNode(){};
 
 
-  RVSlicingNode* RVSlicingNode::create(float w)
+  RVSlicingNode* RVSlicingNode::create( float width )
   {
-    return new RVSlicingNode(w);
+    _count++;
+    _countAll++;
+    return new RVSlicingNode(width);
   }
 
-  RVSlicingNode* RVSlicingNode::clone(Flags tr)
+  RVSlicingNode* RVSlicingNode::clone( unsigned int tr )
   {
     RVSlicingNode* node = RVSlicingNode::create(this->getWidth());
     return node; 
@@ -1128,9 +2014,45 @@ namespace SlicingTree{
 
 
 // Error Methods
-  void RVSlicingNode::setHeight(float h)
+  void RVSlicingNode::setHeight( float height )
   {
-    cerr << "Error(RVSlicingNode::setHeight(float h)): Routings do not have height." << endl; 
+    cerr << "Error(void RVSlicingNode::setHeight( float height )): Routings do not have height." << endl; 
+  }
+
+
+// -----------------------------------------------------------------------------------------------//
+// Class : RHSlicingNode
+// -----------------------------------------------------------------------------------------------//
+
+
+  RHSlicingNode::RHSlicingNode( float height ): RHVSlicingNode( height, 0 )
+  {
+    _nodeSets.push_back(RHBoxSet::create(height));
+  }
+
+
+  RHSlicingNode::~RHSlicingNode(){};
+
+
+  RHSlicingNode* RHSlicingNode::create( float height )
+  {
+    _count++;
+    _countAll++;
+    return new RHSlicingNode(height); 
+  }
+
+
+  RHSlicingNode* RHSlicingNode::clone( unsigned int tr )
+  {
+    RHSlicingNode* node = RHSlicingNode::create(this->getHeight());
+    return node; 
+  }
+
+
+// Error Methods
+  void RHSlicingNode::setWidth( float width )
+  {
+    cerr << " Error(void RHSlicingNode::setWidth( float width )): Routings do not have width." << endl; 
   }
 
 
@@ -1139,26 +2061,12 @@ namespace SlicingTree{
 // -----------------------------------------------------------------------------------------------//
   
 
-  HVSetState::HVSetState( HVSlicingNode* node ):_children(node->getChildren())
-                                               ,_symmetries(node->getSymmetries())
-                                               ,_toleranceRatioH(node->getToleranceRatioH())
-                                               ,_toleranceRatioW(node->getToleranceRatioW())
-                                               ,_toleranceBandH(node->getToleranceBandH())
-                                               ,_toleranceBandW(node->getToleranceBandW())
+  HVSetState::HVSetState( HVSlicingNode* node ): _HVSnode( node )
   {
-    _hminWmin   = pair<float,float>(0,0);
-    _hminWmax   = pair<float,float>(0,0);
-    _hmaxWmin   = pair<float,float>(0,0);
-    _hmaxWmax   = pair<float,float>(0,0);
-    _wminHmin   = pair<float,float>(0,0);
-    _wminHmax   = pair<float,float>(0,0);
-    _wmaxHmin   = pair<float,float>(0,0);
-    _wmaxHmax   = pair<float,float>(0,0);
     _currentSet = vector<size_t> ();
     _nextSet    = vector<size_t> ();
     _nodeSets   = NodeSets();
     _counter    = 1;
-
     initSet();
     initModulos();
   }
@@ -1167,19 +2075,47 @@ namespace SlicingTree{
   HVSetState::~HVSetState(){}
 
 
+  const NodeSets HVSetState::getNodeSets()
+  {
+    _nodeSets.sort();
+    return _nodeSets; 
+  }
+
+
+  void HVSetState::print()
+  {
+    int index = 0;
+    cout << "currentSet:" << endl;
+    vector<size_t>::iterator it2 = _currentSet.begin();
+    for (vector<SlicingNode*>::const_iterator it = _HVSnode->getChildren().begin(); it != _HVSnode->getChildren().end(); it++){
+      NodeSets node = (*it)->getNodeSets();
+      cout << index << ": H = " << node[(*it2)]->getHeight() << ", W = " << node[(*it2)]->getWidth() << endl;
+      it2++;
+      index++;
+    }
+    cout << "counter     = " << _counter  << endl;
+    cout << "end counter = " << _modulos.back()<< endl;
+    cout << "modulos:" << endl;
+    index = 0;
+    for (vector<int>::iterator it = _modulos.begin(); it != _modulos.end(); it++)
+      { 
+        cout << index << ": modulo = " << (*it) << endl;
+        index++;
+      }
+    _nodeSets.print();
+  }
+
+
   void HVSetState::initSet()
   {
      _nextSet.clear();
-    for (vector<SlicingNode*>::iterator it = _children.begin(); it != _children.end(); it++){ 
-      if ( (*it)->isPreset() ) { 
-        _nextSet.push_back((*it)->getNodeSets().findIndex((*it)->getHeight(), (*it)->getWidth())); 
-      }
-      else { 
-        _nextSet.push_back(0); 
-      }
+     for (vector<SlicingNode*>::const_iterator it = _HVSnode->getChildren().begin(); it != _HVSnode->getChildren().end(); it++){ 
+      if ( (*it)->isPreset() ) 
+        { _nextSet.push_back((*it)->getNodeSets().findIndex((*it)->getHeight(), (*it)->getWidth())); }
+      else 
+        { _nextSet.push_back(0); }
     }
     _currentSet = _nextSet;
-
   }
 
 
@@ -1190,172 +2126,30 @@ namespace SlicingTree{
     
     _modulos.clear();
     _modulos.push_back(1);
-    for (vector<SlicingNode*>::iterator it = _children.begin(); it != _children.end(); it++){
+    for (vector<SlicingNode*>::const_iterator it = _HVSnode->getChildren().begin(); it != _HVSnode->getChildren().end(); it++){
         
-      if ( it != _children.begin() ){ _modulos.push_back(modulo); }
-      if ( (!isSymmetry(index)) && (!(*it)->isPreset()) ){
-        NodeSets node = (*it)->getNodeSets();
-        modulo *= node.size();
-      }
+      if ( it != _HVSnode->getChildren().begin() )       { _modulos.push_back(modulo); }
+      if ( (!isSymmetry(index)) && (!(*it)->isPreset()) ){ modulo *= (*it)->getNodeSets().size(); }
       index++;
     }
     _modulos.push_back(modulo);
-    
-  }
-
-  
-  bool HVSetState::isSymmetry( int index, pair<int,int>& symmetry )
-  {
-    bool symmetryFound = false;
-    
-    if (_symmetries.empty() != true){
-      for (list<pair<int,int> >::const_iterator it2 = _symmetries.begin(); it2 != _symmetries.end(); it2++){
-        
-        if ((*it2).second == index){ 
-          symmetry = pair<int,int>((*it2).first,(*it2).second); 
-          symmetryFound = true;
-        }
-      }
-    }
-    return symmetryFound;
-  }
-
-
-  bool HVSetState::isSymmetry( int index )
-  {
-    bool symmetryFound = false;
-    
-    if (_symmetries.empty() != true){
-      for (list<pair<int,int> >::const_iterator it2 = _symmetries.begin(); it2 != _symmetries.end(); it2++){
-        
-        if ((*it2).second == index){ 
-          symmetryFound = true;
-        }
-      }
-    }
-    return symmetryFound;
-  }
-
-
-  void HVSetState::print()
-  {
-    vector<size_t>::iterator it2 = _currentSet.begin();
-    int index = 0;
-    cout << "--------------------------------currentSet:" << endl;
-    for (vector<SlicingNode*>::iterator it = _children.begin(); it != _children.end(); it++){
-      NodeSets node = (*it)->getNodeSets();
-      cout << index << ": H = " << node[(*it2)]->getHeight();
-      cout << ", W = " << node[(*it2)]->getWidth() << endl;
-      it2++;
-    }
-
-    cout << "counter     = " << _counter  << endl;
-    cout << "end counter = " << _modulos.back()<< endl;
-    cout << "modulos:" << endl;
-    index = 0;
-    for (vector<int>::iterator it = _modulos.begin(); it != _modulos.end(); it++)
-      { 
-        cout << index << ": modulo = " << (*it) << endl;
-        index++;
-      }
-    
-    _nodeSets.print();
-    cout << "hminwmin: H: " << _hminWmin.first << ", W: " << _hminWmin.second << endl;
-    cout << "hminwmax: H: " << _hminWmax.first << ", W: " << _hminWmax.second << endl;
-    cout << "hmaxwmin: H: " << _hmaxWmin.first << ", W: " << _hmaxWmin.second << endl;
-    cout << "hmaxwmax: H: " << _hmaxWmax.first << ", W: " << _hmaxWmax.second << endl;
-
-    cout << endl;
-
-    cout << "wminhmin: H: " << _wminHmin.first << ", W: " << _wminHmin.second << endl;
-    cout << "wminhmax: H: " << _wminHmax.first << ", W: " << _wminHmax.second << endl;
-    cout << "wmaxhmin: H: " << _wmaxHmin.first << ", W: " << _wmaxHmin.second << endl;
-    cout << "wmaxhmax: H: " << _wmaxHmax.first << ", W: " << _wmaxHmax.second << endl;
-  }
-
-
-  void HVSetState::updateLimits()
-  {
-    pair<float,float> currentPair = pair<float,float>(getCurrentH(),getCurrentW());
-
-    if (  (_hminWmin == pair<float,float>(0,0)) 
-       && (_hminWmax == pair<float,float>(0,0)) 
-       && (_hmaxWmin == pair<float,float>(0,0)) 
-       && (_hmaxWmax == pair<float,float>(0,0)) 
-       && (_wminHmin == pair<float,float>(0,0))
-       && (_wminHmax == pair<float,float>(0,0))
-       && (_wmaxHmin == pair<float,float>(0,0))
-       && (_wmaxHmax == pair<float,float>(0,0))
-       ){
-      _hminWmin = currentPair;
-      _hminWmax = currentPair;
-      _hmaxWmin = currentPair;
-      _hmaxWmax = currentPair;
-      _wminHmin = currentPair;
-      _wminHmax = currentPair;
-      _wmaxHmin = currentPair;
-      _wmaxHmax = currentPair;
-    } 
-    else {
-      if ( getCurrentH() < _hminWmin.first ) { 
-        _hminWmin = currentPair;
-        _hminWmax = currentPair;
-      }
-      else if (getCurrentH() == _hminWmin.first ) {
-        if      (getCurrentW() < _hminWmin.second) { _hminWmin = currentPair; }
-        else if (getCurrentW() > _hminWmax.second) { _hminWmax = currentPair; }
-      }
-      else if ( getCurrentH() > _hmaxWmin.first ){
-        _hmaxWmin = currentPair;
-        _hmaxWmax = currentPair;
-      }
-      else if (getCurrentH() == _hmaxWmin.first ) {
-        if      (getCurrentW() < _hmaxWmin.second) { _hmaxWmin = currentPair; }
-        else if (getCurrentW() > _hmaxWmax.second) { _hmaxWmax = currentPair; }
-      }
-
-      if ( getCurrentW() < _wminHmin.second ) { 
-        _wminHmin = currentPair;
-        _wminHmax = currentPair;
-      }
-      else if (getCurrentW() == _wminHmin.second ) {
-        if      (getCurrentH() < _wminHmin.first) { _wminHmin = currentPair; }
-        else if (getCurrentH() > _wminHmax.first) { _wminHmax = currentPair; }
-      }
-      else if ( getCurrentW() > _wmaxHmin.second ){
-        _wmaxHmin = currentPair;
-        _wmaxHmax = currentPair;
-      }
-      else if (getCurrentW() == _wmaxHmin.second ) {
-        if      (getCurrentH() < _wmaxHmin.first) { _hmaxWmin = currentPair; }
-        else if (getCurrentH() > _wmaxHmax.first) { _hmaxWmax = currentPair; }
-      }
-    }
-
-  }
-
-
-  const NodeSets HVSetState::getNodeSets()
-  {
-    _nodeSets.sort();
-    return _nodeSets.clone();
   }
 
 
   void HVSetState::next()
   {
-    int           index    = 0;
-    pair<int,int> symmetry = pair<int,int>();
-    vector<size_t>::iterator itpair = _nextSet.begin();
+    int                      index    = 0;
+    pair<int,int>            symmetry = pair<int,int>();
+    vector<size_t>::iterator itpair   = _nextSet.begin();
 
-    for (vector<SlicingNode*>::iterator it = _children.begin(); it != _children.end(); it++){
+    for (vector<SlicingNode*>::const_iterator it = _HVSnode->getChildren().begin(); it != _HVSnode->getChildren().end(); it++){
 
-      if ( this->isSymmetry(index, symmetry) ){ (*itpair) = _nextSet[symmetry.first]; }
+      if ( this->isSymmetry(index, symmetry) )
+        { (*itpair) = _nextSet[symmetry.first]; }
       else {
         if ( (((_counter-1)%_modulos[index]) == _modulos[index]-1) && (!(*it)->isPreset()) ) {
-          NodeSets node = (*it)->getNodeSets();
-          if ( (*itpair)+1 != node.size() ) { (*itpair)++  ; }
-          else                              { (*itpair) = 0; }
+          if ( (*itpair)+1 != (*it)->getNodeSets().size() ) { (*itpair)++  ; }
+          else                                              { (*itpair) = 0; }
         }
       }
       index++;
@@ -1377,37 +2171,34 @@ namespace SlicingTree{
   VSetState::~VSetState(){}
 
 
-  void VSetState::next()
-  {
-    push_back(); 
-    HVSetState::next();
-  }
-
-
-  float VSetState::getMinH ()
+  pair<float,float> VSetState::getCurrentHs ()
   {
     float hmin = 0;
+    float hmax = 0;
     if (!_currentSet.empty()) {
-      vector< size_t >::const_iterator it2 = _currentSet.begin();
-      vector<SlicingNode*>::iterator it = _children.begin();
+      vector<size_t>::const_iterator      it2 = _currentSet.begin();
+      vector<SlicingNode*>::const_iterator it = _HVSnode->getChildren().begin();
 
-      while( (hmin == 0) && (it != _children.end()) ){
-        NodeSets node1 = (*it)->getNodeSets();
-        if ( node1[(*it2)]->getHeight() != 0 )
-          { hmin = node1[(*it2)]->getHeight(); }
+      while( (hmin == 0) && (it != _HVSnode->getChildren().end()) ){
+        NodeSets node = (*it)->getNodeSets();
+        if ( node[(*it2)]->getHeight() != 0 )
+          { hmin = node[(*it2)]->getHeight(); }
         it++;
         it2++;
       }
 
       it2 = _currentSet.begin();
-      for (vector<SlicingNode*>::iterator it = _children.begin(); it != _children.end(); it++){
-        NodeSets node2 = (*it)->getNodeSets();
-        if ( (node2[(*it2)]->getHeight() < hmin)&&(node2[(*it2)]->getHeight() != 0) )
-          { hmin = node2[(*it2)]->getHeight(); }
+      for (vector<SlicingNode*>::const_iterator it = _HVSnode->getChildren().begin(); it != _HVSnode->getChildren().end(); it++){
+        NodeSets node = (*it)->getNodeSets();
+        if ( (node[(*it2)]->getHeight() < hmin)&&(node[(*it2)]->getHeight() != 0) )
+          { hmin = node[(*it2)]->getHeight(); }
+
+        if (node[(*it2)]->getHeight() > hmax)
+          { hmax = node[(*it2)]->getHeight(); }
           it2++;
       }
     }
-    return hmin;  
+    return pair<float,float> (hmin, hmax);  
   }
 
 
@@ -1415,7 +2206,7 @@ namespace SlicingTree{
   {
     float currentH = 0;
     vector< size_t >::const_iterator it2 = _currentSet.begin();
-    for (vector<SlicingNode*>::iterator it = _children.begin(); it != _children.end(); it++){
+    for (vector<SlicingNode*>::const_iterator it = _HVSnode->getChildren().begin(); it != _HVSnode->getChildren().end(); it++){
       NodeSets node = (*it)->getNodeSets();
       if (node[(*it2)]->getHeight() > currentH)
         { currentH = node[(*it2)]->getHeight(); }
@@ -1430,7 +2221,7 @@ namespace SlicingTree{
   {
     float currentW = 0;
     vector< size_t >::const_iterator it2 = _currentSet.begin();
-    for (vector<SlicingNode*>::iterator it = _children.begin(); it != _children.end(); it++){
+    for (vector<SlicingNode*>::const_iterator it = _HVSnode->getChildren().begin(); it != _HVSnode->getChildren().end(); it++){
       NodeSets node = (*it)->getNodeSets();
       currentW += node[(*it2)]->getWidth(); 
       it2++;
@@ -1448,19 +2239,31 @@ namespace SlicingTree{
   }
 
 
+  void VSetState::next()
+  {
+    push_back(); 
+    HVSetState::next();
+  }
+
 
   void VSetState::push_back()
   {
-    if ( checkToleranceBandH() ) {
-      vector<SingleNodeSet*> vect = vector<SingleNodeSet*>();
+    pair<float,float> paireHeights = getCurrentHs();
+    float             height       = paireHeights.second;
+    float             hmin         = paireHeights.first;
+    float             width        = 0;
+
+    if (height - hmin <= _HVSnode->getToleranceBandH()){
+      vector<BoxSet*> vect = vector<BoxSet*>();
       vector<size_t>::iterator it2 = _currentSet.begin();
     
-      for (vector<SlicingNode*>::iterator it = _children.begin(); it != _children.end(); it++){
+      for (vector<SlicingNode*>::const_iterator it = _HVSnode->getChildren().begin(); it != _HVSnode->getChildren().end(); it++){
         NodeSets node = (*it)->getNodeSets();
         vect.push_back(node[(*it2)]);
+        width += node[(*it2)]->getWidth(); 
         it2++;
       }
-      _nodeSets.push_back(VSingleNodeSet::create(vect));
+      _nodeSets.push_back(vect, height, width, Vertical);
     }
   }
 
@@ -1475,23 +2278,16 @@ namespace SlicingTree{
 
   HSetState::~HSetState(){}
 
-  
-  void HSetState::next()
-  {
-    push_back(); 
-    updateLimits(); 
-    HVSetState::next();
-  }
 
-
-  float HSetState::getMinW()
+  pair<float,float> HSetState::getCurrentWs()
   {
     float wmin = 0;
+    float wmax = 0;
     if (!_currentSet.empty()) { 
       vector< size_t >::const_iterator it2 = _currentSet.begin();
-      vector<SlicingNode*>::iterator it = _children.begin();
+      vector<SlicingNode*>::const_iterator it = _HVSnode->getChildren().begin();
       
-      while( (wmin == 0) && (it != _children.end()) ){
+      while( (wmin == 0) && (it != _HVSnode->getChildren().end()) ){
         NodeSets node = (*it)->getNodeSets();
         if ( node[(*it2)]->getWidth() != 0 )
           { wmin = node[(*it2)]->getWidth(); }
@@ -1500,28 +2296,16 @@ namespace SlicingTree{
       }
 
       it2 = _currentSet.begin();
-      for (vector<SlicingNode*>::iterator it = _children.begin(); it != _children.end(); it++){
+      for (vector<SlicingNode*>::const_iterator it = _HVSnode->getChildren().begin(); it != _HVSnode->getChildren().end(); it++){
         NodeSets node = (*it)->getNodeSets();
         if ( (node[(*it2)]->getWidth() < wmin)&&(node[(*it2)]->getWidth() != 0) )
           { wmin = node[(*it2)]->getWidth(); }
-          it2++;
+        if (node[(*it2)]->getWidth() > wmax)
+          { wmax = node[(*it2)]->getWidth(); }
+        it2++;
       }
     }
-    return wmin;  
-  }
-
-
-  float HSetState::getCurrentW()
-  {
-    float currentW = 0;
-    vector< size_t >::const_iterator it2 = _currentSet.begin();
-    for (vector<SlicingNode*>::iterator it = _children.begin(); it != _children.end(); it++){
-      NodeSets node = (*it)->getNodeSets();
-      if (node[(*it2)]->getWidth() > currentW)
-        { currentW = node[(*it2)]->getWidth(); }
-      it2++;
-    }
-    return currentW;
+    return pair<float,float> (wmin, wmax);  
   }
 
 
@@ -1529,7 +2313,7 @@ namespace SlicingTree{
   {
     float currentH = 0;
     vector< size_t >::const_iterator it2 = _currentSet.begin();
-    for (vector<SlicingNode*>::iterator it = _children.begin(); it != _children.end(); it++){
+    for (vector<SlicingNode*>::const_iterator it = _HVSnode->getChildren().begin(); it != _HVSnode->getChildren().end(); it++){
       NodeSets node = (*it)->getNodeSets();
       currentH += node[(*it2)]->getHeight(); 
       it2++;
@@ -1539,6 +2323,20 @@ namespace SlicingTree{
   }
 
 
+  float HSetState::getCurrentW()
+  {
+    float currentW = 0;
+    vector< size_t >::const_iterator it2 = _currentSet.begin();
+    for (vector<SlicingNode*>::const_iterator it = _HVSnode->getChildren().begin(); it != _HVSnode->getChildren().end(); it++){
+      NodeSets node = (*it)->getNodeSets();
+      if (node[(*it2)]->getWidth() > currentW)
+        { currentW = node[(*it2)]->getWidth(); }
+      it2++;
+    }
+    return currentW;
+  }
+  
+
   void HSetState::print()
   {
     HVSetState::print();
@@ -1547,440 +2345,33 @@ namespace SlicingTree{
     cout << endl;
   }
 
+  
+  void HSetState::next()
+  {
+    push_back(); 
+    HVSetState::next();
+  }
+
 
   void HSetState::push_back()
   {
-    if ( checkToleranceBandW() ) {
-      vector<SingleNodeSet*> vect = vector<SingleNodeSet*>();
+    pair<float,float> paireWidths = getCurrentWs();
+    float             width       = paireWidths.second;
+    float             wmin        = paireWidths.first;
+    float             height      = 0;
+    if ( width - wmin <= _HVSnode->getToleranceBandW() ){
+      vector<BoxSet*> vect = vector<BoxSet*>();
       vector<size_t>::iterator it2 = _currentSet.begin();
     
-      for (vector<SlicingNode*>::iterator it = _children.begin(); it != _children.end(); it++){
+      for (vector<SlicingNode*>::const_iterator it = _HVSnode->getChildren().begin(); it != _HVSnode->getChildren().end(); it++){
         NodeSets node = (*it)->getNodeSets();
         vect.push_back(node[(*it2)]);
+        height += node[(*it2)]->getHeight(); 
         it2++;
       }
-      _nodeSets.push_back(HSingleNodeSet::create(vect));
+
+      _nodeSets.push_back(vect, height, width, Horizontal);
     }
-  }
-
-
-// -----------------------------------------------------------------------------------------------//
-// Class : NodeSets
-// -----------------------------------------------------------------------------------------------//
-  
-  NodeSets::NodeSets()
-  {
-    _nodeSets.clear();
-  }
-  
-
-  NodeSets::NodeSets(const NodeSets& other)
-  {
-    _nodeSets = other.getNodeSets();
-  }
-
-
-  NodeSets::~NodeSets(){}
-
-
-  void NodeSets::push_back(SingleNodeSet* singleSet)
-  { 
-    if( this->find(singleSet) == _nodeSets.end() ){ _nodeSets.push_back(singleSet); }
-    else { (*find(singleSet))->incrementCount(); }
-    
-  }
-
-
-  std::pair<float,float> NodeSets::getPairH(float h) const 
-  {
-    float w        = 0;
-    float hclosest = 0;
-
-    for (vector<SingleNodeSet*>::const_iterator itHW = _nodeSets.begin(); itHW != _nodeSets.end(); itHW++){ 
-      if ( ((*itHW)->getHeight() > hclosest) && (h >= (*itHW)->getHeight()) ){
-        hclosest = (*itHW)->getHeight();
-        w        = (*itHW)->getWidth();
-      }
-    }
-    
-    if ( (w == 0) && (hclosest == 0) ){ cerr << "No solution for h = " << h << " has been found." << endl; }
-    return pair<float,float>(hclosest,w);
-  }
-  
-  pair<float,float> NodeSets::getPairHW(float height, float width) const 
-  {
-    vector<SingleNodeSet*>::const_iterator it = _nodeSets.begin();
-    float bestH = (*it)->getHeight();
-    float bestW = (*it)->getWidth();
-    float currentH = 0;
-    float currentW = 0;
-
-    while (it != _nodeSets.end()){
-      currentH = (*it)->getHeight();
-      currentW = (*it)->getWidth();
-
-      if (currentH <= height){
-        if ( currentH > bestH ){
-          bestH = currentH;
-          bestW = currentW;
-        } else if (currentH == bestH){
-          if ( (currentW > bestW) && (currentW <= width) ){ 
-            bestH = currentH;
-            bestW = currentW;
-          }
-          else if ( (currentW < bestW) && (bestW > width) ){ 
-            bestH = currentH;
-            bestW = currentW;
-          }
-        }
-        it++;
-      } else {
-        it = _nodeSets.end();
-      }
-    }
-    return pair<float,float>(bestH, bestW);
-  }
-
-  void NodeSets::print() const 
-  {
-    cout << "Print - NodeSets:" << endl;
-    int index = 0;
-    if (_nodeSets.size() == 0){cout << "--- EMPTY ---" << endl;}
-    else {
-      for (vector <SingleNodeSet*>::const_iterator itPrint = _nodeSets.begin(); itPrint != _nodeSets.end(); itPrint++)
-        { 
-          cout << index << ": cpt: " << (*itPrint)->getCount() << ", H: " << (*itPrint)->getHeight() << ", W: " << (*itPrint)->getWidth() << endl; 
-          index++;
-        } 
-      cout << endl;
-    }
-  }
-
-
-  NodeSets NodeSets::clone() 
-  {
-    NodeSets nodesets = NodeSets();
-    for (vector<SingleNodeSet*>::iterator it = _nodeSets.begin(); it != _nodeSets.end(); it++)
-      { nodesets.push_back((*it)); }
-    return nodesets;
-  }
-
-
-  bool NodeSets::compare( NodeSets nodeSets2 ) 
-  {
-    bool comp = true;
-    if (_nodeSets.size() != nodeSets2.size()) { comp = false; }
-
-    if (comp == true) {
-      vector<SingleNodeSet*>::iterator it2 = nodeSets2.begin();
-      for (vector<SingleNodeSet*>::iterator it1 = _nodeSets.begin(); it1 != _nodeSets.end(); it1++){
-
-        if ( ((*it1)->getHeight() != (*it2)->getHeight())||((*it1)->getWidth() != (*it2)->getWidth()) ){ comp = false; }
-        if (it2 != nodeSets2.end()){ it2++; }
-      }
-    }
-    return comp;
-  }
-
-
-  int NodeSets::findIndex(float height, float width) const
-  {
-    bool end = false;
-    int indextbd = 0;
-    int index    = 0;
-    vector<SingleNodeSet* >::const_iterator it = _nodeSets.begin();
-    while(end == false){
-      if ( ((*it)->getHeight() == height) && ((*it)->getWidth() == width) ){
-        indextbd = index;
-        end = true;
-      }
-      index++;
-      it++;
-      if (it == _nodeSets.end()){ end = true; }
-    }
-    return indextbd;
-  }
-
-
-  SingleNodeSet* NodeSets::operator[](size_t i) 
-  {
-    vector<SingleNodeSet* >::iterator it = _nodeSets.begin();
-    it += i;
-    return (*it); 
-  }
-  
-
-  vector<SingleNodeSet* >::iterator NodeSets::find ( SingleNodeSet* singleSet )
-  {
-    vector<SingleNodeSet* >::iterator it = _nodeSets.begin();
-    vector<SingleNodeSet* >::iterator itFind = _nodeSets.end();
-    if ( (_nodeSets.empty() != true)&&(singleSet != NULL) ){
-
-      while(it != _nodeSets.end()){
-        if ( ((*it)->getHeight() == singleSet->getHeight())&&((*it)->getWidth() == singleSet->getWidth()) ){ 
-          itFind = it;
-          it = _nodeSets.end(); 
-        }
-        else { it++; }
-      }
-    } else {
-      it = _nodeSets.end();
-    }
-
-    return itFind;
-  }
-
-
-  vector<SingleNodeSet* >::iterator NodeSets::find ( float height, float width )
-  { 
-    vector<SingleNodeSet* >::iterator it = _nodeSets.begin();
-    vector<SingleNodeSet* >::iterator itFind = _nodeSets.end();
-    
-    if (_nodeSets.empty() != true){
-
-      while(it != _nodeSets.end()){
-        if ( ((*it)->getHeight() == height)&&((*it)->getWidth() == width) ){ 
-          itFind = it;
-          it     = _nodeSets.end(); 
-        }
-        else { it++; }
-        if ( it == _nodeSets.end() ){ it = _nodeSets.end(); }
-      }
-    } else {
-      it = _nodeSets.end();
-    }
-
-    return itFind;
-  }
-
-
-// -----------------------------------------------------------------------------------------------//
-// Class : SingleNodeSet
-// -----------------------------------------------------------------------------------------------//
-
-
-  SingleNodeSet::SingleNodeSet( float height, float width ):_height(height), _width(width),_cpt(1){}
-
-
-  SingleNodeSet::SingleNodeSet( SingleNodeSet* singleSet ):_height(singleSet->getHeight()), _width(singleSet->getWidth()),_cpt(singleSet->getCount()){}
-
-
-  SingleNodeSet::~SingleNodeSet(){}
-
-
-  void SingleNodeSet::print() const 
-  {
-    cout << "Print - SingleNodeSet" << endl;
-    cout << "cpt: " << _cpt << ", H: " << _height << ", W: " << _width << endl;
-  }
-
-
-  const vector< SingleNodeSet*>& SingleNodeSet::getSet () const
-  {
-    cerr << "Error(vector< SingleNodeSet*> getSet () const): DSingleNodeSet and RHVSingleNodeSet do not have vector of sets." << endl;
-    static const vector< SingleNodeSet*> test = vector< SingleNodeSet*> ();
-    return test;
-  }
-
-
-// -----------------------------------------------------------------------------------------------//
-// Class : HVSingleNodeSet
-// -----------------------------------------------------------------------------------------------//
-                                       
-
-  HVSingleNodeSet::HVSingleNodeSet(vector< SingleNodeSet*> dimensionSet):SingleNodeSet(),_dimensionSet(dimensionSet)
-  {}
-                                       
-
-  HVSingleNodeSet::HVSingleNodeSet(HVSingleNodeSet* singleSet):SingleNodeSet(singleSet),_dimensionSet(singleSet->getSet()){}
-
-
-  HVSingleNodeSet::~HVSingleNodeSet(){}
-
-
-  void HVSingleNodeSet::print() const 
-  {
-    int index = 0;
-    cout << "start Print - HVSingleNodeSet, ";
-    cout << "Total Height: " << getHeight() << " and Total Width: " << getWidth() << endl;
-    for (vector< SingleNodeSet*>::const_iterator it = _dimensionSet.begin(); it != _dimensionSet.end(); it++){ 
-    //cout << index << ": H: " << (*it)->getHeight() << ", W: " << (*it)->getWidth() << endl;
-      (*it)->print();
-      index++;
-    }
-    cout << "end Print - HVSingleNodeSet, ";
-    cout << "Total Height: " << getHeight() << " and Total Width: " << getWidth() << endl;
-  }
-
-
-  float HVSingleNodeSet::getDevicesArea() const
-  {
-    float area = 0;
-    for (vector<SingleNodeSet*>::const_iterator it = _dimensionSet.begin(); it != _dimensionSet.end(); it++){ 
-      area += (*it)->getDevicesArea();
-    }
-    return area;
-  }
-
-  
-// -----------------------------------------------------------------------------------------------//
-// Class : VSingleNodeSet
-// -----------------------------------------------------------------------------------------------//
-
-  VSingleNodeSet::VSingleNodeSet(vector<SingleNodeSet*> dimensionSet):HVSingleNodeSet(dimensionSet)
-  {
-    calculateHeight();
-    calculateWidth();
-  }
-
-
-  VSingleNodeSet::VSingleNodeSet(VSingleNodeSet* singleSet):HVSingleNodeSet(singleSet){}
-
-
-  VSingleNodeSet::~VSingleNodeSet(){}
-
-
-  VSingleNodeSet* VSingleNodeSet::create(vector<SingleNodeSet*> dimensionSet)
-  { 
-    return new VSingleNodeSet(dimensionSet); 
-  }
-
-
-  void VSingleNodeSet::calculateHeight()
-  {
-    float currentH = 0;
-    for (vector< SingleNodeSet*>::const_iterator it = _dimensionSet.begin(); it != _dimensionSet.end(); it++){
-      if (currentH < (*it)->getHeight()){ currentH = (*it)->getHeight(); }
-    }
-    _height = currentH;
-  }
-
-
-  void VSingleNodeSet::calculateWidth()
-  {
-    float currentW = 0;
-    for (vector< SingleNodeSet*>::const_iterator it = _dimensionSet.begin(); it != _dimensionSet.end(); it++){
-      currentW += (*it)->getWidth();
-    }
-    _width = currentW;
-  }
-
-
-// -----------------------------------------------------------------------------------------------//
-// Class : HSingleNodeSet
-// -----------------------------------------------------------------------------------------------//
-
-
-  HSingleNodeSet::HSingleNodeSet(vector< SingleNodeSet*> dimensionSet):HVSingleNodeSet(dimensionSet)
-  {
-    calculateHeight();
-    calculateWidth();
-  }
-
-
-  HSingleNodeSet::HSingleNodeSet(HSingleNodeSet* singleSet):HVSingleNodeSet(singleSet){}
-  
-
-  HSingleNodeSet::~HSingleNodeSet(){}
-
-
-  HSingleNodeSet* HSingleNodeSet::create(vector< SingleNodeSet*> dimensionSet)
-  { 
-    return new HSingleNodeSet(dimensionSet); 
-  }
-
-
-  void HSingleNodeSet::calculateHeight() 
-  {
-    float currentH = 0;
-    for (vector< SingleNodeSet*>::const_iterator it = _dimensionSet.begin(); it != _dimensionSet.end(); it++){
-      currentH += (*it)->getHeight();
-    }
-    _height = currentH;
-  }
-
-
-  void HSingleNodeSet::calculateWidth()
-  {
-    float currentW = 0;
-    for (vector< SingleNodeSet*>::const_iterator it = _dimensionSet.begin(); it != _dimensionSet.end(); it++){
-      if (currentW < (*it)->getWidth()){ currentW = (*it)->getWidth(); }
-    }
-    _width = currentW;
-  }
-
-
-// -----------------------------------------------------------------------------------------------//
-// Class : DSingleNodeSet
-// -----------------------------------------------------------------------------------------------//
-
-
-  DSingleNodeSet::DSingleNodeSet(float height, float width):SingleNodeSet( height, width ){}
-
-
-  DSingleNodeSet::DSingleNodeSet(DSingleNodeSet* singleSet):SingleNodeSet(singleSet){}
-
-
-  DSingleNodeSet::~DSingleNodeSet(){}
-
-
-  DSingleNodeSet* DSingleNodeSet::create(float height, float width)
-  { 
-    return new DSingleNodeSet(height, width); 
-  }
-  
-
-// -----------------------------------------------------------------------------------------------//
-// Class : RHVSingleNodeSet
-// -----------------------------------------------------------------------------------------------//
-
-
-  RHVSingleNodeSet::RHVSingleNodeSet(float height, float width):SingleNodeSet(height, width){}
-
-
-  RHVSingleNodeSet::RHVSingleNodeSet(RHVSingleNodeSet* singleSet):SingleNodeSet(singleSet){}
-
-
-  RHVSingleNodeSet::~RHVSingleNodeSet(){}
-
-
-// -----------------------------------------------------------------------------------------------//
-// Class : RHSingleNodeSet
-// -----------------------------------------------------------------------------------------------//
-  
-  
-  RHSingleNodeSet::RHSingleNodeSet(float height):RHVSingleNodeSet(height, 0){}
-
-
-  RHSingleNodeSet::RHSingleNodeSet(RHSingleNodeSet* singleSet):RHVSingleNodeSet(singleSet){}
-
-  
-  RHSingleNodeSet::~RHSingleNodeSet(){}
-
-
-  RHSingleNodeSet* RHSingleNodeSet::create(float height)
-  {
-    return new RHSingleNodeSet ( height );
-  }
-
-
-// -----------------------------------------------------------------------------------------------//
-// Class : RVSingleNodeSet
-// -----------------------------------------------------------------------------------------------//
-  
-  
-  RVSingleNodeSet::RVSingleNodeSet(float width):RHVSingleNodeSet(0, width){}
-
-
-  RVSingleNodeSet::RVSingleNodeSet(RVSingleNodeSet* singleSet):RHVSingleNodeSet(singleSet){}
-
-  
-  RVSingleNodeSet::~RVSingleNodeSet(){}
-
-
-  RVSingleNodeSet* RVSingleNodeSet::create(float width)
-  {
-    return new RVSingleNodeSet ( width );
   }
 
 }

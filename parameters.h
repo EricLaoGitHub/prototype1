@@ -2,7 +2,7 @@
 #define wMaxDP12 25.1 // Maximum width 30.1
 #define hMinDP12 1.7  // Minimum height
 #define hMaxDP12 7.7  // Minimum height
-#define NDP12   10   // NMAX
+#define NDP12   10   // NMAX 10
 
 /*
 #define wMinM5 1.5
@@ -68,7 +68,7 @@
 #define wMaxM5 6
 #define hMinM5 1
 #define hMaxM5 6
-#define NM5    5
+#define NM5    5 //5
 
 #define wMinM7 1
 #define wMaxM7 7
@@ -80,7 +80,7 @@
 #define wMaxM8 8
 #define hMinM8 3
 #define hMaxM8 8
-#define NM8    5
+#define NM8    5 //5
 
 
 /////////////////////////////////////////////////////////////////////////

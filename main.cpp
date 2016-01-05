@@ -1,5 +1,6 @@
 #include <iostream>
 #include <fstream>
+#include <time.h>
 
 #include <typeinfo>
 #include "parameters.h"
@@ -24,7 +25,7 @@ NodeSets createNodeSets(float widthmin, float widthmax, float heightmin, float h
   float hdelta = (heightmax-heightmin)/nmax;
   
   NodeSets nodeset = NodeSets();
-  for (int i = 0; i < nmax; i++){ nodeset.push_back(DSingleNodeSet::create(heightmin+hdelta*i, widthmax-ldelta*i)); }
+  for (int i = 0; i < nmax; i++){ nodeset.push_back(DBoxSet::create(heightmin+hdelta*i, widthmax-ldelta*i)); }
   return nodeset;
 }
 
@@ -60,7 +61,26 @@ void createSlicingTreeData(SlicingNode* data, float tab[][5], int& i)
 
 int main(int argc, char* argv[])
 {
+  clock_t t1,t2;
+  t1=clock();
   cout << " -------------- Start -------------- " << endl;
+  DBoxSet::printCount();
+  DBoxSet::printCountAll();
+  VBoxSet::printCount();
+  VBoxSet::printCountAll();
+  HBoxSet::printCount();
+  HBoxSet::printCountAll();
+  RHVBoxSet::printCount();
+  RHVBoxSet::printCountAll();
+
+  DSlicingNode::printCount();
+  DSlicingNode::printCountAll();
+  VSlicingNode::printCount();
+  VSlicingNode::printCountAll();
+  HSlicingNode::printCount();
+  HSlicingNode::printCountAll();
+  RHVSlicingNode::printCount();
+  RHVSlicingNode::printCountAll();
 
 
   cout << " -------------- DP12 -------------- " << endl;
@@ -91,40 +111,46 @@ int main(int argc, char* argv[])
   slicingTree->setToleranceRatioW(0); // toleranceW = 1 - test Horizontal
   slicingTree->setToleranceBandH(1); // toleranceH = 1 - test Vertical
   slicingTree->setToleranceBandW(5); // toleranceW = 1 - test Horizontal
+  slicingTree->setAlignment(AlignCenter);
 
   slicingTree->createChild(Vertical,AlignCenter);     // VSlicingNode
   slicingTree->createChild(nodeSetsDP12,AlignCenter); // DeviceNode
   slicingTree->createChild(Vertical,AlignCenter);     // VSlicingNode
   slicingTree->createRouting(1);                      // RoutingNode H
-  slicingTree->createChild(nodeSetsDP12,AlignCenter); // DeviceNode
-
+  slicingTree->createChild(nodeSetsDP12.clone(),AlignCenter); // DeviceNode
+  
   cout << " -------------- 1st Hierarchy -------------- " << endl;
+  cout << " -------------- 1st Child -------------- " << endl;
   slicingTree->getChild(0)->createChild(nodeSetsM8,AlignCenter); // DeviceNode
+  cout << " -------------- 2nd Child -------------- " << endl;
   slicingTree->getChild(0)->createChild(nodeSetsM5,AlignCenter); // DeviceNode
+  cout << " -------------- 3rd Child -------------- " << endl;
   slicingTree->getChild(0)->createRouting(1);                    // RoutingNode V
-  slicingTree->getChild(0)->createChild(1,3);                    // Symmetry, <1,3>
-  slicingTree->getChild(0)->createChild(3,4);                    // Symmetry, <3,4>
-  slicingTree->getChild(0)->createChild(nodeSetsM8,AlignCenter); // DeviceNode
-  slicingTree->getChild(0)->setSymmetry(5,0);                    // Symmetry, <5,0>
+  cout << " -------------- 4th Child -------------- " << endl;
+  slicingTree->getChild(0)->createChild(1,3,None);               // Symmetry, <1,3>
+  slicingTree->getChild(0)->createChild(3,4,None);               // Symmetry, <3,4>
+  slicingTree->getChild(0)->createChild(nodeSetsM8.clone(),AlignCenter); // DeviceNode
+  slicingTree->getChild(0)->addSymmetry(5,0);                    // Symmetry, <5,0>
 
   cout << " -------------- 2nd Hierarchy -------------- " << endl;
   slicingTree->getChild(2)->createChild(nodeSetsM9  ,AlignCenter); // DeviceNode
   slicingTree->getChild(2)->createChild(nodeSetsCM34,AlignCenter); // DeviceNode
   slicingTree->getChild(2)->createChild(nodeSetsM6  ,AlignCenter); // DeviceNode
 
-//slicingTree->pushBackNode(slicingTree->clone());
+//slicingTree->push_back(slicingTree->clone());
 
-  
+
   cout << " -------------- UpdateGlobalSize -------------- " << endl;
   slicingTree->updateGlobalSize();
-
+/*
   cout << " -------------- Print Children -------------- " << endl;
 //slicingTree->printChildren();
   cout << " -------------- Print Root -------------- " << endl;
 //slicingTree->print();
+*/
 //cout << "Occupation Area is : " << slicingTree->getOccupationArea() << "%." << endl;
   cout << " -------------- SetGlobalSize -------------- " << endl;
-  slicingTree->setGlobalSize2(15, 20); 
+  slicingTree->setGlobalSize(30, 25); 
 //cout << " -------------- Print Root -------------- " << endl;
 //slicingTree->print();
 //cout << "Number of leaf: " <<  slicingTree->getLeafNumber() << endl;
@@ -133,11 +159,18 @@ int main(int argc, char* argv[])
 // Writing Datas in a file to be plotted in matlab 
   cout << " -------------- Placement -------------- " << endl;
   slicingTree->place();
-  cout << " -------------- Print Children -------------- " << endl;
-  slicingTree->printChildren();
+
+
+//slicingTree->getChild(0)->recursiveDestroy();
+//cout << " -------------- Print Children -------------- " << endl;
+//slicingTree->printChildren();
+
   cout << " -------------- Print Root -------------- " << endl;
+  
   slicingTree->print();
   cout << " -------------- end Root -------------- " << endl;  
+  
+  int leafNumber      = slicingTree->getLeafNumber();
   cout << "Occupation Area is : " << slicingTree->getOccupationArea() << "%." << endl;
 
   ofstream myfile;
@@ -151,24 +184,77 @@ int main(int argc, char* argv[])
       myfile << tab[j][0] << " " << tab[j][1] << " " << tab[j][2] << " " << tab[j][3] << " " << tab[j][4] << endl;
     }
   myfile.close();
-  cout << "Placement matlab file saved" << endl;
+  cout << "Placement matlab file saved." << endl;
 
   myfile.open (SlicingTreeData2);
   
   NodeSets test = slicingTree->getNodeSets();
-  for (vector <SingleNodeSet*>::const_iterator itPrint = test.begin(); itPrint != test.end(); itPrint++)
+  for (vector <BoxSet*>::const_iterator itPrint = test.begin(); itPrint != test.end(); itPrint++)
     {
-    //myfile << (*itPrint)->getWidth() << " " << (*itPrint)->getHeight() << " " << (*itPrint)->getCount() << endl;
       myfile << (*itPrint)->getWidth() << " " << (*itPrint)->getHeight() << endl;
     }
   
   myfile.close();
-  cout << "Ratio     matlab file saved" << endl;
+  cout << "Ratio     matlab file saved." << endl;
 
-//SingleNodeSet* test1 = slicingTree->getNodeSets().getNodeSetsHW(20.8, 22.2, 0); 
-//pair<float,float> paire = slicingTree->getChild(0)->getPairHW(20.9, 22.1);
-//cout << "H; " << paire.first;
-//cout << ", W: "  << paire.second << endl;
+  cout << "====== Pre RecursiveDestroy ====== " << endl;
+  
+  DBoxSet::printCount();
+  DBoxSet::printCountAll();
+  VBoxSet::printCount();
+  VBoxSet::printCountAll();
+  HBoxSet::printCount();
+  HBoxSet::printCountAll();
+  RHVBoxSet::printCount();
+  RHVBoxSet::printCountAll();
+
+  DSlicingNode::printCount();
+  DSlicingNode::printCountAll();
+  VSlicingNode::printCount();
+  VSlicingNode::printCountAll();
+  HSlicingNode::printCount();
+  HSlicingNode::printCountAll();
+  RHVSlicingNode::printCount();
+  RHVSlicingNode::printCountAll();
+
+  int number = DBoxSet::getCount()+
+               VBoxSet::getCount()+
+               HBoxSet::getCount()+
+               RHVBoxSet::getCount()+
+               VSlicingNode::getCount()+
+               HSlicingNode::getCount()+
+               DSlicingNode::getCount()+
+               RHVSlicingNode::getCount();
+
+  cout << "====== RecursiveDestroy ====== " << endl;
+  slicingTree->recursiveDestroy();
+  
+  
+  DBoxSet::printCount();
+  DBoxSet::printCountAll();
+  VBoxSet::printCount();
+  VBoxSet::printCountAll();
+  HBoxSet::printCount();
+  HBoxSet::printCountAll();
+  RHVBoxSet::printCount();
+  RHVBoxSet::printCountAll();
+
+  DSlicingNode::printCount();
+  DSlicingNode::printCountAll();
+  VSlicingNode::printCount();
+  VSlicingNode::printCountAll();
+  HSlicingNode::printCount();
+  HSlicingNode::printCountAll();
+  RHVSlicingNode::printCount();
+  RHVSlicingNode::printCountAll();
+  
+  t2=clock();
+  float diff ((float)t2-(float)t1);
+
+  cout << endl;
+  cout << "Number of leaves               : " << leafNumber  << endl;
+  cout << "Total number of objects created: " << number << endl;
+  cout << "Running time                   : " << diff/CLOCKS_PER_SEC << " seconds" << endl;
 
   return 0;
 }
