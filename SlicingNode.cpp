@@ -1138,6 +1138,7 @@ namespace SlicingTree{
       this->insertNode( node, copyIndex ); 
       _symmetries.push_back( pair<int,int>(min(childIndex, copyIndex), max(childIndex, copyIndex)) );
       resetSlicingTree();
+      normalizeSymmetries();
     }
     else { cerr << "Error(void HVSlicingNode::createChild( int childIndex, int copyIndex, unsigned int tr )): Indexes cannot be the same." << endl; }
   }  
@@ -1245,6 +1246,7 @@ namespace SlicingTree{
         { 
           _symmetries.push_back( pair<int,int>(min(childIndex, copyIndex), max(childIndex, copyIndex)) ); 
           resetSlicingTree();
+          normalizeSymmetries();
         }
       else
         { cerr << "Error(void HVSlicingNode::addSymmetry( int childIndex, int copyIndex )): Child are not the same, symmetry cannot be set." << endl; }
@@ -1647,8 +1649,7 @@ namespace SlicingTree{
       cerr << "Error(void VSlicingNode::updateGlobalSize()): You have a VSlicingNode with only 1 child. This is an incorrect way to use HVSlicingNodes." << endl; 
     }
     else if ( (this->hasEmptyChildrenNodeSets() != true) && (_nodeSets.empty() == true) ){
-      this->normalizeSymmetries();
-      
+
       VSetState state = VSetState(this);
       while( !state.end() ){ state.next(); }
 
@@ -1802,7 +1803,6 @@ namespace SlicingTree{
       cerr << "Error(void HSlicingNode::updateGlobalSize()): You have a HSlicingNode with only 1 child. This is an incorrect way to use HVSlicingNodes." << endl; 
     }
     else if ( (this->hasEmptyChildrenNodeSets() != true) && (_nodeSets.empty() == true) ){
-      this->normalizeSymmetries();
       
       HSetState state = HSetState(this);
       while( !state.end() ){ state.next(); }
