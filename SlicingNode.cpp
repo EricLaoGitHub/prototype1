@@ -1171,9 +1171,11 @@ namespace SlicingTree{
 
   void HVSlicingNode::removeNode( SlicingNode* node ) 
   {
-    int index = 0;
+    int  index = 0;
     bool found = false;
-    for (vector<SlicingNode*>::iterator it = _children.begin(); it != _children.end(); it++){ 
+    vector<SlicingNode*>::iterator it = _children.begin();
+
+    while( it != _children.end() ){
       if (  ((*it)->getType()   == node->getType()  )
          && ((*it)->getHeight() == node->getHeight()) 
          && ((*it)->getWidth () == node->getWidth ()) 
@@ -1181,11 +1183,16 @@ namespace SlicingTree{
          && ((*it)->getY()      == node->getY()     ) 
          )
         {  
-          _children.erase(it); 
+          _children.erase(it);  
           found = true;
-        } 
-      else { index++; }
+          it = _children.end();
+        }
+      else {
+        it++;
+        index++; 
+      }
     }
+
     if (found == true){
       removeSymmetry(index);
       resetSlicingTree();
@@ -1248,18 +1255,32 @@ namespace SlicingTree{
   
   void HVSlicingNode::removeSymmetry( int index )
   {
-    list<pair<int,int> >::iterator it = _symmetries.begin();
+    bool first        = true;
+    int  erasedFirst  = 0;
+    int  erasedSecond = 0;
+    bool isReference  = true;
 
-    while( it != _symmetries.end() ){
-      if (((*it).first == index) || ((*it).second == index) ){
+    for ( list<pair<int,int> >::iterator it = _symmetries.begin(); it != _symmetries.end(); it++ ){
+      if ((((*it).first == index) || ((*it).second == index) ) && (first == true)){
         list<pair<int,int> >::iterator itToerase = it;
         it++;
+        resetSlicingTree(); 
+        first = false;
+        
+        if ((*it).first == index){
+          erasedFirst  = (*itToerase).first;
+          erasedSecond = (*itToerase).second;
+        } else { isReference = false; }
+
         _symmetries.erase(itToerase);
-        resetSlicingTree();
+        it--;
       } 
       else { 
-        if   ((*it).first > index) { it = _symmetries.end(); }
-        else                       { it++;                   }
+        if ( (first == false) && (isReference) ){
+          if ((*it).first == erasedFirst){ (*it).first = erasedSecond; }
+        } 
+        if ((*it).first  > index) { (*it).first--;  }
+        if ((*it).second > index) { (*it).second--; }
       }
     }
   }
@@ -1623,10 +1644,9 @@ namespace SlicingTree{
 
     if (this->getNbChild() == 1){
       _nodeSets = (*_children.begin())->getNodeSets();
-      cerr << "Error(void HVSlicingNode::updateGlobalSize()): You have a HVSlicingNode with only 1 child. This is an incorrect way to use HVSlicingNodes." << endl; 
+      cerr << "Error(void VSlicingNode::updateGlobalSize()): You have a VSlicingNode with only 1 child. This is an incorrect way to use HVSlicingNodes." << endl; 
     }
-    else if (this->hasEmptyChildrenNodeSets() != true){
-      _nodeSets.clear();
+    else if ( (this->hasEmptyChildrenNodeSets() != true) && (_nodeSets.empty() == true) ){
       this->normalizeSymmetries();
       
       VSetState state = VSetState(this);
@@ -1634,7 +1654,7 @@ namespace SlicingTree{
 
       _nodeSets = state.getNodeSets();
     }
-    if (_nodeSets.empty()) { cerr << "Error(void HVSlicingNode::updateGlobalSize()): No solution has been found. Try to set larger tolerances." << endl; }
+    if (_nodeSets.empty()) { cerr << "Error(void VSlicingNode::updateGlobalSize()): No solution has been found. Try to set larger tolerances." << endl; }
   }
 
 
@@ -1779,10 +1799,9 @@ namespace SlicingTree{
 
     if (this->getNbChild() == 1){
       _nodeSets = (*_children.begin())->getNodeSets();
-      cerr << "Error(void HVSlicingNode::updateGlobalSize()): You have a HVSlicingNode with only 1 child. This is an incorrect way to use HVSlicingNodes." << endl; 
+      cerr << "Error(void HSlicingNode::updateGlobalSize()): You have a HSlicingNode with only 1 child. This is an incorrect way to use HVSlicingNodes." << endl; 
     }
-    else if (this->hasEmptyChildrenNodeSets() != true){     
-      _nodeSets.clear();
+    else if ( (this->hasEmptyChildrenNodeSets() != true) && (_nodeSets.empty() == true) ){
       this->normalizeSymmetries();
       
       HSetState state = HSetState(this);
@@ -1790,7 +1809,7 @@ namespace SlicingTree{
 
       _nodeSets = state.getNodeSets();
     }
-    if (_nodeSets.empty()){ cerr << "Error(void HVSlicingNode::updateGlobalSize()): No solution has been found. Try to set larger tolerances." << endl; }
+    if (_nodeSets.empty()){ cerr << "Error(void HSlicingNode::updateGlobalSize()): No solution has been found. Try to set larger tolerances." << endl; }
   }
 
 

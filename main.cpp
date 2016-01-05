@@ -109,7 +109,7 @@ int main(int argc, char* argv[])
   HSlicingNode* slicingTree = HSlicingNode::create(); 
   slicingTree->setToleranceRatioH(1); // toleranceH = 1 - test Vertical
   slicingTree->setToleranceRatioW(0); // toleranceW = 1 - test Horizontal
-  slicingTree->setToleranceBandH(1); // toleranceH = 1 - test Vertical
+  slicingTree->setToleranceBandH(5); // toleranceH = 1 - test Vertical
   slicingTree->setToleranceBandW(5); // toleranceW = 1 - test Horizontal
   slicingTree->setAlignment(AlignCenter);
 
@@ -156,8 +156,29 @@ int main(int argc, char* argv[])
   cout << " -------------- Print Root -------------- " << endl;
   slicingTree->print();
   
-  int leafNumber      = slicingTree->getLeafNumber();
+  int leafNumber = slicingTree->getLeafNumber();
   cout << "Occupation Area is : " << slicingTree->getOccupationArea() << "%." << endl;
+
+  cout << " -------------- RemoveNode -------------- " << endl;
+  SlicingNode* node = slicingTree->getChild(0)->getChild(1);
+  slicingTree->getChild(0)->removeNode(node);
+  node->destroy();
+//cout << " -------------- Print Children -------------- " << endl;
+//slicingTree->printChildren();
+//cout << " -------------- Print Root -------------- " << endl;
+//slicingTree->print();
+  
+  cout << " -------------- UpdateGlobalSize -------------- " << endl;
+  slicingTree->updateGlobalSize();
+  cout << " -------------- SetGlobalSize -------------- " << endl;
+  slicingTree->setGlobalSize(30, 25); 
+  cout << " -------------- Placement -------------- " << endl;
+  slicingTree->place();
+  cout << " -------------- Print Root -------------- " << endl;
+  slicingTree->print();
+  cout << "Occupation Area is : " << slicingTree->getOccupationArea() << "%." << endl;
+
+
 
   ofstream myfile;
   myfile.open (SlicingTreeData);
@@ -182,19 +203,6 @@ int main(int argc, char* argv[])
   
   myfile.close();
   cout << "Ratio     matlab file saved." << endl;
-
-  cout << " -------------- RemoveNode -------------- " << endl;
-  SlicingNode* node = slicingTree->getChild(0)->getChild(0);
-  slicingTree->getChild(0)->removeNode(node);
-  node->destroy();
-  cout << " -------------- Print Children -------------- " << endl;
-  slicingTree->printChildren();
-  cout << " -------------- Print Root -------------- " << endl;
-  slicingTree->print();
-  
-
-
-
 
   cout << "====== Pre RecursiveDestroy ====== " << endl;
   DBoxSet::printCount();
