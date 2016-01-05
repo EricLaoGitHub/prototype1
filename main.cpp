@@ -151,24 +151,10 @@ int main(int argc, char* argv[])
 //cout << "Occupation Area is : " << slicingTree->getOccupationArea() << "%." << endl;
   cout << " -------------- SetGlobalSize -------------- " << endl;
   slicingTree->setGlobalSize(30, 25); 
-//cout << " -------------- Print Root -------------- " << endl;
-//slicingTree->print();
-//cout << "Number of leaf: " <<  slicingTree->getLeafNumber() << endl;
-  
-
-// Writing Datas in a file to be plotted in matlab 
   cout << " -------------- Placement -------------- " << endl;
   slicingTree->place();
-
-
-//slicingTree->getChild(0)->recursiveDestroy();
-//cout << " -------------- Print Children -------------- " << endl;
-//slicingTree->printChildren();
-
   cout << " -------------- Print Root -------------- " << endl;
-  
   slicingTree->print();
-  cout << " -------------- end Root -------------- " << endl;  
   
   int leafNumber      = slicingTree->getLeafNumber();
   cout << "Occupation Area is : " << slicingTree->getOccupationArea() << "%." << endl;
@@ -197,8 +183,20 @@ int main(int argc, char* argv[])
   myfile.close();
   cout << "Ratio     matlab file saved." << endl;
 
-  cout << "====== Pre RecursiveDestroy ====== " << endl;
+  cout << " -------------- RemoveNode -------------- " << endl;
+  SlicingNode* node = slicingTree->getChild(0)->getChild(0);
+  slicingTree->getChild(0)->removeNode(node);
+  node->destroy();
+  cout << " -------------- Print Children -------------- " << endl;
+  slicingTree->printChildren();
+  cout << " -------------- Print Root -------------- " << endl;
+  slicingTree->print();
   
+
+
+
+
+  cout << "====== Pre RecursiveDestroy ====== " << endl;
   DBoxSet::printCount();
   DBoxSet::printCountAll();
   VBoxSet::printCount();

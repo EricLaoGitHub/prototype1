@@ -629,16 +629,18 @@ namespace SlicingTree{
 
   void SlicingNode::resetSlicingTree()
   {
+    clearParentsNodeSets();
     getRoot()->_resetSlicingTree();
   }
 
 
   void SlicingNode::_resetSlicingTree()
   {
+    _x = 0;
+    _y = 0;
     setPlaced(false);
-    if (isPreset() == false){
-      _x      = 0;
-      _y      = 0;
+    
+    if ( isPreset() == false ){
       _height = 0;
       _width  = 0;
       setSet(false);
@@ -1097,6 +1099,7 @@ namespace SlicingTree{
                         , getToleranceBandW()
                         );
       push_back(hsn);
+      resetSlicingTree();
     }
 
     else if (type == Vertical) { 
@@ -1107,6 +1110,7 @@ namespace SlicingTree{
                         , getToleranceBandW()
                         );
       push_back(vsn); 
+      resetSlicingTree();
     }
     else 
       { cerr << " Error(void HVSlicingNode::createChild(SlicingType type, Alignment alignment)): Unknown type." << endl; }
@@ -1122,6 +1126,7 @@ namespace SlicingTree{
     DSlicingNode* node = DSlicingNode::create( nodeSets, alignment, height, width );
     node->setParent(this);
     this->push_back(node); 
+    resetSlicingTree();
   }
   
 
@@ -1132,6 +1137,7 @@ namespace SlicingTree{
       SlicingNode* node = this->getChild(childIndex)->clone(tr);
       this->insertNode( node, copyIndex ); 
       _symmetries.push_back( pair<int,int>(min(childIndex, copyIndex), max(childIndex, copyIndex)) );
+      resetSlicingTree();
     }
     else { cerr << "Error(void HVSlicingNode::createChild( int childIndex, int copyIndex, unsigned int tr )): Indexes cannot be the same." << endl; }
   }  
@@ -1143,6 +1149,7 @@ namespace SlicingTree{
     for (int i = 0; i < index; i++){ if (it != _children.end()){ it++; } }
     _children.insert(it,node);
     node->setParent(this);
+    resetSlicingTree();
   }
 
 
@@ -1150,6 +1157,7 @@ namespace SlicingTree{
   {
     node->setParent(this);
     _children.push_back(node); 
+    resetSlicingTree();
   }
 
 
@@ -1157,6 +1165,7 @@ namespace SlicingTree{
   {
     node->setParent(this);
     _children.insert(_children.begin(), node); 
+    resetSlicingTree();
   }
 
 
@@ -1178,10 +1187,12 @@ namespace SlicingTree{
       else { index++; }
     }
     if (found == true){
-      clearParentsNodeSets();
       removeSymmetry(index);
-      getRoot()->resetSlicingTree();
+      resetSlicingTree();
       node->removeParent();
+      node->setX(0);
+      node->setY(0);
+      node->setPlaced(false);
     }
   }
 
@@ -1224,7 +1235,10 @@ namespace SlicingTree{
     if (childIndex != copyIndex){
       NodeSets node = this->getChild(childIndex)->getNodeSets();
       if (node.compare( this->getChild(copyIndex)->getNodeSets() ) == true )
-        { _symmetries.push_back( pair<int,int>(min(childIndex, copyIndex), max(childIndex, copyIndex)) ); }
+        { 
+          _symmetries.push_back( pair<int,int>(min(childIndex, copyIndex), max(childIndex, copyIndex)) ); 
+          resetSlicingTree();
+        }
       else
         { cerr << "Error(void HVSlicingNode::addSymmetry( int childIndex, int copyIndex )): Child are not the same, symmetry cannot be set." << endl; }
     }
@@ -1241,6 +1255,7 @@ namespace SlicingTree{
         list<pair<int,int> >::iterator itToerase = it;
         it++;
         _symmetries.erase(itToerase);
+        resetSlicingTree();
       } 
       else { 
         if   ((*it).first > index) { it = _symmetries.end(); }
@@ -1281,10 +1296,11 @@ namespace SlicingTree{
 
   void HVSlicingNode::_resetSlicingTree()
   {
+    _x = 0;
+    _y = 0;
     setPlaced(false);
-    if (isPreset() == false){
-      _x      = 0;
-      _y      = 0;
+    
+    if ( isPreset() == false ){
       _height = 0;
       _width  = 0;
       setSet(false);
@@ -1520,6 +1536,7 @@ namespace SlicingTree{
   void VSlicingNode::createRouting( float space )
   {
     this->push_back(RVSlicingNode::create( space )); 
+    resetSlicingTree();
   } 
 
 
@@ -1675,6 +1692,7 @@ namespace SlicingTree{
   void HSlicingNode::createRouting( float space )
   {
     this->push_back(RHSlicingNode::create( space )); 
+    resetSlicingTree();
   } 
 
 
