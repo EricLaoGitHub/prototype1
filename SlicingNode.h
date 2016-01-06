@@ -50,13 +50,13 @@ namespace SlicingTree{
       BoxSet  ( BoxSet* boxSet );
       virtual ~BoxSet ();
   
-      inline  float        getHeight      () const;
-      inline  float        getWidth       () const; 
-      inline  unsigned int getCpt         () const;
-      inline  void         incrementCpt   ();
-      virtual BoxSet*      clone          () = 0;
-              void         preDestroy     () {}
-      virtual void         destroy        ();
+      inline         float                 getHeight         () const;
+      inline         float                 getWidth          () const; 
+      inline         unsigned int          getCpt            () const;
+      inline         void                  incrementCpt      ();
+      virtual        BoxSet*               clone             () = 0;
+                     void                  preDestroy        () {}
+      virtual        void                  destroy           ();
 
       virtual inline unsigned int          getType           () const;
       virtual inline float                 getOccupationArea () const;
@@ -92,13 +92,13 @@ namespace SlicingTree{
       HVBoxSet  ( HVBoxSet* boxSet );
       virtual ~HVBoxSet ();
 
-      inline const std::vector<BoxSet*>& getSet            () const;
-      inline       float                 getOccupationArea () const;
-                   float                 getDevicesArea    () const;
+      inline const   std::vector<BoxSet*>& getSet            () const;
+      inline         float                 getOccupationArea () const;
+                     float                 getDevicesArea    () const;
 
-      virtual inline void  calculateHeight () = 0;
-      virtual inline void  calculateWidth  () = 0;
-      virtual        void  print           () const;
+      virtual inline void                  calculateHeight   () = 0;
+      virtual inline void                  calculateWidth    () = 0;
+      virtual        void                  print             () const;
 
     protected:
       std::vector<BoxSet*> _dimensionSet;
@@ -177,6 +177,7 @@ namespace SlicingTree{
   inline void         HBoxSet::printCount    () { std::cout << "HBoxSet::Count           = " << _count << std::endl; }
   inline void         HBoxSet::printCountAll () { std::cout << "HBoxSet::CountAll        = " << _countAll << std::endl; }
 
+
 // -----------------------------------------------------------------------------------------------//
 // Class : DBoxSet
 // -----------------------------------------------------------------------------------------------//
@@ -228,7 +229,6 @@ namespace SlicingTree{
       inline float        getWidth       () const;
       inline unsigned int getType        () const;
       inline float        getDevicesArea () const;
-
       
       static inline int   getCount       ();
       static inline void  printCount     ();
@@ -262,8 +262,8 @@ namespace SlicingTree{
       ~RVBoxSet ();
 
     public:
-      static RVBoxSet*   create     ( float width );
-             RVBoxSet*   clone      ();
+      static RVBoxSet* create ( float width );
+             RVBoxSet* clone  ();
   };
 
 
@@ -280,8 +280,8 @@ namespace SlicingTree{
       ~RHBoxSet ();
 
     public:
-      static RHBoxSet*   create     ( float height );
-             RHBoxSet*   clone      ();
+      static RHBoxSet* create ( float height );
+             RHBoxSet* clone  ();
   };
 
 
@@ -360,9 +360,6 @@ namespace SlicingTree{
       virtual ~SlicingNode ();
 
     public:
-    //friend inline std::ostream& operator << ( std::ostream& o, const SlicingNode* node ){ node->print(); return o; } 
-    //friend inline std::ostream& operator << ( std::ostream& o, const SlicingNode& node ){ node.print() ; return o; }
-
       inline bool                   isPreset             () const;
       inline bool                   isSet                () const;
       inline bool                   isPlaced             () const;
@@ -403,7 +400,6 @@ namespace SlicingTree{
       inline void                   setNodeSets          ( NodeSets     nodeSets  );
       inline void                   setParent            ( SlicingNode* parent    );
              void                   setPairH             ( float        height    );
-
       
       inline  void                  clearNodeSets        ();
               void                  clearParentsNodeSets ();
@@ -484,18 +480,18 @@ namespace SlicingTree{
       float        _width;          
   };
 
-  inline bool SlicingNode::isPreset      () const { return (_flags & Preset)     ; }
-  inline bool SlicingNode::isSet         () const { return (_flags & Set)        ; }
-  inline bool SlicingNode::isPlaced      () const { return (_flags & Placed)     ; }
-  inline bool SlicingNode::isAlignLeft   () const { return (_flags & AlignLeft)  ; }
-  inline bool SlicingNode::isAlignRight  () const { return (_flags & AlignRight) ; }
-  inline bool SlicingNode::isAlignCenter () const { return (_flags & AlignCenter); }
-  inline bool SlicingNode::isAlignTop    () const { return (_flags & AlignTop)   ; }
-  inline bool SlicingNode::isAlignBottom () const { return (_flags & AlignBottom); }
-  inline bool SlicingNode::isHorizontal  () const { return (_flags & Horizontal) ; }
-  inline bool SlicingNode::isVertical    () const { return (_flags & Vertical)   ; }
-  inline bool SlicingNode::isDevice      () const { return (_flags & Device)     ; }
-  inline bool SlicingNode::isRouting     () const { return (_flags & Routing)    ; }
+  inline bool            SlicingNode::isPreset      () const { return (_flags & Preset)     ; }
+  inline bool            SlicingNode::isSet         () const { return (_flags & Set)        ; }
+  inline bool            SlicingNode::isPlaced      () const { return (_flags & Placed)     ; }
+  inline bool            SlicingNode::isAlignLeft   () const { return (_flags & AlignLeft)  ; }
+  inline bool            SlicingNode::isAlignRight  () const { return (_flags & AlignRight) ; }
+  inline bool            SlicingNode::isAlignCenter () const { return (_flags & AlignCenter); }
+  inline bool            SlicingNode::isAlignTop    () const { return (_flags & AlignTop)   ; }
+  inline bool            SlicingNode::isAlignBottom () const { return (_flags & AlignBottom); }
+  inline bool            SlicingNode::isHorizontal  () const { return (_flags & Horizontal) ; }
+  inline bool            SlicingNode::isVertical    () const { return (_flags & Vertical)   ; }
+  inline bool            SlicingNode::isDevice      () const { return (_flags & Device)     ; }
+  inline bool            SlicingNode::isRouting     () const { return (_flags & Routing)    ; }
 
   inline unsigned int    SlicingNode::getPreset     () const { return (_flags & presetMask     ); }
   inline unsigned int    SlicingNode::getSet        () const { return (_flags & setMask        ); }
@@ -545,19 +541,19 @@ namespace SlicingTree{
       virtual ~HVSlicingNode ();
     
     public:
-      inline float getToleranceRatioH          () const;
-      inline float getToleranceRatioW          () const;
-      inline void  setToleranceRatioH          ( float tolerance );
-      inline void  setToleranceRatioW          ( float tolerance );
-      inline float getToleranceBandH           () const;
-      inline float getToleranceBandW           () const;
-      inline void  setToleranceBandH           ( float tolerance );
-      inline void  setToleranceBandW           ( float tolerance );
-             void  recursiveSetToleranceRatioH ( float tolerance );
-             void  recursiveSetToleranceRatioW ( float tolerance );
-             void  recursiveSetToleranceBandH  ( float tolerance );
-             void  recursiveSetToleranceBandW  ( float tolerance );
-             void  setTolerances               ( float trh, float trw, float tbh, float tbw );
+      inline float                            getToleranceRatioH          () const;
+      inline float                            getToleranceRatioW          () const;
+      inline void                             setToleranceRatioH          ( float tolerance );
+      inline void                             setToleranceRatioW          ( float tolerance );
+      inline float                            getToleranceBandH           () const;
+      inline float                            getToleranceBandW           () const;
+      inline void                             setToleranceBandH           ( float tolerance );
+      inline void                             setToleranceBandW           ( float tolerance );
+             void                             recursiveSetToleranceRatioH ( float tolerance );
+             void                             recursiveSetToleranceRatioW ( float tolerance );
+             void                             recursiveSetToleranceBandH  ( float tolerance );
+             void                             recursiveSetToleranceBandW  ( float tolerance );
+             void                             setTolerances               ( float trh, float trw, float tbh, float tbw );
 
              bool                             hasEmptyChildrenNodeSets () const;
       inline const std::vector<SlicingNode*>& getChildren              () const;
@@ -590,18 +586,17 @@ namespace SlicingTree{
              void                             preRecursiveDestroy      ();
              void                             recursiveDestroy         ();
 
-     
-      void  _resetSlicingTree    ();
-      void  print                () const;
-      void  printChildren        () const;
-      bool  recursiveCheckPreset () const;
-      bool  recursiveCheckSet    () const;
-      bool  recursiveCheckPlaced () const;
-      int   getLeafNumber        () const;
-      float getDevicesArea       () const;
-      float getOccupationArea    () const;
-      void  setGlobalSize        ( float height, float width );
-      void  _setGlobalSize       ( float height, float width );
+             void                             _resetSlicingTree        ();
+             void                             print                    () const;
+             void                             printChildren            () const;
+             bool                             recursiveCheckPreset     () const;
+             bool                             recursiveCheckSet        () const;
+             bool                             recursiveCheckPlaced     () const;
+             int                              getLeafNumber            () const;
+             float                            getDevicesArea           () const;
+             float                            getOccupationArea        () const;
+             void                             setGlobalSize            ( float height, float width );
+             void                             _setGlobalSize           ( float height, float width );
 
     protected:
       std::vector<SlicingNode*>       _children;
@@ -626,9 +621,8 @@ namespace SlicingTree{
   inline int                              HVSlicingNode::getNbChild     () const              { return _children.size(); }
   inline void                             HVSlicingNode::removeAllNodes ()                    { _children.clear(); }
 
-  inline std::list<std::pair<int,int> > HVSlicingNode::getSymmetries () const                               { return _symmetries; }
-  inline void                           HVSlicingNode::setSymmetries ( std::list<std::pair<int,int> > sym ) { _symmetries = sym;  }
-
+  inline std::list<std::pair<int,int> >   HVSlicingNode::getSymmetries  () const                               { return _symmetries; }
+  inline void                             HVSlicingNode::setSymmetries  ( std::list<std::pair<int,int> > sym ) { _symmetries = sym;  }
 
 
 // -----------------------------------------------------------------------------------------------//
@@ -666,7 +660,7 @@ namespace SlicingTree{
   };
 
   inline int  VSlicingNode::getCount      () { return _count; }
-  inline void VSlicingNode::printCount    () { std::cout << "VSlicingNode::Count      = " << _count << std::endl; }
+  inline void VSlicingNode::printCount    () { std::cout << "VSlicingNode::Count      = " << _count    << std::endl; }
   inline void VSlicingNode::printCountAll () { std::cout << "VSlicingNode::CountAll   = " << _countAll << std::endl; }
 
 
@@ -705,8 +699,9 @@ namespace SlicingTree{
   };
 
   inline int  HSlicingNode::getCount      () { return _count; }
-  inline void HSlicingNode::printCount    () { std::cout << "HSlicingNode::Count      = " << _count << std::endl; }
+  inline void HSlicingNode::printCount    () { std::cout << "HSlicingNode::Count      = " << _count    << std::endl; }
   inline void HSlicingNode::printCountAll () { std::cout << "HSlicingNode::CountAll   = " << _countAll << std::endl; }
+
 
 // -----------------------------------------------------------------------------------------------//
 // Class : DSlicingNode
@@ -725,14 +720,14 @@ namespace SlicingTree{
       ~DSlicingNode ();
 
     public:
-      static DSlicingNode* create         ( NodeSets     nodeSets  
-                                          , unsigned int alignment = UnknownAlignment
-                                          , float        height    = 0
-                                          , float        width     = 0
-                                          );
-      void                 print          () const;
-      DSlicingNode*        clone          ( unsigned int tr = None );
-      inline float         getDevicesArea () const;
+      static DSlicingNode* create              ( NodeSets     nodeSets  
+                                               , unsigned int alignment = UnknownAlignment
+                                               , float        height    = 0
+                                               , float        width     = 0
+                                               );
+      void                 print               () const;
+      DSlicingNode*        clone               ( unsigned int tr = None );
+      inline float         getDevicesArea      () const;
 
       static inline int    getCount            ();
       static inline void   printCount          ();
@@ -749,8 +744,9 @@ namespace SlicingTree{
 
   inline float DSlicingNode::getDevicesArea () const { return _height*_width; }
   inline int   DSlicingNode::getCount       () { return _count  ; }
-  inline void  DSlicingNode::printCount     () { std::cout << "DSlicingNode::Count      = " << _count << std::endl; }
+  inline void  DSlicingNode::printCount     () { std::cout << "DSlicingNode::Count      = " << _count    << std::endl; }
   inline void  DSlicingNode::printCountAll  () { std::cout << "DSlicingNode::CountAll   = " << _countAll << std::endl; }
+
 
 // -----------------------------------------------------------------------------------------------//
 // Class : RHVSlicingNode
@@ -790,7 +786,7 @@ namespace SlicingTree{
 
   inline float RHVSlicingNode::getDevicesArea () const { return 0; }
   inline int   RHVSlicingNode::getCount       ()       { return _count; }
-  inline void  RHVSlicingNode::printCount     ()       { std::cout << "RHVSlicingNode::Count    = " << _count << std::endl; }
+  inline void  RHVSlicingNode::printCount     ()       { std::cout << "RHVSlicingNode::Count    = " << _count    << std::endl; }
   inline void  RHVSlicingNode::printCountAll  ()       { std::cout << "RHVSlicingNode::CountAll = " << _countAll << std::endl; }
 
 
@@ -808,15 +804,10 @@ namespace SlicingTree{
     public:
       static RVSlicingNode* create ( float        width = 0    );
              RVSlicingNode* clone  ( unsigned int tr    = None );
-    /*void destroy(){
-        std::cout << "Hello, on destroy RVSlicingNode" << std::endl; 
-        SlicingNode::destroy();
-        }*/
 
       // Error Message Methods
       void  setHeight ( float height );
   };
-
 
 
 // -----------------------------------------------------------------------------------------------//
@@ -846,23 +837,23 @@ namespace SlicingTree{
   class HVSetState
   {
     protected:
-      HVSetState  ( HVSlicingNode* node );
+      HVSetState ( HVSlicingNode* node );
       virtual ~HVSetState ();
 
     public:
-      virtual float        getCurrentH   () = 0;
-      virtual float        getCurrentW   () = 0;
-      inline  bool         end           ();
-      inline  int          getEndCounter ();
-      const   NodeSets     getNodeSets   (); 
-              bool         isSymmetry    ( int index, std::pair<int,int>& symmetry );
-              bool         isSymmetry    ( int index );
+      virtual float    getCurrentH   () = 0;
+      virtual float    getCurrentW   () = 0;
+      inline  bool     end           ();
+      inline  int      getEndCounter ();
+      const   NodeSets getNodeSets   (); 
+              bool     isSymmetry    ( int index, std::pair<int,int>& symmetry );
+              bool     isSymmetry    ( int index );
 
-      virtual void         print         ();
-              void         initSet       ();
-              void         initModulos   ();
-              void         next          ();
-      virtual void         push_back     () = 0;
+      virtual void     print         ();
+              void     initSet       ();
+              void     initModulos   ();
+              void     next          ();
+      virtual void     push_back     () = 0;
 
     protected: 
       HVSlicingNode*      _HVSnode; 
@@ -873,10 +864,10 @@ namespace SlicingTree{
       NodeSets            _nodeSets;
   };
 
-  inline bool HVSetState::end           () { return (_counter == _modulos.back()+1); }
-  inline int  HVSetState::getEndCounter () { return _modulos.back()+1              ; }
-  inline bool HVSetState::isSymmetry    ( int index, std::pair<int,int>& symmetry ){ return _HVSnode->isSymmetry(index, symmetry); }
-  inline bool HVSetState::isSymmetry    ( int index )                              { return _HVSnode->isSymmetry(index); }
+  inline bool HVSetState::end           ()                                          { return (_counter == _modulos.back()+1); }
+  inline int  HVSetState::getEndCounter ()                                          { return _modulos.back()+1; }
+  inline bool HVSetState::isSymmetry    ( int index, std::pair<int,int>& symmetry ) { return _HVSnode->isSymmetry(index, symmetry); }
+  inline bool HVSetState::isSymmetry    ( int index )                               { return _HVSnode->isSymmetry(index); }
 
 
 // -----------------------------------------------------------------------------------------------//
@@ -910,12 +901,12 @@ namespace SlicingTree{
       HSetState  ( HSlicingNode* node );
       ~HSetState ();
 
-      std::pair<float,float> getCurrentWs     ();
-      float                  getCurrentH      ();
-      float                  getCurrentW      ();
-      void                   print            ();
-      void                   next             ();
-      void                   push_back        ();
+      std::pair<float,float> getCurrentWs ();
+      float                  getCurrentH  ();
+      float                  getCurrentW  ();
+      void                   print        ();
+      void                   next         ();
+      void                   push_back    ();
   };
   
 

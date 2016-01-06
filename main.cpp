@@ -109,8 +109,8 @@ int main(int argc, char* argv[])
   HSlicingNode* slicingTree = HSlicingNode::create(); 
   slicingTree->setToleranceRatioH(1); // toleranceH = 1 - test Vertical
   slicingTree->setToleranceRatioW(0); // toleranceW = 1 - test Horizontal
-  slicingTree->setToleranceBandH(5); // toleranceH = 1 - test Vertical
-  slicingTree->setToleranceBandW(5); // toleranceW = 1 - test Horizontal
+  slicingTree->setToleranceBandH(1); // toleranceH = 1 - test Vertical
+  slicingTree->setToleranceBandW(3); // toleranceW = 1 - test Horizontal
   slicingTree->setAlignment(AlignCenter);
 
   slicingTree->createChild(Vertical,AlignCenter);     // VSlicingNode
@@ -137,7 +137,7 @@ int main(int argc, char* argv[])
   slicingTree->getChild(2)->createChild(nodeSetsCM34,AlignCenter); // DeviceNode
   slicingTree->getChild(2)->createChild(nodeSetsM6  ,AlignCenter); // DeviceNode
 
-//slicingTree->push_back(slicingTree->clone());
+  slicingTree->push_back(slicingTree->clone());
 
 
   cout << " -------------- UpdateGlobalSize -------------- " << endl;

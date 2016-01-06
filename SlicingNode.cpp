@@ -3,7 +3,7 @@
 using namespace std;
 
 namespace SlicingTree{
-
+// Functions for test only
   void printPair(pair<float,float> paire){ cout << "H: " << paire.first << ", W: " << paire.second << endl; }  
   void printVectorPair(vector<pair<float, float> > vectorpaire)
   {
@@ -19,6 +19,7 @@ namespace SlicingTree{
     cout << "end printV" << endl;
   }
 
+
 // -----------------------------------------------------------------------------------------------//
 // Class : BoxSet
 // -----------------------------------------------------------------------------------------------//
@@ -31,7 +32,7 @@ namespace SlicingTree{
 
   BoxSet::BoxSet( BoxSet* boxSet ): _height( boxSet->getHeight() )
                                   , _width ( boxSet->getWidth()  )
-                                  ,_cpt    ( boxSet->getCpt()  ){}
+                                  ,_cpt    ( boxSet->getCpt()    ){}
 
 
   BoxSet::~BoxSet(){}
@@ -100,6 +101,7 @@ namespace SlicingTree{
 // -----------------------------------------------------------------------------------------------//
 // Class : VBoxSet
 // -----------------------------------------------------------------------------------------------//
+
 
   int VBoxSet::_count    = 0;
   int VBoxSet::_countAll = 0;
@@ -1004,7 +1006,7 @@ namespace SlicingTree{
   HVSlicingNode::~HVSlicingNode(){}
 
 
-  void  HVSlicingNode::recursiveSetToleranceRatioH( float tolerance )
+  void HVSlicingNode::recursiveSetToleranceRatioH( float tolerance )
   {
     for (vector<SlicingNode*>::iterator it = _children.begin(); it != _children.end(); it++){
 
@@ -1015,7 +1017,7 @@ namespace SlicingTree{
   }
 
 
-  void  HVSlicingNode::recursiveSetToleranceRatioW( float tolerance )
+  void HVSlicingNode::recursiveSetToleranceRatioW( float tolerance )
   {
     for (vector<SlicingNode*>::iterator it = _children.begin(); it != _children.end(); it++){
 
@@ -1026,7 +1028,7 @@ namespace SlicingTree{
   }
 
 
-  void  HVSlicingNode::recursiveSetToleranceBandH( float tolerance )
+  void HVSlicingNode::recursiveSetToleranceBandH( float tolerance )
   {
     for (vector<SlicingNode*>::iterator it = _children.begin(); it != _children.end(); it++){
 
@@ -1037,7 +1039,7 @@ namespace SlicingTree{
   }
 
 
-  void  HVSlicingNode::recursiveSetToleranceBandW( float tolerance )
+  void HVSlicingNode::recursiveSetToleranceBandW( float tolerance )
   {
     for (vector<SlicingNode*>::iterator it = _children.begin(); it != _children.end(); it++){
 
@@ -1088,6 +1090,7 @@ namespace SlicingTree{
     }
     return i;
   }
+
 
   void HVSlicingNode::createChild( unsigned int type, unsigned int alignment )
   {
@@ -1432,7 +1435,7 @@ namespace SlicingTree{
   }
 
 
-  void HVSlicingNode::setGlobalSize ( float height, float width )
+  void HVSlicingNode::setGlobalSize( float height, float width )
   {
     if ( _nodeSets.empty() != true ){
       vector<BoxSet*>::const_iterator it     = _nodeSets.begin();
@@ -1530,7 +1533,6 @@ namespace SlicingTree{
     HVSlicingNode::preRecursiveDestroy();
     delete(this);
   }
-
 
 
 // -----------------------------------------------------------------------------------------------//
@@ -2355,7 +2357,6 @@ namespace SlicingTree{
       currentH += node[(*it2)]->getHeight(); 
       it2++;
     }
-
     return currentH;
   }
 
