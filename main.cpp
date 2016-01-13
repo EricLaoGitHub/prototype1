@@ -21,11 +21,11 @@ map <float,float>* createMapH(float widthmin, float widthmax, float heightmin, f
 
 NodeSets createNodeSets(float widthmin, float widthmax, float heightmin, float heightmax, float nmax)
 {
-  float ldelta = (widthmax-widthmin)/nmax;
-  float hdelta = (heightmax-heightmin)/nmax;
+  float ldelta = (widthmax-widthmin)/(nmax-1);
+  float hdelta = (heightmax-heightmin)/(nmax-1);
   
   NodeSets nodeset = NodeSets();
-  for (int i = 0; i < nmax; i++){ nodeset.push_back(DBoxSet::create(heightmin+hdelta*i, widthmax-ldelta*i)); }
+  for (int i = 0; i < nmax; i++){ nodeset.push_back(DBoxSet::create(heightmin+hdelta*i, widthmax-ldelta*i, i+1)); }
   return nodeset;
 }
 
@@ -108,9 +108,13 @@ int main(int argc, char* argv[])
   cout << " -------------- Build Slicing Tree -------------- " << endl;
   HSlicingNode* slicingTree = HSlicingNode::create(); 
   slicingTree->setToleranceRatioH(1); // toleranceH = 1 - test Vertical
-  slicingTree->setToleranceRatioW(0); // toleranceW = 1 - test Horizontal
+  slicingTree->setToleranceRatioW(1); // toleranceW = 1 - test Horizontal
   slicingTree->setToleranceBandH(1); // toleranceH = 1 - test Vertical
   slicingTree->setToleranceBandW(3); // toleranceW = 1 - test Horizontal
+
+  float globalHeight = 32;
+  float globalWidth  = 21;
+
   slicingTree->setAlignment(AlignCenter);
 
   slicingTree->createChild(Vertical,AlignCenter);     // VSlicingNode
@@ -150,7 +154,7 @@ int main(int argc, char* argv[])
 */
 //cout << "Occupation Area is : " << slicingTree->getOccupationArea() << "%." << endl;
   cout << " -------------- SetGlobalSize -------------- " << endl;
-  slicingTree->setGlobalSize(30, 25); 
+  slicingTree->setGlobalSize(globalHeight, globalWidth); 
   cout << " -------------- Placement -------------- " << endl;
   slicingTree->place();
   cout << " -------------- Print Root -------------- " << endl;
@@ -171,9 +175,11 @@ int main(int argc, char* argv[])
   cout << " -------------- UpdateGlobalSize -------------- " << endl;
   slicingTree->updateGlobalSize();
   cout << " -------------- SetGlobalSize -------------- " << endl;
-  slicingTree->setGlobalSize(30, 25); 
+  slicingTree->setGlobalSize(77); 
   cout << " -------------- Placement -------------- " << endl;
   slicingTree->place();
+  cout << " -------------- Print Children -------------- " << endl;
+//slicingTree->printChildren();
   cout << " -------------- Print Root -------------- " << endl;
   slicingTree->print();
   cout << "Occupation Area is : " << slicingTree->getOccupationArea() << "%." << endl;
